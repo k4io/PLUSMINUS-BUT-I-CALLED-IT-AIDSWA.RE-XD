@@ -523,8 +523,7 @@ void ClientInput_hk(BasePlayer* plly, uintptr_t state) {
 						std::vector<uintptr_t> ap{};
 						for (auto a : cvp)
 							ap.push_back((uintptr_t)a);
-						settings::current_visible_players = ap;
-						float repeatdelay = held->repeatDelay();
+						settings::current_visible_players = ap; //for esp shiz
 
 						if (desyncTime > 0.8f)
 						{
