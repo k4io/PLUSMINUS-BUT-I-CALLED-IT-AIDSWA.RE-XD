@@ -614,7 +614,8 @@ namespace entities {
 								y_ += 16;
 							}
 
-							temp_target_list.push_back(player);
+							if (entities::dfc(player) < aidsware::ui::get_float(xorstr_("target fov"))) 
+								temp_target_list.push_back(player);
 						}
 						continue;//???? this should've been here already no?
 					}
@@ -1136,37 +1137,55 @@ namespace entities {
 				std::vector<BasePlayer*> best = {};
 
 				BasePlayer* p_tmp = nullptr;
-
-				for (int i = 0; i < (int)aidsware::ui::get_float(xorstr_("counter")); i++)
+				int max = (int)aidsware::ui::get_float(xorstr_("counter"));
+				for (int i = 0; i < max; i++)
 				{
+					if (temp_target_list.size() <= max)
+					{
+						current_visible_players = temp_target_list;
+						return;
+					}
 					for (auto player : temp_target_list)
 					{
 						if (!player->is_teammate() && !player->HasPlayerFlag(PlayerFlags::Sleeping)) {
-							if (entities::dfc(player) < aidsware::ui::get_float(xorstr_("target fov"))) {
-								if (p_tmp == nullptr)
-									p_tmp = player;
+							printf("checking %i\n", player->userID());
+							if (p_tmp == nullptr)
+							{
+								p_tmp = player;
+								printf("1\n");
+							}
+							else
+							{
+								bool f = false;
+								if (best.size() == 0) {
+									if (entities::dfc(p_tmp) > entities::dfc(player))
+										p_tmp = player;
+									f = true;
+									printf("10\n");
+								}
 								else
 								{
-									bool f = false;
-									if (best.size() == 0) {
-										if (entities::dfc(p_tmp) > entities::dfc(player))
-											p_tmp = player;
-										f = true;
-									}
-									else
-										for (auto b : best)
-											if (b->userID() == player->userID())
-												f = true;
-									if (!f)
-										if (entities::dfc(p_tmp) > entities::dfc(player))
-											p_tmp = player;
+									printf("2\n");
+									for (auto b : best)
+										if (b->userID() == player->userID())
+										{
+											printf("20\n");
+											f = true;
+										}
 								}
+								if (!f)
+									if (entities::dfc(p_tmp) > entities::dfc(player))
+									{
+										printf("3\n");
+										p_tmp = player;
+									}
 							}
 						}
 					}
 					//std::vector<BasePlayer*>::iterator position = std::find(current_visible_players.begin(), current_visible_players.end(), p_tmp);
 					//if (position != current_visible_players.end())
 					//	current_visible_players.erase(position);
+					printf("pushing back %i\n", p_tmp->userID());
 					best.push_back(p_tmp);
 				}
 				current_visible_players = best;
