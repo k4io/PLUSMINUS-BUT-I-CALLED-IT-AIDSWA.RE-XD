@@ -1,0 +1,160 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Source Files\core">
+      <UniqueIdentifier>{e3d7229b-8f6a-4844-b62e-06813cdf5d60}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\core\drawing">
+      <UniqueIdentifier>{f2a62f6b-47cd-4368-9a0b-39571e0ecb6a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\core\utils">
+      <UniqueIdentifier>{4feeda76-230c-4aff-9862-5b40be2ec0a4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\core\sdk">
+      <UniqueIdentifier>{e7118637-4a27-454c-a2e7-0f7a50b5950c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\core\sdk\il2cpp">
+      <UniqueIdentifier>{05bbfb5a-dd07-4ada-9653-cf6442e35426}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="entry.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="FGUI\widgets\button.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="FGUI\widgets\checkbox.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="FGUI\widgets\colorpicker.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="FGUI\widgets\combobox.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="FGUI\widgets\container.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="FGUI\widgets\keybinder.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="FGUI\widgets\label.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="FGUI\widgets\listbox.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="FGUI\widgets\multibox.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="FGUI\widgets\slider.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="FGUI\widgets\tabpanel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="FGUI\widgets\textbox.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="FGUI\widgets\widgets.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cfgmanager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="core\drawing\d3d.hpp">
+      <Filter>Source Files\core\drawing</Filter>
+    </ClInclude>
+    <ClInclude Include="core\drawing\renderer.hpp">
+      <Filter>Source Files\core\drawing</Filter>
+    </ClInclude>
+    <ClInclude Include="core\sdk\utils\hookengine.hpp">
+      <Filter>Source Files\core\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="core\sdk\mem.hpp">
+      <Filter>Source Files\core\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="core\sdk\vector.hpp">
+      <Filter>Source Files\core\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="core\sdk\utils\xorstr.hpp">
+      <Filter>Source Files\core\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="settings.hpp">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="core\sdk\il2cpp\dissector.hpp">
+      <Filter>Source Files\core\sdk\il2cpp</Filter>
+    </ClInclude>
+    <ClInclude Include="core\sdk\il2cpp\wrapper.hpp">
+      <Filter>Source Files\core\sdk\il2cpp</Filter>
+    </ClInclude>
+    <ClInclude Include="core\stdafx.hpp">
+      <Filter>Source Files\core</Filter>
+    </ClInclude>
+    <ClInclude Include="core\sdk\utils\crc32.hpp">
+      <Filter>Source Files\core\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="core\sdk\game.hpp">
+      <Filter>Source Files\core\sdk</Filter>
+    </ClInclude>
+    <ClInclude Include="core\sdk\structs.hpp">
+      <Filter>Source Files\core\sdk</Filter>
+    </ClInclude>
+    <ClInclude Include="core\main\hooks.hpp">
+      <Filter>Source Files\core</Filter>
+    </ClInclude>
+    <ClInclude Include="core\main\cache.hpp">
+      <Filter>Source Files\core\sdk</Filter>
+    </ClInclude>
+    <ClInclude Include="core\main\entities.hpp">
+      <Filter>Source Files\core</Filter>
+    </ClInclude>
+    <ClInclude Include="core\main\aimutils.hpp">
+      <Filter>Source Files\core\sdk</Filter>
+    </ClInclude>
+    <ClInclude Include="core\main\other.hpp">
+      <Filter>Source Files\core</Filter>
+    </ClInclude>
+    <ClInclude Include="core\sdk\utils\math.hpp">
+      <Filter>Source Files\core\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="core\sdk\utils\string.hpp" />
+    <ClInclude Include="utils\Fingerprint.hpp" />
+    <ClInclude Include="utils\WinReg.hpp" />
+    <ClInclude Include="core\sdk\utils\xorf.hpp" />
+    <ClInclude Include="utils\Cryptography.hpp" />
+    <ClInclude Include="core\drawing\fgui\FRenderer.hpp" />
+    <ClInclude Include="core\drawing\fgui\FInput.hpp" />
+    <ClInclude Include="core\drawing\ui.hpp" />
+    <ClInclude Include="FGUI\dependencies\external\json.hpp" />
+    <ClInclude Include="FGUI\internal\aliases.hpp" />
+    <ClInclude Include="FGUI\internal\definitions.hpp" />
+    <ClInclude Include="FGUI\internal\helpers.hpp" />
+    <ClInclude Include="FGUI\misc\builder.hpp" />
+    <ClInclude Include="FGUI\widgets\button.hpp" />
+    <ClInclude Include="FGUI\widgets\checkbox.hpp" />
+    <ClInclude Include="FGUI\widgets\colorpicker.hpp" />
+    <ClInclude Include="FGUI\widgets\combobox.hpp" />
+    <ClInclude Include="FGUI\widgets\container.hpp" />
+    <ClInclude Include="FGUI\widgets\keybinder.hpp" />
+    <ClInclude Include="FGUI\widgets\label.hpp" />
+    <ClInclude Include="FGUI\widgets\listbox.hpp" />
+    <ClInclude Include="FGUI\widgets\multibox.hpp" />
+    <ClInclude Include="FGUI\widgets\slider.hpp" />
+    <ClInclude Include="FGUI\widgets\tabpanel.hpp" />
+    <ClInclude Include="FGUI\widgets\textbox.hpp" />
+    <ClInclude Include="FGUI\widgets\widgets.hpp" />
+    <ClInclude Include="FGUI\FGUI.hpp" />
+    <ClInclude Include="cfgmanager.hpp" />
+    <ClInclude Include="Request.hpp" />
+    <ClInclude Include="core\mfont.h" />
+  </ItemGroup>
+</Project>

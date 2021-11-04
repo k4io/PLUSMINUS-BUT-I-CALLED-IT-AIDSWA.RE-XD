@@ -1,0 +1,384 @@
+#pragma once
+#include <memory>
+#include <D3D11.h>
+#include <d3d9.h>
+#include <D2D1.h>
+#include <unordered_map>
+#include <dwrite_1.h>
+#include <string_view>
+#pragma comment( lib, "dxgi" )
+#pragma comment( lib, "d2d1" )
+#pragma comment( lib, "dcomp" )
+#pragma comment( lib, "dwrite" )
+
+#define M_PI 3.14159265358979323846f
+#define D3DXToRadian(degree) ((degree) * (M_PI / 180.0f))
+
+#define RET_CHK(x) if ( x != S_OK ) return
+
+namespace Renderer {
+	ID2D1Factory* m_pInterface;
+	ID2D1RenderTarget* m_pCanvas;
+	IDWriteFactory1* m_pTextEngine;
+	IDWriteTextFormat* m_pTextFormat;
+	IDWriteTextFormat* m_pIconFormat;
+	ID2D1SolidColorBrush* m_pSolidBrush;
+	bool initialized = false;
+
+	bool Init(IDXGISwapChain* SwapChain) {
+		if (!initialized) {
+			initialized = true;
+			D2D1_FACTORY_OPTIONS CreateOpt = { D2D1_DEBUG_LEVEL_NONE };
+			DWriteCreateFactory(DWRITE_FACTORY_TYPE_SHARED, __uuidof(m_pTextEngine), (IUnknown**)&m_pTextEngine);
+			D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, __uuidof(ID2D1Factory), &CreateOpt, (void**)&m_pInterface);
+			m_pTextEngine->CreateTextFormat(wxorstr_(L"Lucida Console"), NULL, DWRITE_FONT_WEIGHT_REGULAR, DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STRETCH_NORMAL, 10.f, L"", &m_pTextFormat);
+			
+			if (!m_pInterface || !m_pTextEngine || !m_pTextFormat || !m_pIconFormat) return false;
+		}
+
+		ID3D11Device* d3d_device;
+		if (SwapChain->GetDevice(IID_PPV_ARGS(&d3d_device))) 
+			return false;
+
+		WORD flagsOffset = *(WORD*)((*(uintptr_t**)d3d_device)[ 38 ] + 2);
+		int& flags = *(INT*)((uintptr_t)d3d_device + flagsOffset);
+		d3d_device->Release( );
+
+		IDXGISurface* d3d_bbuf;
+		if (SwapChain->GetBuffer(0, IID_PPV_ARGS(&d3d_bbuf)))
+			return false;
+
+		D2D1_RENDER_TARGET_PROPERTIES d2d_prop = D2D1::RenderTargetProperties(D2D1_RENDER_TARGET_TYPE_HARDWARE, D2D1::PixelFormat(DXGI_FORMAT_UNKNOWN, D2D1_ALPHA_MODE_PREMULTIPLIED));
+
+		// set flags just for target creating,
+		flags |= 0x20;
+		HRESULT canvas_state = m_pInterface->CreateDxgiSurfaceRenderTarget(d3d_bbuf, d2d_prop, &m_pCanvas); 
+		flags &= ~0x20;
+
+		d3d_bbuf->Release( );
+
+		if (canvas_state)
+			return false;
+
+		if (!m_pSolidBrush)
+			m_pCanvas->CreateSolidColorBrush({}, &m_pSolidBrush);
+
+		return true;
+	}
+
+	bool new_frame(IDXGISwapChain* SwapChain) {
+		if (!m_pCanvas && !Init(SwapChain))
+			return false;
+
+		m_pCanvas->BeginDraw( );
+		return true;
+	}
+
+	void reset_canvas( ) {
+		if (m_pCanvas) {
+			m_pCanvas->Release( );
+			m_pCanvas = nullptr;
+		}
+	}
+
+	void rectangle_filled(Vector2 pos, Vector2 size, const Color3 color) {
+		m_pSolidBrush->SetColor(D2D1::ColorF(color.r / 255.f, color.g / 255.f, color.b / 255.f, color.a / 255.f));
+		m_pCanvas->FillRectangle(D2D1::RectF(pos.x, pos.y, pos.x + size.x, pos.y + size.y), m_pSolidBrush);
+	}
+
+	void rectangle(Vector2 pos, Vector2 size, const Color3 color, float thickness = 1.2f) {
+		m_pSolidBrush->SetColor(D2D1::ColorF(color.r / 255.f, color.g / 255.f, color.b / 255.f, color.a / 255.f));
+		m_pCanvas->DrawRectangle(D2D1::RectF(pos.x, pos.y, pos.x + size.x, pos.y + size.y), m_pSolidBrush, thickness, nullptr);
+	}
+
+	void rectangle_filled(Square2 rec, const Color3 color) {
+		m_pSolidBrush->SetColor(D2D1::ColorF(color.r / 255.f, color.g / 255.f, color.b / 255.f, color.a / 255.f));
+		m_pCanvas->FillRectangle(D2D1::RectF(rec.pos.x, rec.pos.y, rec.pos.x + rec.size.x, rec.pos.y + rec.size.y), m_pSolidBrush);
+	}
+
+	void rectangle(Square2 rec, const Color3 color, float thickness = 1.2f) {
+		m_pSolidBrush->SetColor(D2D1::ColorF(color.r / 255.f, color.g / 255.f, color.b / 255.f, color.a / 255.f));
+		m_pCanvas->DrawRectangle(D2D1::RectF(rec.pos.x, rec.pos.y, rec.pos.x + rec.size.x, rec.pos.y + rec.size.y), m_pSolidBrush, thickness, nullptr);
+	}
+
+	void line(const Vector2 start, const Vector2 end, Color3 color, bool outl = false, float thickness = 1.f) {
+		if (outl) {
+			m_pSolidBrush->SetColor(D2D1::ColorF(D3DCOLOR_RGBA(0, 0, 0, 255), 1.f));
+			m_pCanvas->DrawLine({ start.x, start.y }, { end.x, end.y }, m_pSolidBrush, thickness * 2);
+		}
+		m_pSolidBrush->SetColor(D2D1::ColorF(color.r / 255.f, color.g / 255.f, color.b / 255.f, color.a / 255.f));
+		m_pCanvas->DrawLine({ start.x, start.y }, { end.x, end.y }, m_pSolidBrush, thickness);
+	}
+
+	void circle(const Vector2 start, Color3 color, float radius, float thickness) {
+		m_pSolidBrush->SetColor(D2D1::ColorF(color.r / 255.f, color.g / 255.f, color.b / 255.f, color.a / 255.f));
+		m_pCanvas->DrawEllipse({ { start.x, start.y }, radius, radius }, m_pSolidBrush, thickness);
+	}
+
+	void filled_circle(const Vector2 start, Color3 color, float radius) {
+		m_pSolidBrush->SetColor(D2D1::ColorF(color.r / 255.f, color.g / 255.f, color.b / 255.f, color.a / 255.f));
+		m_pCanvas->FillEllipse({ { start.x, start.y}, radius,radius }, m_pSolidBrush);
+	}
+
+	void rounded_box(int x, int y, int w, int h, Color3 color, float rounding = 10.f) {
+		m_pSolidBrush->SetColor(D2D1::ColorF(color.r / 255.f, color.g / 255.f, color.b / 255.f, color.a / 255.f));
+		D2D1_RECT_F dre = { x, y, x + w, y + h };
+		m_pCanvas->DrawRoundedRectangle({ dre, rounding, rounding }, m_pSolidBrush);
+	}
+
+	void rounded_rectangle_filled(int x, int y, int w, int h, Color3 color, float rounding) {
+		m_pSolidBrush->SetColor(D2D1::ColorF(color.r / 255.f, color.g / 255.f, color.b / 255.f, color.a / 255.f));
+		//m_pCanvas->FillRoundedRectangle({ { x, y, x + w, y + h }, rounding, rounding }, m_pSolidBrush);
+
+		D2D1_RECT_F dre = {x, y, x + w, y + h};
+		//m_pCanvas->DrawRoundedRectangle({ dre, rounding, rounding }, m_pSolidBrush);
+		m_pCanvas->FillRoundedRectangle({ dre, rounding, rounding }, m_pSolidBrush);
+	}
+
+	void ProgressBar(const Vector2 start, Vector2 end, Color3 fgcolor, Color3 bgcolor, float value, float z)
+	{
+		rectangle_filled(start, { end.x - start.x, 10 }, bgcolor);
+		end.x = (start.x + (z * value));
+		rectangle_filled({ start.x, start.y + 2}, { end.x - start.x, 6 }, fgcolor);
+	}
+
+	Vector2 get_text_size(std::wstring text, float sz) 	{
+		const auto str = text;
+		const auto str_len = static_cast<std::uint32_t>(str.length( ));
+
+		IDWriteTextLayout* dwrite_layout = nullptr;
+		RET_CHK(m_pTextEngine->CreateTextLayout(str.c_str(), str_len, m_pTextFormat, screen_size.x, screen_size.y, &dwrite_layout)) Vector2(0,0);
+
+		const DWRITE_TEXT_RANGE range
+		{
+			0,
+			str_len
+		};
+
+		dwrite_layout->SetFontSize(sz, range);
+
+		DWRITE_TEXT_METRICS metrics;
+		dwrite_layout->GetMetrics(&metrics);
+
+		return Vector2(metrics.width, metrics.height);
+	}
+
+
+	void gradient_rect(Vector2 pos, Vector2 size, const Color3 color, const Color3 color_2, bool horizontal) {
+		D2D1_LINEAR_GRADIENT_BRUSH_PROPERTIES linearGradientBrushProperties = {};
+		ID2D1GradientStopCollection* pGradientStops = NULL;
+		ID2D1LinearGradientBrush* m_pLinearGradientBrush;
+
+		D2D1_GRADIENT_STOP gradientStops[ 2 ];
+		gradientStops[ 0 ].color = D2D1::ColorF(color.r / 255.f, color.g / 255.f, color.b / 255.f, color.a / 255.f);
+		gradientStops[ 0 ].position = 0.0f;
+		gradientStops[ 1 ].color = D2D1::ColorF(color.r / 255.f, color.g / 255.f, color.b / 255.f, color.a / 255.f);
+		gradientStops[ 1 ].position = 1.0f;
+
+		RET_CHK(m_pCanvas->CreateGradientStopCollection(
+			gradientStops,
+			2,
+			D2D1_GAMMA_2_2,
+			D2D1_EXTEND_MODE_CLAMP,
+			&pGradientStops
+		));
+
+		RET_CHK(m_pCanvas->CreateLinearGradientBrush(
+			D2D1::LinearGradientBrushProperties(
+				D2D1::Point2F(pos.x, pos.y),
+				D2D1::Point2F(pos.x + size.x, horizontal ? pos.y : pos.y + size.y)
+			),
+			pGradientStops,
+			&m_pLinearGradientBrush
+		));
+		m_pCanvas->FillRectangle(D2D1::RectF(pos.x, pos.y, pos.x + size.x, pos.y + size.y), m_pLinearGradientBrush);
+	}
+
+
+	template <typename ...Args>
+	void text(const Vector2 pos, const Color3 clr, const float sz, bool center, bool outline, const std::wstring_view text, Args&&... args) {
+		const auto size = static_cast<std::size_t>(std::swprintf(nullptr, 0, text.data(), std::forward<Args>(args)...) + 1);
+
+		const std::unique_ptr<wchar_t[]> buffer(new wchar_t[size]);
+		std::swprintf(buffer.get(), size, text.data(), std::forward<Args>(args)...);
+
+		const auto str = std::wstring(buffer.get(), buffer.get() + size - 1);
+		const auto str_len = static_cast<std::uint32_t>(str.size());
+
+		IDWriteTextLayout* dwrite_layout = nullptr;
+		RET_CHK(m_pTextEngine->CreateTextLayout(str.c_str(), str_len, m_pTextFormat, screen_size.x, screen_size.y, &dwrite_layout));
+
+		const DWRITE_TEXT_RANGE range
+		{
+			0,
+			str_len
+		};
+
+		dwrite_layout->SetFontSize(sz, range);
+
+		if (center) {
+			m_pSolidBrush->SetColor(D2D1::ColorF(D2D1::ColorF::Black));
+			DWRITE_TEXT_METRICS TextInfo;
+			dwrite_layout->GetMetrics(&TextInfo);
+			Vector2 TextSize = { TextInfo.width / 2.f, TextInfo.height / 2.f };
+			const auto x = pos.x - TextSize.x;
+			const auto y = pos.y - TextSize.y;
+			if (outline) {
+
+				m_pCanvas->DrawTextLayout(D2D1::Point2F(x - 1, y), dwrite_layout, m_pSolidBrush);
+				m_pCanvas->DrawTextLayout(D2D1::Point2F(x + 1, y), dwrite_layout, m_pSolidBrush);
+				m_pCanvas->DrawTextLayout(D2D1::Point2F(x, y - 1), dwrite_layout, m_pSolidBrush);
+				m_pCanvas->DrawTextLayout(D2D1::Point2F(x, y + 1), dwrite_layout, m_pSolidBrush);
+			}
+
+			m_pSolidBrush->SetColor(D2D1::ColorF(clr.r / 255.f, clr.g / 255.f, clr.b / 255.f, clr.a / 255.f));
+
+			m_pCanvas->DrawTextLayout(D2D1::Point2F(x, y), dwrite_layout, m_pSolidBrush);
+			dwrite_layout->Release();
+			return;
+		}
+
+
+		m_pSolidBrush->SetColor(D2D1::ColorF(D2D1::ColorF::Black));
+
+		if (outline) {
+			const auto x = pos.x;
+			const auto y = pos.y;
+
+			m_pCanvas->DrawTextLayout(D2D1::Point2F(x - 1, y), dwrite_layout, m_pSolidBrush);
+			m_pCanvas->DrawTextLayout(D2D1::Point2F(x + 1, y), dwrite_layout, m_pSolidBrush);
+			m_pCanvas->DrawTextLayout(D2D1::Point2F(x, y - 1), dwrite_layout, m_pSolidBrush);
+			m_pCanvas->DrawTextLayout(D2D1::Point2F(x, y + 1), dwrite_layout, m_pSolidBrush);
+		}
+
+		m_pSolidBrush->SetColor(D2D1::ColorF(clr.r / 255.f, clr.g / 255.f, clr.b / 255.f, clr.a / 255.f));
+		m_pCanvas->DrawTextLayout(D2D1::Point2F(pos.x, pos.y), dwrite_layout, m_pSolidBrush);
+		dwrite_layout->Release();
+	}
+	template <typename ...Args>
+		void icon(const Vector2 pos, const Color3 clr, const float sz, bool center, bool outline, const std::wstring_view text, Args&&... args) {
+		const auto size = static_cast<std::size_t>(std::swprintf(nullptr, 0, text.data(), std::forward<Args>(args)...) + 1);
+
+		const std::unique_ptr<wchar_t[]> buffer(new wchar_t[size]);
+		std::swprintf(buffer.get(), size, text.data(), std::forward<Args>(args)...);
+
+		const auto str = std::wstring(buffer.get(), buffer.get() + size - 1);
+		const auto str_len = static_cast<std::uint32_t>(str.size());
+
+		IDWriteTextLayout* dwrite_layout = nullptr;
+		RET_CHK(m_pTextEngine->CreateTextLayout(str.c_str(), str_len, m_pIconFormat, screen_size.x, screen_size.y, &dwrite_layout));
+
+		const DWRITE_TEXT_RANGE range
+		{
+			0,
+			str_len
+		};
+
+		dwrite_layout->SetFontSize(sz, range);
+
+		if (center) {
+			m_pSolidBrush->SetColor(D2D1::ColorF(D2D1::ColorF::Black));
+			DWRITE_TEXT_METRICS TextInfo;
+			dwrite_layout->GetMetrics(&TextInfo);
+			Vector2 TextSize = { TextInfo.width / 2.f, TextInfo.height / 2.f };
+			const auto x = pos.x - TextSize.x;
+			const auto y = pos.y - TextSize.y;
+			if (outline) {
+
+				m_pCanvas->DrawTextLayout(D2D1::Point2F(x - 1, y), dwrite_layout, m_pSolidBrush);
+				m_pCanvas->DrawTextLayout(D2D1::Point2F(x + 1, y), dwrite_layout, m_pSolidBrush);
+				m_pCanvas->DrawTextLayout(D2D1::Point2F(x, y - 1), dwrite_layout, m_pSolidBrush);
+				m_pCanvas->DrawTextLayout(D2D1::Point2F(x, y + 1), dwrite_layout, m_pSolidBrush);
+			}
+
+			m_pSolidBrush->SetColor(D2D1::ColorF(clr.r / 255.f, clr.g / 255.f, clr.b / 255.f, clr.a / 255.f));
+
+			m_pCanvas->DrawTextLayout(D2D1::Point2F(x, y), dwrite_layout, m_pSolidBrush);
+			dwrite_layout->Release();
+			return;
+		}
+
+
+		m_pSolidBrush->SetColor(D2D1::ColorF(D2D1::ColorF::Black));
+
+		if (outline) {
+			const auto x = pos.x;
+			const auto y = pos.y;
+
+			m_pCanvas->DrawTextLayout(D2D1::Point2F(x - 1, y), dwrite_layout, m_pSolidBrush);
+			m_pCanvas->DrawTextLayout(D2D1::Point2F(x + 1, y), dwrite_layout, m_pSolidBrush);
+			m_pCanvas->DrawTextLayout(D2D1::Point2F(x, y - 1), dwrite_layout, m_pSolidBrush);
+			m_pCanvas->DrawTextLayout(D2D1::Point2F(x, y + 1), dwrite_layout, m_pSolidBrush);
+		}
+
+		m_pSolidBrush->SetColor(D2D1::ColorF(clr.r / 255.f, clr.g / 255.f, clr.b / 255.f, clr.a / 255.f));
+		m_pCanvas->DrawTextLayout(D2D1::Point2F(pos.x, pos.y), dwrite_layout, m_pSolidBrush);
+		dwrite_layout->Release();
+	}
+	template <typename ...Args>
+	void boldtext(const Vector2 pos, const Color3 clr, const float sz, bool center, bool outline, const std::wstring_view text, Args&&... args) {
+		const auto size = static_cast<std::size_t>(std::swprintf(nullptr, 0, text.data( ), std::forward<Args>(args)...) + 1);
+
+		const std::unique_ptr<wchar_t [ ]> buffer(new wchar_t[ size ]);
+		std::swprintf(buffer.get( ), size, text.data( ), std::forward<Args>(args)...);
+
+		const auto str = std::wstring(buffer.get( ), buffer.get( ) + size - 1);
+		const auto str_len = static_cast<std::uint32_t>(str.size( ));
+
+		IDWriteTextLayout* dwrite_layout = nullptr;
+		RET_CHK(m_pTextEngine->CreateTextLayout(str.c_str( ), str_len, m_pTextFormat, screen_size.x, screen_size.y, &dwrite_layout));
+
+		const DWRITE_TEXT_RANGE range
+		{
+			0,
+			str_len
+		};
+
+		dwrite_layout->SetFontSize(sz, range);
+		dwrite_layout->SetFontWeight(DWRITE_FONT_WEIGHT_EXTRA_BOLD, range);
+
+		if (center) {
+			m_pSolidBrush->SetColor(D2D1::ColorF(D2D1::ColorF::Black));
+			DWRITE_TEXT_METRICS TextInfo;
+			dwrite_layout->GetMetrics(&TextInfo);
+			Vector2 TextSize = { TextInfo.width / 2.f, TextInfo.height / 2.f };
+			const auto x = pos.x - TextSize.x;
+			const auto y = pos.y - TextSize.y;
+			if (outline) {
+
+				m_pCanvas->DrawTextLayout(D2D1::Point2F(x - 1, y), dwrite_layout, m_pSolidBrush);
+				m_pCanvas->DrawTextLayout(D2D1::Point2F(x + 1, y), dwrite_layout, m_pSolidBrush);
+				m_pCanvas->DrawTextLayout(D2D1::Point2F(x, y - 1), dwrite_layout, m_pSolidBrush);
+				m_pCanvas->DrawTextLayout(D2D1::Point2F(x, y + 1), dwrite_layout, m_pSolidBrush);
+			}
+
+			m_pSolidBrush->SetColor(D2D1::ColorF(clr.r / 255.f, clr.g / 255.f, clr.b / 255.f, clr.a / 255.f));
+
+			m_pCanvas->DrawTextLayout(D2D1::Point2F(x, y), dwrite_layout, m_pSolidBrush);
+			dwrite_layout->Release( );
+			return;
+		}
+
+
+		m_pSolidBrush->SetColor(D2D1::ColorF(D2D1::ColorF::Black));
+
+		if (outline) {
+			const auto x = pos.x;
+			const auto y = pos.y;
+
+			m_pCanvas->DrawTextLayout(D2D1::Point2F(x - 1, y), dwrite_layout, m_pSolidBrush);
+			m_pCanvas->DrawTextLayout(D2D1::Point2F(x + 1, y), dwrite_layout, m_pSolidBrush);
+			m_pCanvas->DrawTextLayout(D2D1::Point2F(x, y - 1), dwrite_layout, m_pSolidBrush);
+			m_pCanvas->DrawTextLayout(D2D1::Point2F(x, y + 1), dwrite_layout, m_pSolidBrush);
+		}
+
+		m_pSolidBrush->SetColor(D2D1::ColorF(clr.r / 255.f, clr.g / 255.f, clr.b / 255.f, clr.a / 255.f));
+		m_pCanvas->DrawTextLayout(D2D1::Point2F(pos.x, pos.y), dwrite_layout, m_pSolidBrush);
+		dwrite_layout->Release( );
+	}
+	void end_frame( ) {
+		HRESULT state = m_pCanvas->EndDraw( );
+		if (state == D2DERR_RECREATE_TARGET)
+			reset_canvas( );
+	}
+}

@@ -1,0 +1,258 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>16.0</VCProjectVersion>
+    <Keyword>Win32Proj</Keyword>
+    <ProjectGuid>{44bfa8e7-24be-42a8-928f-93b5315bdec4}</ProjectGuid>
+    <RootNamespace>plusminusprivate</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <ProjectName>aidsware</ProjectName>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v142</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v142</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v142</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v142</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <LinkIncremental>true</LinkIncremental>
+    <IncludePath>$(ProjectDir);$(IncludePath)</IncludePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <LinkIncremental>false</LinkIncremental>
+    <IncludePath>$(ProjectDir);$(IncludePath)</IncludePath>
+  </PropertyGroup>
+  <PropertyGroup Label="Vcpkg" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <VcpkgUseStatic>true</VcpkgUseStatic>
+    <VcpkgTriplet>x64-windows-static</VcpkgTriplet>
+  </PropertyGroup>
+  <PropertyGroup Label="Vcpkg" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <VcpkgUseStatic>true</VcpkgUseStatic>
+    <VcpkgTriplet>x64-windows-static</VcpkgTriplet>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>WIN32;_DEBUG;PLUSMINUSPRIVATE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableUAC>false</EnableUAC>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>WIN32;NDEBUG;PLUSMINUSPRIVATE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableUAC>false</EnableUAC>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>_DEBUG;PLUSMINUSPRIVATE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableUAC>false</EnableUAC>
+      <AdditionalDependencies>detours/detours.lib;ws2_32.lib;Wldap32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>NDEBUG;PLUSMINUSPRIVATE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <Optimization>Disabled</Optimization>
+      <WholeProgramOptimization>true</WholeProgramOptimization>
+      <AdditionalIncludeDirectories>C:\Themida\ThemidaSDK\Include\C\</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableUAC>false</EnableUAC>
+      <AdditionalDependencies>detours/detours.lib;ws2_32.lib;Wldap32.lib;SecureEngineSDK64.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <GenerateMapFile>true</GenerateMapFile>
+      <AdditionalLibraryDirectories>C:\Themida\ThemidaSDK\Lib\COFF\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="cfgmanager.cpp" />
+    <ClCompile Include="entry.cpp" />
+    <ClCompile Include="FGUI\widgets\button.cpp" />
+    <ClCompile Include="FGUI\widgets\checkbox.cpp" />
+    <ClCompile Include="FGUI\widgets\colorpicker.cpp" />
+    <ClCompile Include="FGUI\widgets\combobox.cpp" />
+    <ClCompile Include="FGUI\widgets\container.cpp" />
+    <ClCompile Include="FGUI\widgets\keybinder.cpp" />
+    <ClCompile Include="FGUI\widgets\label.cpp" />
+    <ClCompile Include="FGUI\widgets\listbox.cpp" />
+    <ClCompile Include="FGUI\widgets\multibox.cpp" />
+    <ClCompile Include="FGUI\widgets\slider.cpp" />
+    <ClCompile Include="FGUI\widgets\tabpanel.cpp" />
+    <ClCompile Include="FGUI\widgets\textbox.cpp" />
+    <ClCompile Include="FGUI\widgets\widgets.cpp" />
+    <ClCompile Include="imgui\imgui_tables.cpp" />
+    <ClCompile Include="Minhook\src\buffer.c" />
+    <ClCompile Include="Minhook\src\HDE\hde32.c" />
+    <ClCompile Include="Minhook\src\HDE\hde64.c" />
+    <ClCompile Include="Minhook\src\hook.c" />
+    <ClCompile Include="Minhook\src\trampoline.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="cfgmanager.hpp" />
+    <ClInclude Include="Minhook\include\MinHook.h" />
+    <ClInclude Include="Minhook\src\buffer.h" />
+    <ClInclude Include="Minhook\src\HDE\hde32.h" />
+    <ClInclude Include="Minhook\src\HDE\hde64.h" />
+    <ClInclude Include="Minhook\src\HDE\pstdint.h" />
+    <ClInclude Include="Minhook\src\HDE\table32.h" />
+    <ClInclude Include="Minhook\src\HDE\table64.h" />
+    <ClInclude Include="Minhook\src\trampoline.h" />
+    <ClInclude Include="Request.hpp" />
+    <ClInclude Include="utils\Fingerprint.hpp" />
+    <ClInclude Include="utils\WinReg.hpp" />
+    <ClInclude Include="core\drawing\fgui\FInput.hpp" />
+    <ClInclude Include="core\drawing\fgui\FRenderer.hpp" />
+    <ClInclude Include="core\drawing\ui.hpp" />
+    <ClInclude Include="core\main\aimutils.hpp" />
+    <ClInclude Include="core\main\cache.hpp" />
+    <ClInclude Include="core\sdk\utils\crc32.hpp" />
+    <ClInclude Include="core\drawing\d3d.hpp" />
+    <ClInclude Include="core\sdk\il2cpp\dissector.hpp" />
+    <ClInclude Include="core\sdk\utils\math.hpp" />
+    <ClInclude Include="core\main\other.hpp" />
+    <ClInclude Include="core\main\entities.hpp" />
+    <ClInclude Include="core\sdk\game.hpp" />
+    <ClInclude Include="core\sdk\utils\hookengine.hpp" />
+    <ClInclude Include="core\main\hooks.hpp" />
+    <ClInclude Include="core\sdk\mem.hpp" />
+    <ClInclude Include="core\drawing\renderer.hpp" />
+    <ClInclude Include="core\sdk\utils\string.hpp" />
+    <ClInclude Include="core\sdk\utils\xorf.hpp" />
+    <ClInclude Include="FGUI\dependencies\external\json.hpp" />
+    <ClInclude Include="FGUI\FGUI.hpp" />
+    <ClInclude Include="FGUI\internal\aliases.hpp" />
+    <ClInclude Include="FGUI\internal\definitions.hpp" />
+    <ClInclude Include="FGUI\internal\helpers.hpp" />
+    <ClInclude Include="FGUI\misc\builder.hpp" />
+    <ClInclude Include="FGUI\widgets\button.hpp" />
+    <ClInclude Include="FGUI\widgets\checkbox.hpp" />
+    <ClInclude Include="FGUI\widgets\colorpicker.hpp" />
+    <ClInclude Include="FGUI\widgets\combobox.hpp" />
+    <ClInclude Include="FGUI\widgets\container.hpp" />
+    <ClInclude Include="FGUI\widgets\keybinder.hpp" />
+    <ClInclude Include="FGUI\widgets\label.hpp" />
+    <ClInclude Include="FGUI\widgets\listbox.hpp" />
+    <ClInclude Include="FGUI\widgets\multibox.hpp" />
+    <ClInclude Include="FGUI\widgets\slider.hpp" />
+    <ClInclude Include="FGUI\widgets\tabpanel.hpp" />
+    <ClInclude Include="FGUI\widgets\textbox.hpp" />
+    <ClInclude Include="FGUI\widgets\widgets.hpp" />
+    <ClInclude Include="settings.hpp" />
+    <ClInclude Include="core\stdafx.hpp" />
+    <ClInclude Include="core\sdk\structs.hpp" />
+    <ClInclude Include="core\sdk\vector.hpp" />
+    <ClInclude Include="core\sdk\il2cpp\wrapper.hpp" />
+    <ClInclude Include="core\sdk\utils\xorstr.hpp" />
+    <ClInclude Include="utils\Cryptography.hpp" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets" />
+</Project>
