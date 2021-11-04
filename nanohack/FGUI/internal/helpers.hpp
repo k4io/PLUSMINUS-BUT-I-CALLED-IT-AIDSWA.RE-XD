@@ -106,7 +106,7 @@ namespace FGUI {
         float size;
         CFont(bool icons = false)
         {
-            name = L"Lucida Console";
+            name = L"Tahoma";
             size = 11.0f;
         }
 

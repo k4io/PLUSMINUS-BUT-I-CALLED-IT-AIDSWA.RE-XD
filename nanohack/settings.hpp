@@ -1,13 +1,12 @@
 namespace settings {
-	std::vector<uintptr_t> current_visible_players{};
 	std::string data_dir = xorstr_("");
-
-	bool instakill = false;
 
 	bool cheat_init = false;
 
 	bool open = false;
 
+	bool instakill = false;
+	
 	bool panic = false;
 
 	HWND console_window = 0;

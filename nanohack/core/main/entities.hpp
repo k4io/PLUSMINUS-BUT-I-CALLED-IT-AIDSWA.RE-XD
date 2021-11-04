@@ -1,4 +1,5 @@
 namespace entities {
+	std::vector<BasePlayer*> current_visible_players;
 	namespace belt {
 		Vector2 pos = Vector2(200, 200);
 		bool should_drag = false;
@@ -42,6 +43,7 @@ namespace entities {
 
 		return screen_center.distance_2d(player->bones()->dfc);
 	}
+
 	Color3 get_color(BasePlayer* player, bool boxes = false, bool flag1 = false) {
 		if (!boxes) {
 			if (player->HasPlayerFlag(PlayerFlags::Sleeping)) {
@@ -54,8 +56,8 @@ namespace entities {
 			if (!player->playerModel()->isNpc()) {
 				if (player->is_target())
 					if (player->is_visible()) {
-						if (aidsware::ui::get_bool("insta kill") && flag1)
-							return aidsware::ui::get_color("insta kill indicator");
+						//if (aidsware::ui::get_bool("insta kill") && flag1)
+						//	return aidsware::ui::get_color("insta kill indicator");
 						return aidsware::ui::get_color("visible players");
 					}
 					else
@@ -292,7 +294,7 @@ namespace entities {
 				Renderer::boldtext({ screen_center.x + 20, screen_center.y - 20 }, Color3(90, 19, 128), 14.f, true, true, wxorstr_(L"[p]"));
 
 			std::vector<BasePlayer*> temp_target_list{};
-
+				
 			for (int i = 0; i < entityList->vals->size; i++) {
 				auto entity = *reinterpret_cast<BaseEntity**>(std::uint64_t(entityList->vals->buffer) + (0x20 + (sizeof(void*) * i)));
 				if (!entity) continue;
@@ -365,11 +367,12 @@ namespace entities {
 							Vector2 headPos = { bounds.left + (box_width / 2), bounds.top - 9.54f };
 
 							bool flag1 = false;
-							for (auto a : settings::current_visible_players)
+							
+							for (auto a : current_visible_players)
 							{
-								BasePlayer* p = (BasePlayer*)a;
-								if (p->userID() == player->userID())
+								if (a->userID() == player->userID())
 								{
+									Renderer::line({ bounds.left + ((bounds.right - bounds.left) / 2), bounds.bottom }, { screen_center.x, screen_size.y }, Color3(255, 0, 0), true);
 									flag1 = true;
 								}
 							}
@@ -469,7 +472,7 @@ namespace entities {
 							if (aidsware::ui::get_bool(xorstr_("insta kill")) || aidsware::ui::get_bool(xorstr_("peek assist")))
 							{
 								//GUI::Render.ProgressBar(v, v2, D2D1::ColorF::White, D2D1::ColorF::Gray, (antihack::functions::current_desync_value < 0.f) ? 0.f : antihack::functions::current_desync_value, 40);
-								Renderer::ProgressBar({ screen_center.x - 30, screen_center.y + 20 }, { screen_center.x + 30, screen_center.y + 20 }, { 50, 30, 160 }, { 38, 38, 60 }, desyncTime < 0.f ? 0.f : desyncTime, 60);
+								Renderer::ProgressBar({ screen_center.x - 30, screen_center.y + 20 }, { screen_center.x + 30, screen_center.y + 20 }, { 51, 88, 181 }, { 38, 38, 60 }, desyncTime < 0.f ? 0.f : desyncTime, 60);
 							}
 
 							if (aidsware::ui::get_bool(xorstr_("hpbar")))
@@ -1126,6 +1129,49 @@ namespace entities {
 				}
 
 			}
+
+			if (settings::instakill)
+			{
+				current_visible_players.clear();
+				std::vector<BasePlayer*> best = {};
+
+				BasePlayer* p_tmp = nullptr;
+
+				for (int i = 0; i < (int)aidsware::ui::get_float(xorstr_("counter")); i++)
+				{
+					for (auto player : temp_target_list)
+					{
+						if (!player->is_teammate() && !player->HasPlayerFlag(PlayerFlags::Sleeping)) {
+							if (entities::dfc(player) < aidsware::ui::get_float(xorstr_("target fov"))) {
+								if (p_tmp == nullptr)
+									p_tmp = player;
+								else
+								{
+									bool f = false;
+									if (best.size() == 0) {
+										if (entities::dfc(p_tmp) > entities::dfc(player))
+											p_tmp = player;
+										f = true;
+									}
+									else
+										for (auto b : best)
+											if (b->userID() == player->userID())
+												f = true;
+									if (!f)
+										if (entities::dfc(p_tmp) > entities::dfc(player))
+											p_tmp = player;
+								}
+							}
+						}
+					}
+					//std::vector<BasePlayer*>::iterator position = std::find(current_visible_players.begin(), current_visible_players.end(), p_tmp);
+					//if (position != current_visible_players.end())
+					//	current_visible_players.erase(position);
+					best.push_back(p_tmp);
+				}
+				current_visible_players = best;
+			}
+			
 			if (!settings::instakill)
 			{
 				for (auto player : temp_target_list)
@@ -1141,6 +1187,7 @@ namespace entities {
 					}
 				}
 			}
+			
 		}
 		else {
 			if (target_ply != nullptr)

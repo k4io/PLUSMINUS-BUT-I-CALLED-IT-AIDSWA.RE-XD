@@ -31,7 +31,7 @@ namespace Renderer {
 			D2D1_FACTORY_OPTIONS CreateOpt = { D2D1_DEBUG_LEVEL_NONE };
 			DWriteCreateFactory(DWRITE_FACTORY_TYPE_SHARED, __uuidof(m_pTextEngine), (IUnknown**)&m_pTextEngine);
 			D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, __uuidof(ID2D1Factory), &CreateOpt, (void**)&m_pInterface);
-			m_pTextEngine->CreateTextFormat(wxorstr_(L"Lucida Console"), NULL, DWRITE_FONT_WEIGHT_REGULAR, DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STRETCH_NORMAL, 10.f, L"", &m_pTextFormat);
+			m_pTextEngine->CreateTextFormat(wxorstr_(L"Tahoma"), NULL, DWRITE_FONT_WEIGHT_REGULAR, DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STRETCH_NORMAL, 10.f, L"", &m_pTextFormat);
 			
 			if (!m_pInterface || !m_pTextEngine || !m_pTextFormat || !m_pIconFormat) return false;
 		}
@@ -142,7 +142,7 @@ namespace Renderer {
 		rectangle_filled({ start.x, start.y + 2}, { end.x - start.x, 6 }, fgcolor);
 	}
 
-	Vector2 get_text_size(std::wstring text, float sz) 	{
+	Vector2 get_text_size(std::wstring text, float sz)	{
 		const auto str = text;
 		const auto str_len = static_cast<std::uint32_t>(str.length( ));
 

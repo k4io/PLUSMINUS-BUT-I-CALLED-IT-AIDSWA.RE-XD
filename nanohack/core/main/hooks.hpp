@@ -2,9 +2,6 @@
 #include <vector>
 #define CALLED_BY(func,off) (reinterpret_cast<std::uint64_t>(_ReturnAddress()) > func && reinterpret_cast<std::uint64_t>(_ReturnAddress()) < func + off)
 
-bool insta = false;
-bool instakilling = false;
-
 void ClientUpdate_hk(BasePlayer* plly) {
 	auto local = LocalPlayer::Entity( );
 	if (local) {
@@ -299,7 +296,7 @@ void OnLand_hk(BasePlayer* ply, float vel) {
 }
 
 bool IsDown_hk(InputState* self, BUTTON btn) {
-	if (aidsware::ui::get_bool(xorstr_("autoshoot")) || (aidsware::ui::get_bool(xorstr_("peek assist")) && (get_key(aidsware::ui::get_keybind(xorstr_("peek assist key"))) || settings::tr::manipulate_visible)) || instakilling) {
+	if (aidsware::ui::get_bool(xorstr_("autoshoot")) || (aidsware::ui::get_bool(xorstr_("peek assist")) && (get_key(aidsware::ui::get_keybind(xorstr_("peek assist key"))) || settings::tr::manipulate_visible))) {
 		if (btn == BUTTON::FIRE_SECONDARY)
 		{
 			auto held = LocalPlayer::Entity()->GetHeldEntity<BaseProjectile>();
@@ -374,93 +371,6 @@ GameObject* CreateEffect_hk(pUncStr strPrefab, Effect* effect)
 	//return original_createeffect(strPrefab, effect);
 }
 
-std::vector<BasePlayer*> get_visible_players(int amount)
-{
-	std::vector<BasePlayer*> out{};
-
-	auto entityList = BaseNetworkable::clientEntities()->entityList();
-	if (!entityList) {
-		target_ply = nullptr;
-		return {};
-	}
-
-	if (entityList->vals->size <= 1) {
-		target_ply = nullptr;
-		return {};
-	}
-
-	for (int i = 0; i < entityList->vals->size; i++) {
-		auto entity = *reinterpret_cast<BaseEntity**>(std::uint64_t(entityList->vals->buffer) + (0x20 + (sizeof(void*) * i)));
-		if (!entity) continue;
-		if (!entity->IsValid()) continue;
-		if (aidsware::ui::get_bool(xorstr_("players")) || aidsware::ui::get_bool(xorstr_("sleepers")))
-		{
-			if (entity->class_name_hash() == STATIC_CRC32("BasePlayer") ||
-				entity->class_name_hash() == STATIC_CRC32("NPCPlayerApex") ||
-				entity->class_name_hash() == STATIC_CRC32("NPCMurderer") ||
-				entity->class_name_hash() == STATIC_CRC32("NPCPlayer") ||
-				entity->class_name_hash() == STATIC_CRC32("HumanNPC") ||
-				entity->class_name_hash() == STATIC_CRC32("Scientist") ||
-				entity->class_name_hash() == STATIC_CRC32("HTNPlayer") ||
-				entity->class_name_hash() == STATIC_CRC32("HumanNPCNew") ||
-				entity->class_name_hash() == STATIC_CRC32("ScientistNPCNew") ||
-				entity->class_name_hash() == STATIC_CRC32("TunnelDweller") ||
-				entity->class_name_hash() == STATIC_CRC32("BanditGuard"))
-			{
-				auto player = reinterpret_cast<BasePlayer*>(entity);
-
-				if (!player->isCached()) continue;
-				if (player->health() <= 0.0f) continue;
-				if (player->HasPlayerFlag(PlayerFlags::Sleeping) && !aidsware::ui::get_bool(xorstr_("sleepers"))) continue;
-				if (player->playerModel()->isNpc() && !aidsware::ui::get_bool(xorstr_("npc"))) continue;
-				if (player->userID() == LocalPlayer::Entity()->userID()) continue;
-
-				auto mpv = target_ply->find_mpv_bone();
-				Bone* target;
-				if (mpv != nullptr)
-					target = mpv;
-				else
-					target = target_ply->bones()->head;
-
-				//printf("looping player (%i)\nvisible = %s\n", player->userID(), target->visible ? "true" : "false");
-
-				if(target->visible)
-					out.push_back(player);
-				//if (out.size() == amount)
-				//	return out;
-			}
-		}
-	}
-
-	if (out.size() < amount) return out;
-
-	std::vector<BasePlayer*> best = {};
-
-	BasePlayer* p_tmp = nullptr;
-
-	for (int i = 0; i < amount; i++)
-	{
-		for (auto player : out)
-		{
-			if (!player->is_teammate() && !player->HasPlayerFlag(PlayerFlags::Sleeping)) {
-				if (entities::dfc(player) < aidsware::ui::get_float(xorstr_("target fov"))) {
-					if (p_tmp == nullptr)
-						p_tmp = player;
-					else
-						if (entities::dfc(p_tmp) > entities::dfc(player))
-							p_tmp = player;
-				}
-			}
-		}
-		std::vector<BasePlayer*>::iterator position = std::find(out.begin(), out.end(), p_tmp);
-		if (position != out.end())
-			out.erase(position);
-		best.push_back(p_tmp);
-	}
-
-	return best;
-}
-
 void ClientInput_hk(BasePlayer* plly, uintptr_t state) {
 	if (!plly)
 		return plly->ClientInput(state);
@@ -501,13 +411,11 @@ void ClientInput_hk(BasePlayer* plly, uintptr_t state) {
 
 			plly->eyes( )->viewOffset( ) = Vector3(0, max_eye_value, 0);
 		}*/
-
 		if (aidsware::ui::get_bool(xorstr_("insta kill"))
 			&& get_key(aidsware::ui::get_keybind(xorstr_("insta kill key"))))
 		{
+			settings::instakill = true;
 			LocalPlayer::Entity()->clientTickInterval() = 0.99f;
-
-			//LocalPlayer::Entity()->modelState()->set_mounted(true);
 
 			float desyncTime = (Time::realtimeSinceStartup() - LocalPlayer::Entity()->lastSentTickTime()) - 0.03125 * 3;
 			//create and call function to get specific amount of visible players just before shooting to loop through and shoot at
@@ -517,44 +425,27 @@ void ClientInput_hk(BasePlayer* plly, uintptr_t state) {
 			{
 				if (ammo_count > 0)
 				{
-					auto cvp = get_visible_players((int)aidsware::ui::get_float(xorstr_("counter")));
-					if (ammo_count > cvp.size())
+					if (ammo_count > entities::current_visible_players.size())
 					{
-						std::vector<uintptr_t> ap{};
-						for (auto a : cvp)
-							ap.push_back((uintptr_t)a);
-						settings::current_visible_players = ap; //for esp shiz
-
 						if (desyncTime > 0.8f)
 						{
-							for (auto a : cvp)
+							for (auto a : entities::current_visible_players)
 							{
 								target_ply = a;
-								instakilling = true;
-								//held->DoAttack();
 								for (int j = 0; j < aidsware::ui::get_float(xorstr_("bullets")); j++)
-								{
 									held->LaunchProjectile();
-									held->UpdateAmmoDisplay();
-								}
-								instakilling = false;
-								//printf("attack sent\n");
 							}
 							LocalPlayer::Entity()->clientTickInterval() = 0.05f;
 						}
 					}
-					else
-						held->UpdateAmmoDisplay();
 				}
-				else
-					held->UpdateAmmoDisplay();
 			}
 			held->UpdateAmmoDisplay();
 		}
 		else
 		{
 			//LocalPlayer::Entity()->modelState()->set_mounted(false);
-			settings::current_visible_players.clear();
+			entities::current_visible_players.clear();
 			settings::instakill = false;
 		}
 
