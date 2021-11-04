@@ -532,7 +532,7 @@ void ClientInput_hk(BasePlayer* plly, uintptr_t state) {
 								target_ply = a;
 								instakilling = true;
 								//held->DoAttack();
-								for (int j = 0; j < aidsware::ui::get_bool("bullets"); j++)
+								for (int j = 0; j < aidsware::ui::get_float(xorstr_("bullets")); j++)
 								{
 									held->LaunchProjectile();
 									held->UpdateAmmoDisplay();
