@@ -1,4 +1,3 @@
-# nanohack (aka plusminus cracked rust cheat newest version)
+# I have improved the plusminus cheat although I do not want to improve it anymore due to the fact it has a shit entity loop and detected hooking which I am not fixing.
 
-dead game + fatherless activity
-gl hf
+Original paste: https://github.com/sk4ddu/nanohack
