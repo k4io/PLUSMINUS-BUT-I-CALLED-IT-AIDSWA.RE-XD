@@ -31,7 +31,7 @@ namespace Renderer {
 			D2D1_FACTORY_OPTIONS CreateOpt = { D2D1_DEBUG_LEVEL_NONE };
 			DWriteCreateFactory(DWRITE_FACTORY_TYPE_SHARED, __uuidof(m_pTextEngine), (IUnknown**)&m_pTextEngine);
 			D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, __uuidof(ID2D1Factory), &CreateOpt, (void**)&m_pInterface);
-			m_pTextEngine->CreateTextFormat(wxorstr_(L"Tahoma"), NULL, DWRITE_FONT_WEIGHT_REGULAR, DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STRETCH_NORMAL, 10.f, L"", &m_pTextFormat);
+			m_pTextEngine->CreateTextFormat(wxorstr_(L"Courier"), NULL, DWRITE_FONT_WEIGHT_REGULAR, DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STRETCH_NORMAL, 10.f, L"", &m_pTextFormat);
 			
 			if (!m_pInterface || !m_pTextEngine || !m_pTextFormat || !m_pIconFormat) return false;
 		}

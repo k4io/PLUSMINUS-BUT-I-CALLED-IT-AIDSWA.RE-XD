@@ -91,13 +91,16 @@ namespace FGUI
 
         char tBuffer[256] = {};
         sprintf_s(tBuffer, xorstr_("%.2f"), m_flValue);
+        //if (m_strTitle == "counter" || m_strTitle == "bullets")
+            //sprintf_s(tBuffer, xorstr_("%i"), static_cast<int>(m_flValue));
 
         FGUI::DIMENSION dmValueTextSize = FGUI::RENDER.GetTextSize(m_anyFont, std::string(tBuffer) + " " + m_strPrefix);
 
         // slider position ratio
         float flRatio = (m_flValue - m_rngBoundaries.m_flMin) / (m_rngBoundaries.m_flMax - m_rngBoundaries.m_flMin);
         float flLocation = (flRatio * m_dmSize.m_iWidth);
-
+        //if (m_strTitle == "counter" || m_strTitle == "bullets")
+            //flLocation = static_cast<int>(flRatio * m_dmSize.m_iWidth);
         // slider body
         //FGUI::RENDER.Rectangle(arWidgetRegion.m_iLeft, arWidgetRegion.m_iTop + 3, m_dmSize.m_iWidth, 2, { 14, 36, 69 });
        // DrawRoundedRectangle(arWidgetRegion.m_iLeft, arWidgetRegion.m_iTop, m_dmSize.m_iWidth, m_dmSize.m_iHeight, { 14, 36, 69 }, 1.f);

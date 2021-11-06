@@ -827,11 +827,6 @@ public:
 		static auto clazz = CLASS("Assembly-CSharp::PlayerEyes");
 		return *reinterpret_cast<Vector3*>(std::uint64_t(clazz->static_fields));
 	}
-	Vector3 position( ) {
-		if (!this) return Vector3::Zero( );
-		static auto off = METHOD("Assembly-CSharp::PlayerEyes::get_position(): Vector3");
-		return reinterpret_cast<Vector3(__fastcall*)(PlayerEyes*)>(off)(this);
-	}
 	Quaternion rotation( ) {
 		if (!this) return Quaternion{};
 		static auto off = METHOD("Assembly-CSharp::PlayerEyes::get_rotation(): Quaternion");
@@ -858,6 +853,12 @@ public:
 		return reinterpret_cast<Ray(__fastcall*)(PlayerEyes*)>(off)(this);
 	}
 
+	Vector3 position() {
+		if (!this) return Vector3::Zero();
+		static auto off = METHOD("Assembly-CSharp::PlayerEyes::get_position(): Vector3");
+		return reinterpret_cast<Vector3(__fastcall*)(PlayerEyes*)>(off)(this);
+	}
+
 	static inline Vector3(*BodyLeanOffset_)(PlayerEyes*) = nullptr;
 	Vector3 BodyLeanOffset( ) {
 		return BodyLeanOffset_(this);
@@ -865,6 +866,10 @@ public:
 	static inline void(*DoFirstPersonCamera_)(PlayerEyes*, Component*) = nullptr;
 	void DoFirstPersonCamera(Component* cam) {
 		return DoFirstPersonCamera_(this, cam);
+	}
+	static inline Vector3(*get_position_)(PlayerEyes*) = nullptr;
+	Vector3 get_position() {
+		return get_position_(this);
 	}
 };
 enum class PlayerFlags : int {
@@ -1222,6 +1227,17 @@ public:
 	STATIC_FUNCTION("UnityEngine.InputLegacyModule::UnityEngine::Input::GetKeyDown(KeyCode): Boolean", GetKeyDown, bool(KeyCode));
 	STATIC_FUNCTION("UnityEngine.InputLegacyModule::UnityEngine::Input::GetKey(KeyCode): Boolean", GetKey, bool(KeyCode));
 };
+/*
+class TraceInfo {
+	FIELD("Assembly-CSharp::TraceInfo::valid", valid, bool);
+
+	void UpdateHitTest(HitTest* test) {
+		if (!this) return;
+		static auto off = METHOD("Assembly-CSharp::TraceInfo::UpdateHitTest(HitTest): Void");
+		return reinterpret_cast<void(__fastcall*)(HitTest*)>(off)(test);
+	}
+};
+*/
 class Projectile : public Component {
 public:
 	FIELD("Assembly-CSharp::Projectile::swimRandom", swimRandom, float);
@@ -1236,6 +1252,7 @@ public:
 	FIELD("Assembly-CSharp::Projectile::hitTest", hitTest, HitTest*);
 	FIELD("Assembly-CSharp::Projectile::currentVelocity", currentVelocity, Vector3);
 	FIELD("Assembly-CSharp::Projectile::gravityModifier", gravityModifier, float);
+
 	static inline void(*Launch_)(Projectile*) = nullptr;
 	void Launch( ) {
 		return Launch_(this);
@@ -2317,7 +2334,7 @@ public:
 
 		return NULL;
 	}
-	static uint64_t GetCamera( ) {
+	static uint64_t GetCamera() {
 		const auto base = (uint64_t)GetModuleHandleA(xorstr_("UnityPlayer.dll"));
 
 		if (!base)
@@ -2351,7 +2368,7 @@ public:
 		uint64_t camera_table = 0;
 
 		const auto camera_string = memstr((char*)data_base, xorstr_("AllCameras"), data_size);
-		for (auto walker = (uint64_t*)camera_string; walker > 0; walker -= 1) {
+		for (auto walker = (uint64_t*)camera_string; *walker > 0; walker -= 1) {
 			if (*walker > 0x100000 && *walker < 0xF00000000000000) {
 				// [[[[unityplayer.dll + ctable offset]]] + 0x30] = Camera
 				camera_table = *walker;
@@ -2365,19 +2382,19 @@ public:
 		return 0;
 	}
 	static bool world_to_screen(Vector3 world, Vector2& screen) {
-		const auto matrix = viewMatrix.transpose( );
+		const auto matrix = viewMatrix.transpose();
 
-		const Vector3 translation = { matrix[ 3 ][ 0 ], matrix[ 3 ][ 1 ], matrix[ 3 ][ 2 ] };
-		const Vector3 up = { matrix[ 1 ][ 0 ], matrix[ 1 ][ 1 ], matrix[ 1 ][ 2 ] };
-		const Vector3 right = { matrix[ 0 ][ 0 ], matrix[ 0 ][ 1 ], matrix[ 0 ][ 2 ] };
+		const Vector3 translation = { matrix[3][0], matrix[3][1], matrix[3][2] };
+		const Vector3 up = { matrix[1][0], matrix[1][1], matrix[1][2] };
+		const Vector3 right = { matrix[0][0], matrix[0][1], matrix[0][2] };
 
-		const auto w = translation.dot_product(world) + matrix[ 3 ][ 3 ];
+		const auto w = translation.dot_product(world) + matrix[3][3];
 
 		if (w < 0.1f)
 			return false;
 
-		const auto x = right.dot_product(world) + matrix[ 0 ][ 3 ];
-		const auto y = up.dot_product(world) + matrix[ 1 ][ 3 ];
+		const auto x = right.dot_product(world) + matrix[0][3];
+		const auto y = up.dot_product(world) + matrix[1][3];
 
 		screen =
 		{
@@ -2388,9 +2405,9 @@ public:
 		return true;
 	}
 
-	static Matrix getViewMatrix( ) {
-		static auto camera_list = GetCamera( );
-		if (!camera_list) return Matrix( );
+	static Matrix getViewMatrix() {
+		static auto camera_list = GetCamera();
+		if (!camera_list) return Matrix();
 
 		auto camera_table = *reinterpret_cast<uint64_t*>(camera_list);
 		auto cam = *reinterpret_cast<uint64_t*>(camera_table);
@@ -2428,6 +2445,7 @@ void initialize_cheat( ) {
 	ASSIGN_HOOK("Assembly-CSharp::BaseCombatEntity::OnAttacked(HitInfo): Void", BaseCombatEntity::OnAttacked_);
 	ASSIGN_HOOK("Assembly-CSharp::InputState::IsDown(BUTTON): Boolean", InputState::IsDown_);
 	ASSIGN_HOOK("Assembly-CSharp::PlayerEyes::get_BodyLeanOffset(): Vector3", PlayerEyes::BodyLeanOffset_);
+	ASSIGN_HOOK("Assembly-CSharp::PlayerEyes::get_position(): Vector3", PlayerEyes::get_position_);
 	ASSIGN_HOOK("Assembly-CSharp::BaseProjectile::CreateProjectile(String,Vector3,Vector3,Vector3): Projectile", BaseProjectile::CreateProjectile_);
 	ASSIGN_HOOK("UnityEngine.CoreModule::UnityEngine::MonoBehaviour::StartCoroutine(Collections.IEnumerator): Coroutine", MonoBehaviour::StartCoroutine_);
 	ASSIGN_HOOK("Assembly-CSharp::PlayerWalkMovement::UpdateVelocity(): Void", PlayerWalkMovement::UpdateVelocity_);

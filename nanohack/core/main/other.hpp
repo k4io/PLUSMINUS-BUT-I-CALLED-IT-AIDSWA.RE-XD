@@ -69,7 +69,13 @@ namespace other {
 	{
 		auto loco = LocalPlayer::Entity();
 
+		if (!loco) return false;
+		if (!target_ply) return false;
+
 		auto held = loco->GetHeldEntity<BaseProjectile>();
+
+		if (!held) return false;
+
 		if (held->Empty() && (held->class_name_hash() == STATIC_CRC32("BaseProjectile")
 			|| held->class_name_hash() == STATIC_CRC32("BowWeapon")
 			|| held->class_name_hash() == STATIC_CRC32("CompoundBowWeapon")
@@ -96,6 +102,8 @@ namespace other {
 
 		std::vector<Vector3> arr = {};
 
+		if (aidsware::ui::get_bool(xorstr_("with peek assist")))
+			mm_max_eye = 8.f;
 		if (loco->in_minicopter())
 			mm_max_eye = 75.f;
 		if (loco->on_horse())
@@ -119,6 +127,11 @@ namespace other {
 			if (!target_ply->bones()->head->visible_(point))
 				continue;
 
+			if (aidsware::ui::get_bool(xorstr_("with peek assist")) 
+				&& (mm_max_eye == 8.f || mm_max_eye == 25.f || mm_max_eye == 75.f))
+				settings::can_insta = true;
+			else settings::can_insta = false;
+
 			choice = s;
 			break;
 		}
@@ -130,6 +143,7 @@ namespace other {
 
 	void find_manipulate_angle( ) {
 		auto loco = LocalPlayer::Entity( );
+		auto held = LocalPlayer::Entity()->GetHeldEntity<BaseProjectile>();
 		loco->modelState()->set_mounted(true);
 		Vector3 re_p = loco->transform( )->position( ) + loco->transform( )->up( ) * (PlayerEyes::EyeOffset( ).y + loco->eyes( )->viewOffset( ).y);
 		// real eye pos

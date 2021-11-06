@@ -6,6 +6,8 @@ namespace settings {
 	bool open = false;
 
 	bool instakill = false;
+	bool can_insta = false;
+	bool peek_insta = false;
 	
 	bool panic = false;
 

@@ -411,35 +411,45 @@ void ClientInput_hk(BasePlayer* plly, uintptr_t state) {
 
 			plly->eyes( )->viewOffset( ) = Vector3(0, max_eye_value, 0);
 		}*/
+
+		if (aidsware::ui::get_bool(xorstr_("autoshoot")) && aidsware::ui::get_bool(xorstr_("insta kill")) && aidsware::ui::get_bool(xorstr_("with peek assist")))
+			settings::can_insta = other::can_manipulate();
+		
 		if (aidsware::ui::get_bool(xorstr_("insta kill"))
-			&& get_key(aidsware::ui::get_keybind(xorstr_("insta kill key"))))
+			&& get_key(aidsware::ui::get_keybind(xorstr_("insta kill key")))
+			|| settings::can_insta)
 		{
+			if (!aidsware::ui::get_bool(xorstr_("with peek assist"))) settings::can_insta = false;
 			settings::instakill = true;
 			LocalPlayer::Entity()->clientTickInterval() = 0.99f;
 
-			float desyncTime = (Time::realtimeSinceStartup() - LocalPlayer::Entity()->lastSentTickTime()) - 0.03125 * 3;
+			//float desyncTime = (Time::realtimeSinceStartup() - LocalPlayer::Entity()->lastSentTickTime()) - 0.03125 * 3;
 			//create and call function to get specific amount of visible players just before shooting to loop through and shoot at
 			int ammo_count = held->primaryMagazine()->contents();
 
 			if (held)
-			{
 				if (ammo_count > 0)
-				{
 					if (ammo_count > entities::current_visible_players.size())
-					{
 						if (desyncTime > 0.8f)
 						{
 							for (auto a : entities::current_visible_players)
 							{
 								target_ply = a;
-								for (int j = 0; j < aidsware::ui::get_float(xorstr_("bullets")); j++)
-									held->LaunchProjectile();
+
+								if (aidsware::ui::get_bool(xorstr_("with peek assist")))
+								{
+									settings::peek_insta = true;
+									other::find_manipulate_angle();
+									for (int j = 0; j < aidsware::ui::get_float(xorstr_("bullets")); j++)
+										held->LaunchProjectile();
+									settings::peek_insta = false;
+								}
+								else
+									for (int j = 0; j < aidsware::ui::get_float(xorstr_("bullets")); j++)
+										held->LaunchProjectile();
 							}
 							LocalPlayer::Entity()->clientTickInterval() = 0.05f;
 						}
-					}
-				}
-			}
 			held->UpdateAmmoDisplay();
 		}
 		else
@@ -450,16 +460,16 @@ void ClientInput_hk(BasePlayer* plly, uintptr_t state) {
 		}
 
 
-		settings::tr::manipulated = aidsware::ui::get_bool(xorstr_("peek assist")) && get_key(aidsware::ui::get_keybind(xorstr_("peek assist key")));
+		settings::tr::manipulated = aidsware::ui::get_bool(xorstr_("peek assist")) && get_key(aidsware::ui::get_keybind(xorstr_("peek assist key")) || settings::instakill);
 
-
-		if (aidsware::ui::get_bool(xorstr_("peek assist")) && target_ply != nullptr && target_ply->isCached() && get_key(aidsware::ui::get_keybind(xorstr_("peek assist key"))))
+		
+		if (aidsware::ui::get_bool(xorstr_("peek assist")) && target_ply != nullptr && target_ply->isCached() && get_key(aidsware::ui::get_keybind(xorstr_("peek assist key"))) && !settings::instakill)
 			other::find_manipulate_angle();
 		else
 			if (!other::m_manipulate.empty())
 				other::m_manipulate = Vector3::Zero();
 
-		if (aidsware::ui::get_bool(xorstr_("peek assist")) && target_ply != nullptr && target_ply->isCached() && aidsware::ui::get_bool(xorstr_("autoshoot")))
+		if (aidsware::ui::get_bool(xorstr_("peek assist")) && target_ply != nullptr && target_ply->isCached() && aidsware::ui::get_bool(xorstr_("autoshoot")) && !settings::instakill)
 			if (other::can_manipulate()) {
 				other::find_manipulate_angle();
 				settings::tr::manipulate_visible = true;
@@ -527,7 +537,7 @@ float GetRandomVelocity_hk(ItemModProjectile* self) {
 	float modifier = 1.f;
 
 	if (aidsware::ui::get_bool(xorstr_("fast bullets")))
-		modifier += 0.4f;
+		modifier += 0.48f;
 
 	return self->GetRandomVelocity( ) * modifier;
 }
@@ -732,6 +742,13 @@ void sendclienttick_hk(BasePlayer* self)
 	return self->SendClientTick();
 }
 
+Vector3 playereyes_getpos_hk(PlayerEyes* self)
+{
+	if (settings::peek_insta)
+		return self->get_position() + other::m_manipulate;
+	return self->get_position();
+}
+
 void do_hooks( ) {
 	VM_DOLPHIN_BLACK_START
 
@@ -763,6 +780,7 @@ void do_hooks( ) {
 	hookengine::hook(PlayerEyes::DoFirstPersonCamera_, DoFirstPersonCamera_hk);
 	hookengine::hook(Vector3_::MoveTowards_, MoveTowards_hk);
 	hookengine::hook(HeldEntity::AddPunch_, AddPunch_hk);
+	hookengine::hook(PlayerEyes::get_position_, playereyes_getpos_hk);
 
 
 	VM_DOLPHIN_BLACK_END
@@ -800,6 +818,7 @@ void undo_hooks( ) {
 
 	hookengine::unhook(BasePlayer::SendClientTick_, sendclienttick_hk);
 
+	hookengine::unhook(PlayerEyes::get_position_, playereyes_getpos_hk);
 
 	VM_DOLPHIN_BLACK_END
 }

@@ -116,13 +116,13 @@ namespace aidsware::ui
 
 		void create_window(std::string name, Vector2 position, Vector2 size, std::uint32_t menu_key)
 		{
-			ptrnBuilder.Widget(vars::Container).Title(name).Position(position.x + currentX, position.y).Size(size.x, size.y).Key(menu_key).Font(xorstr_("Tahoma"), 12, true, 1);
+			ptrnBuilder.Widget(vars::Container).Title(name).Position(position.x + currentX, position.y).Size(size.x, size.y).Key(menu_key).Font(xorstr_("Courier"), 12, true, 1);
 		}
 
 		void button(std::string name, std::function<void()> callback, Vector2 position, Tabs tab = Tabs::Visual)
 		{
 			vars::buttons[name] = std::make_shared<FGUI::CButton>();
-			ptrnBuilder.Widget(vars::buttons[name]).Title(name).Position(position.x + currentX, currentY + position.y).Font(xorstr_("Tahoma"), 11).Medium(vars::Tabs, (int)tab).Callback(callback).SpawnIn(vars::Container, false);
+			ptrnBuilder.Widget(vars::buttons[name]).Title(name).Position(position.x + currentX, currentY + position.y).Font(xorstr_("Courier"), 11).Medium(vars::Tabs, (int)tab).Callback(callback).SpawnIn(vars::Container, false);
 			currentY += 25.0f;
 		}
 
@@ -130,17 +130,17 @@ namespace aidsware::ui
 		{
 			auto text_size = Renderer::get_text_size(StringConverter::ToUnicode(name), 11.0f);
 			vars::checkBoxes[name] = std::make_shared<FGUI::CCheckBox>();
-			auto cb = ptrnBuilder.Widget(vars::checkBoxes[name]).Title(name).Position(position.x + currentX, position.y + currentY).Font(xorstr_("Tahoma"), 11).Medium(vars::Tabs, (int)tab).SpawnIn(vars::Container, false);
+			auto cb = ptrnBuilder.Widget(vars::checkBoxes[name]).Title(name).Position(position.x + currentX, position.y + currentY).Font(xorstr_("Courier"), 11).Medium(vars::Tabs, (int)tab).SpawnIn(vars::Container, false);
 			if (colorpick)
 			{
 				vars::colorPickers[name] = std::make_shared<FGUI::CColorPicker>();
-				ptrnBuilder.Widget(vars::colorPickers[name]).Title(name + xorstr_(" color")).Position((text_size.x * 1.5) + 10.0f + position.x + cppos.x, currentY + position.y).Font(xorstr_("Tahoma"), 11).Medium(vars::Tabs, (int)tab).SpawnIn(vars::Container, false);
+				ptrnBuilder.Widget(vars::colorPickers[name]).Title(name + xorstr_(" color")).Position((text_size.x * 1.5) + 10.0f + position.x + cppos.x, currentY + position.y).Font(xorstr_("Courier"), 11).Medium(vars::Tabs, (int)tab).SpawnIn(vars::Container, false);
 			}
 			currentY += 20.0f;
 			if (keybind)
 			{
 				vars::keybinders[name + xorstr_(" key")] = std::make_shared<FGUI::CKeyBinder>();
-				ptrnBuilder.Widget(vars::keybinders[name + xorstr_(" key")]).Title(name + xorstr_(" key")).Position(position.x + currentX, position.y + currentY).Font(xorstr_("Tahoma"), 11).Medium(vars::Tabs, (int)tab).SpawnIn(vars::Container, false);
+				ptrnBuilder.Widget(vars::keybinders[name + xorstr_(" key")]).Title(name + xorstr_(" key")).Position(position.x + currentX, position.y + currentY).Font(xorstr_("Courier"), 11).Medium(vars::Tabs, (int)tab).SpawnIn(vars::Container, false);
 				currentY += 25.0f;
 			}
 			currentY += 5.0f;
@@ -149,7 +149,7 @@ namespace aidsware::ui
 		void label(std::string name, Vector2 position, Tabs tab = Tabs::Visual, bool newline = true, bool fonticon = false, std::string e = "")
 		{
 			vars::labels[name] = std::make_shared<FGUI::CLabel>();
-			ptrnBuilder.Widget(vars::labels[name]).Title(name).Position(position.x + currentX, position.y + currentY).Font(xorstr_("Tahoma"), 11).Medium(vars::Tabs, (int)tab).SpawnIn(vars::Container, false);
+			ptrnBuilder.Widget(vars::labels[name]).Title(name).Position(position.x + currentX, position.y + currentY).Font(xorstr_("Courier"), 11).Medium(vars::Tabs, (int)tab).SpawnIn(vars::Container, false);
 			if(newline)
 				currentY += 20.0f;
 		}
@@ -157,21 +157,21 @@ namespace aidsware::ui
 		void color_picker(std::string name, Vector2 position, Tabs tab = Tabs::Visual)
 		{
 			vars::colorPickers[name] = std::make_shared<FGUI::CColorPicker>();
-			ptrnBuilder.Widget(vars::colorPickers[name]).Title(name).Position(position.x + currentX, currentY + position.y).Font(xorstr_("Tahoma"), 11).Medium(vars::Tabs, (int)tab).SpawnIn(vars::Container, false);
+			ptrnBuilder.Widget(vars::colorPickers[name]).Title(name).Position(position.x + currentX, currentY + position.y).Font(xorstr_("Courier"), 11).Medium(vars::Tabs, (int)tab).SpawnIn(vars::Container, false);
 			currentY += 20.0f;
 		}
 
 		void textbox(std::string name, Vector2 position, Tabs tab = Tabs::Visual, std::string value = "")
 		{
 			vars::textBoxes[name] = std::make_shared<FGUI::CTextBox>();
-			ptrnBuilder.Widget(vars::textBoxes[name]).Title(name).Position(position.x + currentX, position.y + currentY).Font(xorstr_("Tahoma"), 11).Text(value).Medium(vars::Tabs, (int)tab).SpawnIn(vars::Container, false);
+			ptrnBuilder.Widget(vars::textBoxes[name]).Title(name).Position(position.x + currentX, position.y + currentY).Font(xorstr_("Courier"), 11).Text(value).Medium(vars::Tabs, (int)tab).SpawnIn(vars::Container, false);
 			currentY += 25.0f;
 		}
 
 		void combobox(std::string name, std::vector<std::string> options, Vector2 position, Tabs tab = Tabs::Visual)
 		{
 			vars::comboBoxes[name] = std::make_shared<FGUI::CComboBox>();
-			auto widget = ptrnBuilder.Widget(vars::comboBoxes[name]).Title(name).Position(position.x + currentX, currentY + position.y).Font(xorstr_("Tahoma"), 11).Medium(vars::Tabs, (int)tab);
+			auto widget = ptrnBuilder.Widget(vars::comboBoxes[name]).Title(name).Position(position.x + currentX, currentY + position.y).Font(xorstr_("Courier"), 11).Medium(vars::Tabs, (int)tab);
 			
 			for(auto opt : options)
 				widget.Entry(opt);
@@ -183,20 +183,20 @@ namespace aidsware::ui
 		void keybind(std::string name, Vector2 position, Tabs tab = Tabs::Visual)
 		{
 			vars::keybinders[name] = std::make_shared<FGUI::CKeyBinder>();
-			ptrnBuilder.Widget(vars::keybinders[name]).Title(name).Position(position.x + currentX, position.y + currentY).Font(xorstr_("Tahoma"), 11).Medium(vars::Tabs, (int)tab).SpawnIn(vars::Container, false);
+			ptrnBuilder.Widget(vars::keybinders[name]).Title(name).Position(position.x + currentX, position.y + currentY).Font(xorstr_("Courier"), 11).Medium(vars::Tabs, (int)tab).SpawnIn(vars::Container, false);
 			currentY += 25.0f;
 		}
 
 		void slider(std::string name, Vector2 position, float value, float min, float max, Tabs tab = Tabs::Combat)
 		{
 			vars::sliders[name] = std::make_shared<FGUI::CSlider>();
-			ptrnBuilder.Widget(vars::sliders[name]).Title(name).Range(min, max).Value(value).Position(position.x + currentX, position.y + currentY).Font(xorstr_("Tahoma"), 11).Medium(vars::Tabs, (int)tab).SpawnIn(vars::Container, false);
+			ptrnBuilder.Widget(vars::sliders[name]).Title(name).Range(min, max).Value(value).Position(position.x + currentX, position.y + currentY).Font(xorstr_("Courier"), 11).Medium(vars::Tabs, (int)tab).SpawnIn(vars::Container, false);
 			currentY += 30.0f;
 		}
 
 		void tabs(std::vector<std::string> tabs)
 		{
-			auto builder = ptrnBuilder.Widget(vars::Tabs).Position(0, 0).Font(xorstr_("Tahoma"), 16, true, 1);
+			auto builder = ptrnBuilder.Widget(vars::Tabs).Position(0, 0).Font(xorstr_("Courier"), 16, true, 1);
 			for (auto tab : tabs)
 				builder.Tab(tab);
 			
@@ -247,15 +247,13 @@ namespace aidsware::ui
 		wrapper::checkbox(xorstr_("hitbox attraction"), Vector2(0, 0), Tabs::Combat);
 		wrapper::checkbox(xorstr_("fat bullet"), Vector2(0, 0), Tabs::Combat);
 		wrapper::checkbox(xorstr_("fast bullets"), Vector2(0, 0), Tabs::Combat);
-		wrapper::checkbox(xorstr_("insta eoka"), Vector2(0, 0), Tabs::Combat);
-		wrapper::checkbox(xorstr_("automatic"), Vector2(0, 0), Tabs::Combat);
-		wrapper::checkbox(xorstr_("no sway"), Vector2(0, 0), Tabs::Combat);
 
 		wrapper::checkbox(xorstr_("insta kill"), Vector2(0, 0), Tabs::Combat);
 		wrapper::keybind(xorstr_("insta kill key"), Vector2(0, 0.0f), Tabs::Combat);
 		wrapper::currentY += 10.f;
 		wrapper::slider(xorstr_("counter"), Vector2(0, 0), 5.0f, 0.0f, 9.f, Tabs::Combat);
 		wrapper::slider(xorstr_("bullets"), Vector2(0, 0), 1.0f, 0.0f, 5.0f, Tabs::Combat);
+		wrapper::checkbox(xorstr_("with peek assist"), Vector2(0, 0), Tabs::Combat);
 		wrapper::currentX += 20.f;
 		wrapper::reset_height();
 
@@ -267,6 +265,11 @@ namespace aidsware::ui
 		wrapper::slider(xorstr_("recoil %"), Vector2(180.0f, 0.0f), 100.0f, 0.0f, 100.0f, Tabs::Combat);
 		wrapper::slider(xorstr_("spread %"), Vector2(180.0f, 0), 100.0f, 0.0f, 100.0f, Tabs::Combat);
 
+		wrapper::currentY -= 10.0f;
+		wrapper::checkbox(xorstr_("insta eoka"), Vector2(180.0f, 0), Tabs::Combat);
+		wrapper::checkbox(xorstr_("automatic"), Vector2(180.0f, 0), Tabs::Combat);
+		wrapper::checkbox(xorstr_("no sway"), Vector2(180.0f, 0), Tabs::Combat);
+
 		wrapper::currentY += 10.0f;
 		wrapper::label(xorstr_("peek assist properties"), Vector2(170.0f, -10.f), Tabs::Combat);
 		wrapper::slider(xorstr_("max radius"), Vector2(180.0f, 10.0f), 7.f, 1.0f, 20.0f, Tabs::Combat);
@@ -274,10 +277,8 @@ namespace aidsware::ui
 		wrapper::slider(xorstr_("checks"), Vector2(180.0f, 10.0f), 30.f, 1.f, 360.0f, Tabs::Combat);
 		wrapper::slider(xorstr_("duration"), Vector2(180.0f, 10.0f), 0.05f, 0.001f, 60.0f, Tabs::Combat);
 
-		wrapper::currentY += 20.0f;
+		wrapper::currentY += 5.0f;
 		wrapper::checkbox(xorstr_("always heli weakspot"), Vector2(170, 0), Tabs::Combat);
-		wrapper::checkbox(xorstr_("draw targeting fov"), Vector2(170, 0.0f), Tabs::Combat);
-		wrapper::checkbox(xorstr_("show peek assist checks"), Vector2(170, 0), Tabs::Combat);
 		wrapper::checkbox(xorstr_("insta charge compound"), Vector2(170, 0), Tabs::Combat);
 		wrapper::currentY += 10.0f;
 		//float r = aidsware::ui::get_float(xorstr_("rings")) * aidsware::ui::get_float(xorstr_("checks")) * 20.f;
@@ -315,11 +316,13 @@ namespace aidsware::ui
 		wrapper::checkbox(xorstr_("tool cupboards"), Vector2(170, 0), Tabs::Visual);
 		wrapper::checkbox(xorstr_("storage"), Vector2(170, 0), Tabs::Visual);
 		wrapper::checkbox(xorstr_("vehicles"), Vector2(170, 0), Tabs::Visual);
-		wrapper::checkbox(xorstr_("raid esp"), Vector2(170, 0), Tabs::Visual);
-		wrapper::checkbox(xorstr_("chams"), Vector2(170, 0), Tabs::Visual);
+		//wrapper::checkbox(xorstr_("raid esp"), Vector2(170, 0), Tabs::Visual);
+		//wrapper::checkbox(xorstr_("chams"), Vector2(170, 0), Tabs::Visual);
 		wrapper::checkbox(xorstr_("debug"), Vector2(170, 0), Tabs::Visual);
 		wrapper::currentY += 30.f;
 		wrapper::slider(xorstr_("esp dist"), Vector2(170, 0), 100.0f, 0.0f, 400.0f, Tabs::Visual);
+		wrapper::checkbox(xorstr_("draw targeting fov"), Vector2(170, 0.0f), Tabs::Visual);
+		wrapper::checkbox(xorstr_("show peek assist checks"), Vector2(170, 0), Tabs::Visual);
 		wrapper::reset_height();
 		wrapper::reset_width();
 

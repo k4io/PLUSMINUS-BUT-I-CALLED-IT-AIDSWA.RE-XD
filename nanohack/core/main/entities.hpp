@@ -56,8 +56,8 @@ namespace entities {
 			if (!player->playerModel()->isNpc()) {
 				if (player->is_target())
 					if (player->is_visible()) {
-						//if (aidsware::ui::get_bool("insta kill") && flag1)
-						//	return aidsware::ui::get_color("insta kill indicator");
+						if (aidsware::ui::get_bool("insta kill") && flag1)
+							return aidsware::ui::get_color("insta kill indicator");
 						return aidsware::ui::get_color("visible players");
 					}
 					else
@@ -292,6 +292,8 @@ namespace entities {
 				Renderer::boldtext({ screen_center.x + 20, screen_center.y + 20 }, Color3(52, 235, 97), 14.f, true, true, wxorstr_(L"[v]"));
 			if (settings::tr::manipulated)
 				Renderer::boldtext({ screen_center.x + 20, screen_center.y - 20 }, Color3(90, 19, 128), 14.f, true, true, wxorstr_(L"[p]"));
+			if (settings::can_insta)
+				Renderer::boldtext({ screen_center.x - 20, screen_center.y + 20 }, Color3(230, 180, 44), 14.f, true, true, wxorstr_(L"[i]"));
 
 			std::vector<BasePlayer*> temp_target_list{};
 				
@@ -333,8 +335,7 @@ namespace entities {
 						if (player->playerModel()->isNpc() && !aidsware::ui::get_bool(xorstr_("npc"))) continue;
 						if (player->userID() == LocalPlayer::Entity()->userID()) continue;
 
-						//add checks for insta kill in here and add like 5 targets to list, then try 6 etc then 7
-
+						/*
 						if (aidsware::ui::get_bool(xorstr_("chams")))
 						{
 							auto list = player->playerModel()->_multiMesh()->Renderers();
@@ -342,21 +343,24 @@ namespace entities {
 							if (list) {
 								for (int i = 0; i < list->size; i++) {
 									auto _renderer = reinterpret_cast<Renderer_*>(list->get(i));
-									if (!_renderer) continue;
-
-									auto material = _renderer->material();
-									if (!material) continue;
-									if (!material->shader()) continue;
-									if (og_shader == material->shader())
-										continue;
-									if (og_shader == nullptr)
-										og_shader = Shader::Find(xorstr_("Hidden/Internal-Colored"));
-									material->set_shader(og_shader);
-									material->SetColor(xorstr_("_Color"), Color(1, 0, 0, 1));
+									if (_renderer)
+									{
+										auto material = _renderer->material();
+										if (material)
+										{
+											if (og_shader != material->shader())
+											{
+												if (!og_shader)
+													og_shader = Shader::Find(xorstr_("Hidden/Internal-Colored"));
+												material->set_shader(og_shader);
+												material->SetColor(xorstr_("_Color"), Color(1, 0, 0, 1));
+											}
+										}
+									}
 								}
 							}
 						}
-
+						*/
 						auto bounds = player->bones()->bounds;
 						if (!bounds.empty()) {
 							int y_ = 0;
@@ -368,11 +372,15 @@ namespace entities {
 
 							bool flag1 = false;
 							
-							for (auto a : current_visible_players)
+							for (int i = 0; i < current_visible_players.size(); i++)
 							{
+								auto a = current_visible_players[i];
 								if (a->userID() == player->userID())
 								{
-									Renderer::line({ bounds.left + ((bounds.right - bounds.left) / 2), bounds.bottom }, { screen_center.x, screen_size.y }, Color3(255, 0, 0), true);
+									Color3 col = get_color(player, false, true);
+									Renderer::line({ bounds.left + ((bounds.right - bounds.left) / 2), bounds.bottom }, { screen_center.x, screen_size.y }, col, true);
+									if(aidsware::ui::get_bool(xorstr_("debug")))
+										Renderer::text({ headPos.x, headPos.y - 20 }, col, 12.f, true, true, wxorstr_(L"i: %i"), i);
 									flag1 = true;
 								}
 							}
@@ -617,7 +625,6 @@ namespace entities {
 							if (entities::dfc(player) < aidsware::ui::get_float(xorstr_("target fov"))) 
 								temp_target_list.push_back(player);
 						}
-						continue;//???? this should've been here already no?
 					}
 				}
 
@@ -1147,13 +1154,9 @@ namespace entities {
 					}
 					for (auto player : temp_target_list)
 					{
-						if (!player->is_teammate() && !player->HasPlayerFlag(PlayerFlags::Sleeping)) {
-							printf("checking %i\n", player->userID());
+						if (!player->is_teammate() && !player->HasPlayerFlag(PlayerFlags::Sleeping))
 							if (p_tmp == nullptr)
-							{
 								p_tmp = player;
-								printf("1\n");
-							}
 							else
 							{
 								bool f = false;
@@ -1161,31 +1164,18 @@ namespace entities {
 									if (entities::dfc(p_tmp) > entities::dfc(player))
 										p_tmp = player;
 									f = true;
-									printf("10\n");
 								}
 								else
-								{
-									printf("2\n");
 									for (auto b : best)
 										if (b->userID() == player->userID())
-										{
-											printf("20\n");
 											f = true;
-										}
-								}
+
 								if (!f)
 									if (entities::dfc(p_tmp) > entities::dfc(player))
-									{
-										printf("3\n");
 										p_tmp = player;
-									}
+
 							}
-						}
 					}
-					//std::vector<BasePlayer*>::iterator position = std::find(current_visible_players.begin(), current_visible_players.end(), p_tmp);
-					//if (position != current_visible_players.end())
-					//	current_visible_players.erase(position);
-					printf("pushing back %i\n", p_tmp->userID());
 					best.push_back(p_tmp);
 				}
 				current_visible_players = best;
