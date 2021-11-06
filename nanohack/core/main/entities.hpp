@@ -695,6 +695,7 @@ namespace entities {
 								}
 							}
 						}
+
 						if (entity->ShortPrefabName_hash() == STATIC_CRC32("small_stash_deployed") && aidsware::ui::get_bool(xorstr_("stashes"))) {
 							Vector2 screen;
 							if (Camera::world_to_screen(entity->transform()->position(), screen)) {
@@ -709,7 +710,6 @@ namespace entities {
 								}
 							}
 						}
-
 
 						if (entity->ShortPrefabName_hash() == STATIC_CRC32("cupboard.tool.deployed") && aidsware::ui::get_bool(xorstr_("tool cupboards")))
 						{

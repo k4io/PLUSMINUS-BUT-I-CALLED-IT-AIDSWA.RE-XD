@@ -95,6 +95,8 @@ namespace aimutils {
 
 		float distance = target.distance(LocalPlayer::Entity( )->eyes()->position());
 	
+		bullet_speed *= 1.f - 0.015625f * projectile->drag();
+
 		float travel_time = distance / bullet_speed;
 
 		Vector3 vel = Vector3(targetvel.x, 0, targetvel.z) * 0.75f;

@@ -2368,7 +2368,7 @@ public:
 		uint64_t camera_table = 0;
 
 		const auto camera_string = memstr((char*)data_base, xorstr_("AllCameras"), data_size);
-		for (auto walker = (uint64_t*)camera_string; *walker > 0; walker -= 1) {
+		for (auto walker = (uint64_t*)camera_string; walker > 0; walker -= 1) {
 			if (*walker > 0x100000 && *walker < 0xF00000000000000) {
 				// [[[[unityplayer.dll + ctable offset]]] + 0x30] = Camera
 				camera_table = *walker;
