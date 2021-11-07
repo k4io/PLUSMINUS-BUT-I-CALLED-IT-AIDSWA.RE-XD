@@ -1,3 +1,4 @@
+#pragma once
 namespace aimutils {
 	double get_bullet_drop(double height, double aaaa, float speed, float gravity) {
 		double pitch = std::atan2(height, aaaa);
@@ -50,7 +51,7 @@ namespace aimutils {
 
 	float max(float a, float b) { return a > b ? a : b; }
 
-	Vector3 get_prediction( ) {
+	Vector3 get_prediction() {
 		auto mpv = target_ply->find_mpv_bone();
 		Vector3 target;
 		if (mpv != nullptr)
@@ -92,12 +93,16 @@ namespace aimutils {
 
 		if (projectile == nullptr)
 			return target;
+
 		/*
 		TraceResult f = traceProjectile(LocalPlayer::Entity()->eyes()->get_position(),
 			projectile->initialVelocity(),
 			projectile->drag(),
 			Vector3(0, -9.1 * projectile->gravityModifier(), 0),
 			target);
+
+		Vector3 temp = projectile->initialVelocity();
+		printf("initialVelocity: %ff, %ff, %ff\ndrag: %ff\ngravityModifier: %ff\n", temp.x, temp.y, temp.z, projectile->drag(), projectile->gravityModifier());
 
 		LogSystem::AddTraceResult(f);
 		*/
@@ -107,12 +112,11 @@ namespace aimutils {
 		bullet_speed *= 1.f - 0.015625f * projectile->drag();
 
 		float travel_time = distance / bullet_speed;
-		//float travel_time = f.hitTime;
 
-		//Vector3 vel = Vector3(targetvel.x, 0, targetvel.z) * 0.75f;
-		Vector3 vel = target_ply->playerModel()->newVelocity();
+		Vector3 vel = Vector3(targetvel.x, 0, targetvel.z) * 0.75f;
+		//Vector3 vel = target_ply->playerModel()->newVelocity();
 		Vector3 predicted_velocity = vel * travel_time;
-		//Vector3 predicted_velocity = f.outVelocity;
+		//Vector3 predicted_velocity = f.outVelocity * f.hitTime;
 
 		target.x += predicted_velocity.x;
 		target.z += predicted_velocity.z;

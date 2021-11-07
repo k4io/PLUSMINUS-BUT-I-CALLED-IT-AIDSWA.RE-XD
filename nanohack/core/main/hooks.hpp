@@ -1,5 +1,50 @@
 #include <intrin.h>
 #include <vector>
+
+#define safe_read(Addr, Type) (((((ULONG64)Addr) > 0x400000) && (((ULONG64)Addr + sizeof(Type)) < 0x00007FFFFFFF0000)) ? *(Type*)((ULONG64)Addr) : Type{})
+#define safe_write(Addr, Data, Type) if ((((ULONG64)Addr) > 0x400000) && (((ULONG64)Addr + sizeof(Type)) < 0x00007FFFFFFF0000)) { *(Type*)((ULONG64)Addr) = (Data); }
+#define safe_memcpy(Dst, Src, Size) safe_memcpy_wrapper(((ULONG64)Dst), ((ULONG64)Src), Size)
+void safe_memcpy_wrapper(ULONG64 Dst, ULONG64 Src, ULONG Sz)
+{
+	if ((((ULONG64)Dst) > 0x400000) && (((ULONG64)Dst + Sz) < 0x00007FFFFFFF0000))
+	{
+		while (true)
+		{
+			//copy 8 byte
+			if (Sz >= 8)
+			{
+				*(ULONG64*)Dst = *(ULONG64*)Src;
+				Dst += 8; Src += 8; Sz -= 8;
+			}
+
+			//copy 4 byte
+			else if (Sz >= 4)
+			{
+				*(ULONG*)Dst = *(ULONG*)Src;
+				Dst += 4; Src += 4; Sz -= 4;
+			}
+
+			//copy 2 byte
+			else if (Sz >= 2)
+			{
+				*(WORD*)Dst = *(WORD*)Src;
+				Dst += 2; Src += 2; Sz -= 2;
+			}
+
+			//copy last byte
+			else if (Sz)
+			{
+				*(BYTE*)Dst = *(BYTE*)Src;
+				break;
+			}
+
+			//if(Sz == 0)
+			else
+				break;
+		}
+	}
+}
+
 #define CALLED_BY(func,off) (reinterpret_cast<std::uint64_t>(_ReturnAddress()) > func && reinterpret_cast<std::uint64_t>(_ReturnAddress()) < func + off)
 
 void ClientUpdate_hk(BasePlayer* plly) {
@@ -104,6 +149,9 @@ void ClientUpdate_Sleeping_hk(BasePlayer* player)
 }
 
 Vector3 GetModifiedAimConeDirection_hk(float aimCone, Vector3 inputVec, bool anywhereInside = true) {
+
+	return AimConeUtil::GetModifiedAimConeDirection(aimCone, inputVec, anywhereInside);
+
 	bool flag = false;
 	if (get_key(aidsware::ui::get_keybind(xorstr_("psilent key"))))
 	{
@@ -117,6 +165,120 @@ Vector3 GetModifiedAimConeDirection_hk(float aimCone, Vector3 inputVec, bool any
 	aimCone *= aidsware::ui::get_float(xorstr_("spread %")) / 100.0f;
 
 	return AimConeUtil::GetModifiedAimConeDirection(aimCone, inputVec, anywhereInside);
+}
+double CalcBulletDrop(double height, double DepthPlayerTarget, float velocity, float gravity) {
+	double pitch = (Vector3::my_atan2(height, DepthPlayerTarget));
+	double BulletVelocityXY = velocity * Vector3::my_cos(pitch);
+	double Time = DepthPlayerTarget / BulletVelocityXY;
+	double TotalVerticalDrop = (0.5f * gravity * Time * Time);
+	return TotalVerticalDrop * 10;
+}
+#define powFFFFFFFFFFFFFFFFFFFFFF(n) (n)*(n)
+void APrediction(Vector3 local, Vector3& target, Vector3 targetvel, float bulletspeed, float gravity, float drag) {
+	float Dist = local.distance(target);
+	bulletspeed *= 1.f - 0.015625f * drag;
+	float BulletTime = Dist / bulletspeed;
+	Vector3 vel = Vector3(targetvel.x, 0, targetvel.z) * 0.75f;
+	Vector3 PredictVel = vel * BulletTime;
+	target += PredictVel;
+	double height = target.y - local.y;
+	Vector3 dir = target - local;
+	float DepthPlayerTarget = Vector3::my_sqrt(powFFFFFFFFFFFFFFFFFFFFFF(dir.x) + powFFFFFFFFFFFFFFFFFFFFFF(dir.z));
+	float drop = CalcBulletDrop(height, DepthPlayerTarget, bulletspeed, gravity);
+	target.y += drop;
+}
+
+void serverrpc_projectileshoot_hk(int64_t rcx, int64_t rdx, int64_t r9, int64_t ProjectileShoot, int64_t arg5)
+{
+	while (1)
+	{
+		if (!ProjectileShoot)
+			break;
+		auto loco = LocalPlayer::Entity();
+		if (!loco) break;
+
+		auto baseprojectile = LocalPlayer::Entity()->GetHeldEntity<BaseProjectile>();
+		if (!baseprojectile) break;
+		auto wep_class_name = baseprojectile->class_name();
+
+		if (!baseprojectile->Empty() && (baseprojectile->class_name_hash() != STATIC_CRC32("BaseProjectile")
+			&& baseprojectile->class_name_hash() != STATIC_CRC32("BowWeapon")
+			&& baseprojectile->class_name_hash() != STATIC_CRC32("CompoundBowWeapon")
+			&& baseprojectile->class_name_hash() != STATIC_CRC32("BaseLauncher")
+			&& baseprojectile->class_name_hash() != STATIC_CRC32("CrossbowWeapon"))) {
+			break;
+		}
+
+		//uintptr_t projectile_list = safe_read(safe_read(baseprojectile + 0x358, uintptr_t) + 0x10, uintptr_t);
+		uintptr_t projectile_list = *reinterpret_cast<uintptr_t*>(
+			*reinterpret_cast<uintptr_t*>((uintptr_t)baseprojectile + 0x358) + 0x10); //createdProjectiles;
+
+		//viewMatrix = Camera::getViewMatrix();
+		auto camera_pos = loco->eyes()->get_position();//safe_read(il2cpp::field(safe_read(cam, uintptr_t), _("position"), false), Vector3);
+
+		//uintptr_t shoot_list = safe_read(safe_read(ProjectileShoot + 0x18, uintptr_t) + 0x10, uintptr_t);
+		uintptr_t shoot_list = *(uintptr_t*)(*(uintptr_t*)(ProjectileShoot + 0x18) + 0x10); //
+		auto sz = safe_read(safe_read(ProjectileShoot + 0x18, uintptr_t) + 0x18, int);
+
+		Vector3 aimbot_velocity, aim_angle, rpc_position, target;
+
+		auto mpv = target_ply->find_mpv_bone();
+
+		if (mpv != nullptr)
+			target = mpv->position;
+		else
+			target = target_ply->bones()->head->position;
+
+		Vector3 v = loco->eyes()->get_position();
+		if (!v.x || !v.y || !v.z)
+			v = loco->eyes()->get_position();
+
+		Vector3 bonepos = target;
+		Vector3 vel = target_ply->playerModel()->newVelocity();
+
+		for (size_t i = 0; i < sz; i++)
+		{
+			auto projectile = *(uintptr_t*)(shoot_list + 0x20 + i * 0x8); // 
+
+			Projectile* p = (Projectile*)(shoot_list + 0x20 + i * 0x8);
+
+			rpc_position = *reinterpret_cast<Vector3*>(projectile + 0x18); //
+			auto original_vel = *reinterpret_cast<Vector3*>(projectile + 0x24); //
+
+
+			if (target_ply/* && !target.teammate*/) {
+				APrediction(v, bonepos, vel, original_vel.Length(), p->gravityModifier(), p->drag());
+
+				aim_angle = /*get_aim_angle(rpc_position, target.pos, target.velocity, false, stats)*/bonepos - rpc_position;
+
+				aimbot_velocity = (aim_angle).normalized() * original_vel.Length();
+
+				*reinterpret_cast<Vector3*>(projectile + 0x24) = aimbot_velocity;
+				//*reinterpret_cast<Vector3*>(projectile + 0x24) = aimbot_velocity;
+			}
+		}
+
+		auto sz2 = safe_read(projectile_list + 0x18, int);
+
+
+		for (int i = 0; i < sz2; i++)
+		{
+			auto projectile = *(uintptr_t*)((uintptr_t)projectile_list + 0x20 + i * 0x8);
+
+			if (!projectile)
+				continue;
+
+			if (aidsware::ui::get_bool(xorstr_("psilent"))) {
+				if (target_ply) {
+					safe_write(projectile + 0x118, aimbot_velocity, Vector3);
+					//p->currentVelocity() = aimbot_velocity;
+				}
+			}
+		}
+		break;
+	}
+	reinterpret_cast<void (*)(int64_t, int64_t, int64_t, int64_t, int64_t)>(settings::serverrpc_projectileshoot)(rcx, rdx, r9, ProjectileShoot, arg5);
+	return;
 }
 
 Attack* BuildAttackMessage_hk(HitTest* self) {
@@ -371,9 +533,38 @@ GameObject* CreateEffect_hk(pUncStr strPrefab, Effect* effect)
 	//return original_createeffect(strPrefab, effect);
 }
 
+bool has_intialized_methods = false;
 void ClientInput_hk(BasePlayer* plly, uintptr_t state) {
 	if (!plly)
 		return plly->ClientInput(state);
+
+	if (!has_intialized_methods) {
+		auto il2cpp_codegen_initialize_method = reinterpret_cast<void (*)(unsigned int)>(settings::il_init_methods);
+		//56229 for real rust or 56204 for cracked rust
+		for (int i = 0; i <
+			//#ifdef cracked_rust
+			56204
+			//#else
+							//56229
+			//#endif
+			; i++) {
+			il2cpp_codegen_initialize_method(i);
+		}
+		has_intialized_methods = true;
+	}
+
+	static uintptr_t* serverrpc_projecshoot;
+	if (!serverrpc_projecshoot) {
+		auto method_serverrpc_projecshoot = *reinterpret_cast<uintptr_t*>(settings::serverrpc_projectileshoot);
+
+		if (method_serverrpc_projecshoot) {
+			serverrpc_projecshoot = **(uintptr_t***)(method_serverrpc_projecshoot + 0x30);
+
+			settings::serverrpc_projectileshoot = *serverrpc_projecshoot;
+
+			*serverrpc_projecshoot = reinterpret_cast<uintptr_t>(&serverrpc_projectileshoot_hk);
+		}
+	}
 
 	if (plly->userID( ) == LocalPlayer::Entity( )->userID( )) {
 		auto held = plly->GetHeldEntity<BaseProjectile>();
@@ -410,6 +601,11 @@ void ClientInput_hk(BasePlayer* plly, uintptr_t state) {
 
 			plly->eyes( )->viewOffset( ) = Vector3(0, max_eye_value, 0);
 		}*/
+
+		if (aidsware::ui::get_bool(xorstr_("flyhack stop")))
+		{
+			CheckFlyhack();
+		}
 
 		if (aidsware::ui::get_bool(xorstr_("autoshoot")) && aidsware::ui::get_bool(xorstr_("insta kill")) && aidsware::ui::get_bool(xorstr_("with peek assist")))
 			settings::can_insta = other::can_manipulate();

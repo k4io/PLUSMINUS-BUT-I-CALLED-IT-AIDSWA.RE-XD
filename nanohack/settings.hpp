@@ -18,6 +18,9 @@ namespace settings {
 	float flyhack = 0.f;
 	float hor_flyhack = 0.f;
 
+	uintptr_t il_init_methods;
+	uintptr_t serverrpc_projectileshoot;
+
 	namespace tr {
 		bool manipulated = false;
 		bool manipulate_visible = false;

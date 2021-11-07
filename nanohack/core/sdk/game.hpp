@@ -1,3 +1,58 @@
+#include <core/sdk/lazy_importer.hpp>
+#define in_range(x,a,b) (x>=a&&x<=b) 
+#define get_bits(x) (in_range((x&(~0x20)),'A','F')?((x&(~0x20))-'A'+0xa):(in_range(x,'0','9')?x-'0':0))
+#define get_byte(x) (get_bits(x[0])<<4|get_bits(x[1]))
+uintptr_t find(uintptr_t range_start, uintptr_t range_end, const char* pattern) {
+	const char* pattern_bytes = pattern;
+
+	uintptr_t first_match = 0;
+
+	for (uintptr_t cur_byte = range_start; cur_byte < range_end; cur_byte++) {
+		if (!*pattern_bytes)
+			return first_match;
+
+		if (*(uint8_t*)pattern_bytes == '\?' || *(uint8_t*)cur_byte == static_cast<uint8_t>(get_byte(pattern_bytes))) {
+			if (!first_match)
+				first_match = cur_byte;
+
+			if (!pattern_bytes[2])
+				return first_match;
+
+			if (*(uint16_t*)pattern_bytes == '\?\?' || *(uint8_t*)pattern_bytes != '\?')
+				pattern_bytes += 3;
+			else
+				pattern_bytes += 2;
+		}
+		else {
+			pattern_bytes = pattern;
+			first_match = 0;
+		}
+	}
+
+	return 0;
+}
+uintptr_t find(const char* mod, const char* pattern) {
+	const char* pattern_bytes = pattern;
+
+	uintptr_t range_start = (uintptr_t)LI_MODULE_SAFE_(mod);
+
+	uintptr_t range_end = range_start + LI_MODULESIZE_SAFE_(mod);
+
+	return find(range_start, range_end, pattern);
+}
+uintptr_t find_rel(const char* mod, const char* pattern, ptrdiff_t position = 0, ptrdiff_t jmp_size = 3, ptrdiff_t instruction_size = 7) {
+	auto result = find(mod, pattern);
+
+	if (!result) return 0;
+
+	result += position;
+
+	auto rel_addr = *reinterpret_cast<int32_t*>(result + jmp_size);
+	auto abs_addr = result + instruction_size + rel_addr;
+
+	return abs_addr;
+}
+
 class SafeExecution {
 private:
 	static int fail(unsigned int code, struct _EXCEPTION_POINTERS* ep) {
@@ -1374,7 +1429,6 @@ public:
 	FIELD("Assembly-CSharp::PlayerModel::_multiMesh", _multiMesh, SkinnedMultiMesh*);
 	FIELD("Assembly-CSharp::PlayerModel::MaleSkin", MaleSkin, SkinSetCollection*);
 	FIELD("Assembly-CSharp::PlayerModel::FemaleSkin", FemaleSkin, SkinSetCollection*);
-	FIELD("Assembly-CSharp::PlayerModel::velocity", velocity, Vector3);
 };
 class TOD_AtmosphereParameters {
 public:
@@ -1927,12 +1981,30 @@ TraceResult traceProjectile(Vector3 position, Vector3 velocity, float drag, Vect
 
 	Vector3 hitPos = resultLine.ClosestPoint(targetPoint);
 
+	printf("hitPos(%ff, %ff, %ff)\nhitTime: %ff\n", hitPos.x, hitPos.y, hitPos.z, travelTime - num);
+
 	result.hitDist = (hitPos - targetPoint).Length();
 	result.hitPosition = hitPos;
 	result.outVelocity = velocity;
 	result.hitTime = travelTime - num;
 	return result;
+}; 
+class ProjectileShoot_Projectile
+{
+public:
+	FIELD("Assembly-CSharp::ProjectileShoot.Projectile::ShouldPool", ShouldPool, bool);
+	FIELD("Assembly-CSharp::ProjectileShoot.Projectile::projectileID", projectileID, int);
+	FIELD("Assembly-CSharp::ProjectileShoot.Projectile::startPos", startPos, Vector3);
+	FIELD("Assembly-CSharp::ProjectileShoot.Projectile::startVel", startVel, Vector3);
+	FIELD("Assembly-CSharp::ProjectileShoot.Projectile::seed", seed, int);
 };
+class ProjectileShoot
+{
+public:
+	FIELD("Assembly-CSharp::ProjectileShoot::ShouldPool", ShouldPool, bool);
+	FIELD("Assembly-CSharp::ProjectileShoot::ammoType", ammoType, int);
+	FIELD("Assembly-CSharp::ProjectileShoot::projectiles", projectiles, ListDictionary*);
+}; 
 
 Matrix viewMatrix = {};
 class Camera {
@@ -2542,6 +2614,8 @@ public:
 	FIELD("Assembly-CSharp::BaseProjectile::aimSway", aimSway, float);
 	FIELD("Assembly-CSharp::BaseProjectile::aimSwaySpeed", aimSwaySpeed, float);
 
+
+
 	void LaunchProjectile()
 	{
 		if (!this) return;
@@ -2770,6 +2844,10 @@ void initialize_cheat( ) {
 	ASSIGN_HOOK("Assembly-CSharp::BasePlayer::SendClientTick(): Void", BasePlayer::SendClientTick_);
 
 	ASSIGN_HOOK("Assembly-CSharp::Projectile::Launch(): Void", Projectile::Launch_);
+
+	settings::il_init_methods = find(xorstr_("GameAssembly.dll"), "48 83 EC 48 48 8B 05 ? ? ? ? 48 63 90 ? ? ? ?");
+
+	settings::serverrpc_projectileshoot = find_rel(xorstr_("GameAssembly.dll"), xorstr_("4C 8B 0D ? ? ? ? 48 8B 75 28"));
 
 	settings::cheat_init = true;
 

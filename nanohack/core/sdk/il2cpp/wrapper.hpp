@@ -1,6 +1,6 @@
 #pragma once
-
-
+#include <core/sdk/utils/xorstr.hpp>
+#include <libloaderapi.h>
 
 auto gameAssembly = GetModuleHandleA(xorstr_("GameAssembly.dll"));
 

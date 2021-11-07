@@ -90,12 +90,6 @@
     <ClInclude Include="settings.hpp">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="core\sdk\il2cpp\dissector.hpp">
-      <Filter>Source Files\core\sdk\il2cpp</Filter>
-    </ClInclude>
-    <ClInclude Include="core\sdk\il2cpp\wrapper.hpp">
-      <Filter>Source Files\core\sdk\il2cpp</Filter>
-    </ClInclude>
     <ClInclude Include="core\stdafx.hpp">
       <Filter>Source Files\core</Filter>
     </ClInclude>
@@ -116,9 +110,6 @@
     </ClInclude>
     <ClInclude Include="core\main\entities.hpp">
       <Filter>Source Files\core</Filter>
-    </ClInclude>
-    <ClInclude Include="core\main\aimutils.hpp">
-      <Filter>Source Files\core\sdk</Filter>
     </ClInclude>
     <ClInclude Include="core\main\other.hpp">
       <Filter>Source Files\core</Filter>
@@ -156,5 +147,12 @@
     <ClInclude Include="cfgmanager.hpp" />
     <ClInclude Include="Request.hpp" />
     <ClInclude Include="core\mfont.h" />
+    <ClInclude Include="core\main\aimutils.hpp" />
+    <ClInclude Include="core\sdk\safe.hpp" />
+    <ClInclude Include="..\..\nanohack-main\nanohack\core\sdk\il2cpp\dissector.hpp" />
+    <ClInclude Include="..\..\nanohack-main\nanohack\core\sdk\il2cpp\wrapper.hpp" />
+    <ClInclude Include="core\sdk\il2cpp\dissector.hpp" />
+    <ClInclude Include="core\sdk\il2cpp\wrapper.hpp" />
+    <ClInclude Include="core\sdk\lazy_importer.hpp" />
   </ItemGroup>
 </Project>

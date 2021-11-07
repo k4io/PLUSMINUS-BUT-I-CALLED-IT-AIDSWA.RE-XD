@@ -190,19 +190,24 @@
     <ClCompile Include="FGUI\widgets\widgets.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\nanohack-main\nanohack\core\sdk\il2cpp\dissector.hpp" />
+    <ClInclude Include="..\..\nanohack-main\nanohack\core\sdk\il2cpp\wrapper.hpp" />
     <ClInclude Include="cfgmanager.hpp" />
+    <ClInclude Include="core\main\aimutils.hpp" />
     <ClInclude Include="core\mfont.h" />
+    <ClInclude Include="core\sdk\il2cpp\dissector.hpp" />
+    <ClInclude Include="core\sdk\il2cpp\wrapper.hpp" />
+    <ClInclude Include="core\sdk\lazy_importer.hpp" />
+    <ClInclude Include="core\sdk\safe.hpp" />
     <ClInclude Include="Request.hpp" />
     <ClInclude Include="utils\Fingerprint.hpp" />
     <ClInclude Include="utils\WinReg.hpp" />
     <ClInclude Include="core\drawing\fgui\FInput.hpp" />
     <ClInclude Include="core\drawing\fgui\FRenderer.hpp" />
     <ClInclude Include="core\drawing\ui.hpp" />
-    <ClInclude Include="core\main\aimutils.hpp" />
     <ClInclude Include="core\main\cache.hpp" />
     <ClInclude Include="core\sdk\utils\crc32.hpp" />
     <ClInclude Include="core\drawing\d3d.hpp" />
-    <ClInclude Include="core\sdk\il2cpp\dissector.hpp" />
     <ClInclude Include="core\sdk\utils\math.hpp" />
     <ClInclude Include="core\main\other.hpp" />
     <ClInclude Include="core\main\entities.hpp" />
@@ -236,7 +241,6 @@
     <ClInclude Include="core\stdafx.hpp" />
     <ClInclude Include="core\sdk\structs.hpp" />
     <ClInclude Include="core\sdk\vector.hpp" />
-    <ClInclude Include="core\sdk\il2cpp\wrapper.hpp" />
     <ClInclude Include="core\sdk\utils\xorstr.hpp" />
     <ClInclude Include="utils\Cryptography.hpp" />
   </ItemGroup>

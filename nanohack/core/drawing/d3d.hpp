@@ -4,6 +4,8 @@ bool menu_init = false;
 
 void undo_hooks( );
 
+
+
 namespace d3d {
 	HRESULT present_hook(IDXGISwapChain* swapChain, UINT syncInterval, UINT flags) {
 		static Vector2 text_size = Vector2(0, 0);
@@ -102,7 +104,7 @@ namespace d3d {
 		game_assembly = (uintptr_t)GetModuleHandleA(xorstr_("GameAssembly.dll"));
 
 		auto addr = mem::find_pattern(unity_player, (PBYTE)"\x48\x83\xEC\x28\xE8\x00\x00\x00\x00\x48\x8B\x80\xA0\x03\x00\x00", xorstr_("xxxxx????xxxxxxx"));
-
+		
 		if (!addr)
 			return false;
 

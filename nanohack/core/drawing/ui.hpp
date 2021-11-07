@@ -345,6 +345,7 @@ namespace aidsware::ui
 		wrapper::checkbox(xorstr_("infinite jump"), Vector2(0, 0), Tabs::Misc);
 		wrapper::checkbox(xorstr_("can hold items"), Vector2(0, 0), Tabs::Misc);
 		wrapper::checkbox(xorstr_("omnisprint"), Vector2(0, 0), Tabs::Misc);
+		//wrapper::checkbox(xorstr_("flyhack stop"), Vector2(0, 0), Tabs::Misc);
 		wrapper::checkbox(xorstr_("no fall"), Vector2(0, 0), Tabs::Misc);
 		wrapper::checkbox(xorstr_("fake shots"), Vector2(0, 0), Tabs::Misc, true, false);
 		wrapper::reset_height();
