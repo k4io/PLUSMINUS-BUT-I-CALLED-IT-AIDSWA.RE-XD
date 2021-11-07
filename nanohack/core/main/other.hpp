@@ -1,11 +1,6 @@
 namespace other {
 	Vector3 m_manipulate = Vector3::Zero( );
 
-	static inline float MAX(const float& A, const float& B)
-	{
-		return (A > B ? A : B);
-	}
-
 	bool ValidateEyePos(Vector3 position) //returns true if invalid
 	{
 		auto loco = LocalPlayer::Entity();

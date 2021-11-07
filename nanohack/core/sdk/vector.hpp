@@ -211,6 +211,8 @@ public:
 		z = fz;
 	}
 
+	inline float Length() { return sqrtf(x * x + y * y + z * z); }
+
 	static Vector3 Zero( ) {
 		return Vector3(0.0f, 0.0f, 0.0f);
 	}

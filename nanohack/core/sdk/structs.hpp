@@ -160,8 +160,8 @@ struct Line {
 	Vector3 point1;
 
 	Line(Vector3 point0, Vector3 point1) {
-		this->point0 = point0;
-		this->point1 = point1;
+		this->point0 = point0; //prev pos
+		this->point1 = point1; //current pos
 	}
 
 	Line(Vector3 origin, Vector3 direction, float length) {

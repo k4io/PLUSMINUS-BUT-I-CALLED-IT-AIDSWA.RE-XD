@@ -13,6 +13,11 @@ namespace settings {
 
 	HWND console_window = 0;
 
+	float max_flyhack = 0.f;
+	float max_hor_flyhack = 0.f;
+	float flyhack = 0.f;
+	float hor_flyhack = 0.f;
+
 	namespace tr {
 		bool manipulated = false;
 		bool manipulate_visible = false;

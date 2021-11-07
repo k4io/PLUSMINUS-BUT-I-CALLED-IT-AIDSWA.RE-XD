@@ -198,6 +198,66 @@ public:
 		return type;
 	}
 };
+float timee = 120.f;
+bool sdk_initialized = false;
+bool timer_initialized = false;
+float timeSinceStartup = 0;
+float timeFrequency = 0;
+float get_time_since_startup() {
+	LARGE_INTEGER PerformanceCount;
+	LARGE_INTEGER FrequencyCount;
+
+	if (!timer_initialized) {
+		timer_initialized = true;
+
+		PerformanceCount.QuadPart = 0;
+		QueryPerformanceCounter(&PerformanceCount);
+
+		FrequencyCount.QuadPart = 0;
+		QueryPerformanceFrequency(&FrequencyCount);
+
+		timeFrequency = float(FrequencyCount.QuadPart);
+
+		timeSinceStartup = float(PerformanceCount.QuadPart);
+	}
+
+	PerformanceCount.QuadPart = 0;
+	QueryPerformanceCounter(&PerformanceCount);
+
+	return float(PerformanceCount.QuadPart - timeSinceStartup) / timeFrequency;
+}
+class BulletTracer {
+public:
+	Vector3 start;
+	Vector3 end;
+	BulletTracer() {
+		this->start = Vector3::Zero();
+		this->end = Vector3::Zero();
+	}
+	BulletTracer(Vector3 st, Vector3 en) {
+		this->start = st;
+		this->end = en;
+	}
+};
+struct Explosion {
+public:
+	std::string name;
+	float timeSince;
+	Vector3 position;
+};
+struct TraceResult {
+	float hitDist;
+	Vector3 hitPosition;
+	Vector3 outVelocity;
+	float hitTime;
+
+	TraceResult() {
+		this->hitDist = 0.f;
+		this->hitPosition = Vector3::Zero();
+		this->outVelocity = Vector3::Zero();
+		this->hitTime = 0.f;
+	}
+};
 typedef struct _UncStr {
 	char stub[0x10];
 	int len;
@@ -673,12 +733,6 @@ public:
 	void OnAttacked(HitInfo* info) {
 		return OnAttacked_(this, info);
 	}
-};
-struct Explosion {
-public:
-	std::string name;
-	float timeSince;
-	Vector3 position;
 };
 class ConsoleSystem {
 public:
@@ -1238,61 +1292,6 @@ class TraceInfo {
 	}
 };
 */
-class Projectile : public Component {
-public:
-	FIELD("Assembly-CSharp::Projectile::swimRandom", swimRandom, float);
-	FIELD("Assembly-CSharp::Projectile::drag", drag, float);
-	FIELD("Assembly-CSharp::Projectile::thickness", thickness, float);
-	FIELD("Assembly-CSharp::Projectile::projectileID", projectileID, int);
-	FIELD("Assembly-CSharp::Projectile::mod", mod, ItemModProjectile*);
-	FIELD("Assembly-CSharp::Projectile::traveledDistance", traveledDistance, float);
-	FIELD("Assembly-CSharp::Projectile::initialDistance", initialDistance, float);
-	FIELD("Assembly-CSharp::Projectile::ricochetChance", ricochetChance, float);
-	FIELD("Assembly-CSharp::Projectile::currentPosition", currentPosition, Vector3);
-	FIELD("Assembly-CSharp::Projectile::hitTest", hitTest, HitTest*);
-	FIELD("Assembly-CSharp::Projectile::currentVelocity", currentVelocity, Vector3);
-	FIELD("Assembly-CSharp::Projectile::gravityModifier", gravityModifier, float);
-
-	static inline void(*Launch_)(Projectile*) = nullptr;
-	void Launch( ) {
-		return Launch_(this);
-	}
-	static inline void(*DoMovement_)(Projectile*, float) = nullptr;
-	void DoMovement(float deltaTime) {
-		return DoMovement_(this, deltaTime);
-	}
-	static inline void(*Update_)(Projectile*) = nullptr;
-	void Update( ) {
-		return Update_(this);
-	}
-	static inline void(*Retire_)(Projectile*) = nullptr;
-	void Retire( ) {
-		return Retire_(this);
-	}
-	static inline bool(*Refract_)(Projectile*, uint64_t&, Vector3, Vector3, float) = nullptr;
-	bool Refract( uint64_t& seed, Vector3 point, Vector3 normal, float resistance) {
-		return Refract_(this, seed, point, normal, resistance);
-	}
-	static inline void(*SetEffectScale_)(Projectile*, float) = nullptr;
-	void SetEffectScale(float sca) {
-		return SetEffectScale_(this, sca);
-	}
-	static inline bool(*DoHit_)(Projectile*, HitTest*, Vector3, Vector3) = nullptr;
-	bool DoHit(HitTest* test, Vector3 point, Vector3 world) {
-		return DoHit_(this, test, point, world);
-	}
-
-	bool isAuthoritative( ) {
-		if (!this) return false;
-		static auto off = METHOD("Assembly-CSharp::Projectile::get_isAuthoritative(): Boolean");
-		return reinterpret_cast<bool(__fastcall*)(Projectile*)>(off)(this);
-	}
-	bool isAlive( ) {
-		if (!this) return false;
-		static auto off = METHOD("Assembly-CSharp::Projectile::get_isAlive(): Boolean");
-		return reinterpret_cast<bool(__fastcall*)(Projectile*)>(off)(this);
-	}
-};
 class AttackEntity : public BaseEntity {
 public:
 	FIELD("Assembly-CSharp::AttackEntity::lastTickTime", lastTickTime, float);
@@ -1375,6 +1374,7 @@ public:
 	FIELD("Assembly-CSharp::PlayerModel::_multiMesh", _multiMesh, SkinnedMultiMesh*);
 	FIELD("Assembly-CSharp::PlayerModel::MaleSkin", MaleSkin, SkinSetCollection*);
 	FIELD("Assembly-CSharp::PlayerModel::FemaleSkin", FemaleSkin, SkinSetCollection*);
+	FIELD("Assembly-CSharp::PlayerModel::velocity", velocity, Vector3);
 };
 class TOD_AtmosphereParameters {
 public:
@@ -1573,6 +1573,10 @@ public:
 
 float MAX(const float& A, const float& B) { return (A > B ? A : B); }
 
+
+float flyhackDistanceVertical = 0.f;
+float flyhackDistanceHorizontal = 0.f;
+float flyhackPauseTime;
 class BasePlayer;
 
 BasePlayer* target_ply = nullptr;
@@ -1628,6 +1632,7 @@ public:
 	FIELD("Assembly-CSharp::BasePlayer::eyes", eyes, PlayerEyes*);
 	FIELD("Assembly-CSharp::BasePlayer::lastHeadshotSoundTime", lastHeadshotSoundTime, float);
 	FIELD("Assembly-CSharp::BasePlayer::lastSentTickTime", lastSentTickTime, float);
+	FIELD("Assembly-CSharp::BasePlayer::lastSentTick", lastSentTick, PlayerTick*);
 	FIELD("Assembly-CSharp::BasePlayer::clientTickInterval", clientTickInterval, float);
 
 	bool IsDucked( ) { // lad don't fancy calling functions in a non-game thread, eh, thy lad shall recreate it.
@@ -1739,10 +1744,10 @@ public:
 
 		return this->GetMaxSpeed( );
 	}
-	float GetHeight(bool ducked) {
+	float GetHeight() {
 		if (!this) return 0.f;
 		static auto off = METHOD("Assembly-CSharp::BasePlayer::GetHeight(Boolean): Single");
-		return reinterpret_cast<float(__fastcall*)(BasePlayer*, bool)>(off)(this, ducked);
+		return reinterpret_cast<float(__fastcall*)(BasePlayer*, bool)>(off)(this, this->IsDucked());
 	}
 	static ListDictionary* visiblePlayerList( ) {
 		static auto clazz = CLASS("Assembly-CSharp::BasePlayer");
@@ -1889,6 +1894,405 @@ public:
 		return nullptr;
 	}
 };
+
+TraceResult traceProjectile(Vector3 position, Vector3 velocity, float drag, Vector3 gravity, Vector3 targetPoint) {
+	//constexpr float num = 0.03125f;
+	constexpr float num = 0.015625f;
+	Vector3 prevPosition = position;
+	float prevDist = FLT_MAX;
+	Line resultLine = Line(position, position);
+	float travelTime = 0.f;
+	TraceResult result;
+
+	for (; travelTime < 8.f; ) {
+		prevPosition = position;
+		position += velocity * num;
+
+		Line line = Line(prevPosition, position);
+		Vector3 nearest = line.ClosestPoint(targetPoint);
+
+		float dst = (nearest - targetPoint).Length();
+
+		if (dst > prevDist) {
+			printf("dst > prevdist\n");
+			break;
+		}
+		prevDist = dst;
+		resultLine = line;
+
+		velocity += gravity * num;
+		velocity -= velocity * drag * num;
+		travelTime += num;
+	}
+
+	Vector3 hitPos = resultLine.ClosestPoint(targetPoint);
+
+	result.hitDist = (hitPos - targetPoint).Length();
+	result.hitPosition = hitPos;
+	result.outVelocity = velocity;
+	result.hitTime = travelTime - num;
+	return result;
+};
+
+Matrix viewMatrix = {};
+class Camera {
+public:
+	static char* memstr(char* haystack, const char* needle, int size) {
+		char* p;
+		char needlesize = strlen(needle);
+
+		for (p = haystack; p <= (haystack - needlesize + size); p++) {
+			if (memcmp(p, needle, needlesize) == 0)
+				return p; /* found */
+		}
+
+		return NULL;
+	}
+	static uint64_t GetCamera() {
+		const auto base = (uint64_t)GetModuleHandleA(xorstr_("UnityPlayer.dll"));
+
+		if (!base)
+			return 0;
+
+		const auto dos_header = reinterpret_cast<IMAGE_DOS_HEADER*>(base);
+		const auto nt_header = reinterpret_cast<IMAGE_NT_HEADERS64*>(base + dos_header->e_lfanew);
+
+		uint64_t data_base;
+		uint64_t data_size;
+
+		for (int i = 0;;) {
+			const auto section = reinterpret_cast<IMAGE_SECTION_HEADER*>(
+				base + dos_header->e_lfanew + // nt_header base 
+				sizeof(IMAGE_NT_HEADERS64) +  // start of section headers
+				(i * sizeof(IMAGE_SECTION_HEADER))); // section header at our index
+
+			if (strcmp((char*)section->Name, xorstr_(".data")) == 0) {
+				data_base = section->VirtualAddress + base;
+				data_size = section->SizeOfRawData;
+				break;
+			}
+
+			i++;
+
+			if (i >= nt_header->FileHeader.NumberOfSections) {
+				return 0;
+			}
+		}
+
+		uint64_t camera_table = 0;
+
+		const auto camera_string = memstr((char*)data_base, xorstr_("AllCameras"), data_size);
+		for (auto walker = (uint64_t*)camera_string; walker > 0; walker -= 1) {
+			if (*walker > 0x100000 && *walker < 0xF00000000000000) {
+				// [[[[unityplayer.dll + ctable offset]]] + 0x30] = Camera
+				camera_table = *walker;
+				break;
+			}
+		}
+
+		if (camera_table)
+			return camera_table;
+
+		return 0;
+	}
+	static bool world_to_screen(Vector3 world, Vector2& screen) {
+		const auto matrix = viewMatrix.transpose();
+
+		const Vector3 translation = { matrix[3][0], matrix[3][1], matrix[3][2] };
+		const Vector3 up = { matrix[1][0], matrix[1][1], matrix[1][2] };
+		const Vector3 right = { matrix[0][0], matrix[0][1], matrix[0][2] };
+
+		const auto w = translation.dot_product(world) + matrix[3][3];
+
+		if (w < 0.1f)
+			return false;
+
+		const auto x = right.dot_product(world) + matrix[0][3];
+		const auto y = up.dot_product(world) + matrix[1][3];
+
+		screen =
+		{
+			screen_center.x * (1.f + x / w),
+			screen_center.y * (1.f - y / w)
+		};
+
+		return true;
+	}
+
+	static Matrix getViewMatrix() {
+		static auto camera_list = GetCamera();
+		if (!camera_list) return Matrix();
+
+		auto camera_table = *reinterpret_cast<uint64_t*>(camera_list);
+		auto cam = *reinterpret_cast<uint64_t*>(camera_table);
+
+		return *reinterpret_cast<Matrix*>(cam + 0x2E4);
+	}
+};
+
+class LogSystem {
+public:
+	static inline int max_entries = 10;
+
+	static void draw_text(Vector2, std::wstring);
+	static void draw_line(Vector2, Vector2);
+
+	struct LogEntry {
+	public:
+		std::wstring message;
+		float startedAt;
+		float duration;
+
+		LogEntry(std::wstring message, float duration) {
+			this->message = message;
+			this->duration = duration;
+			this->startedAt = get_time_since_startup();
+		}
+	};
+
+	static inline std::vector<LogEntry> logs = std::vector<LogEntry>();
+	static inline std::vector<Explosion> loggedExplosions = std::vector<Explosion>();
+	static inline std::vector<BulletTracer> bulletTracers = std::vector<BulletTracer>();
+	static inline std::vector<TraceResult> traceResults = std::vector<TraceResult>();
+
+	static void Log(std::wstring message, float duration) {
+		if (logs.size() >= max_entries)
+			logs.erase(logs.begin());
+
+		logs.push_back(LogEntry(message, duration));
+	}
+	static void AddTraceResult(TraceResult res) {
+		traceResults.push_back(res);
+
+		if (traceResults.size() > 1)
+			traceResults.erase(traceResults.begin());
+	}
+	static void AddTracer(Vector3 start, Vector3 end) {
+		bulletTracers.push_back(BulletTracer(start, end));
+
+		if (bulletTracers.size() > 1)
+			bulletTracers.erase(bulletTracers.begin());
+	}
+	static void LogExplosion(std::string type, Vector3 pos) {
+		bool explosionCollision = false;
+		std::vector<Explosion>::iterator it;
+		for (it = loggedExplosions.begin(); it != loggedExplosions.end(); it++) {
+			Vector2 explPos;
+			if (it->position.distance(pos) <= 25.0f) {
+				explosionCollision = true;
+				break;
+			}
+		}
+		if (!explosionCollision) {
+			Explosion explosion = Explosion();
+			explosion.name = StringFormat::format(xorstr_("%s Raid"), type.c_str());
+			explosion.position = pos;
+			explosion.timeSince = get_time_since_startup();
+			loggedExplosions.push_back(explosion);
+		}
+	}
+
+	static void Render() {
+		float yPos = 30.0f;
+		for (int i = 0; i < logs.size(); i++) {
+			LogEntry entry = logs[i];
+			if ((get_time_since_startup() - entry.startedAt) >= entry.duration) {
+				logs.erase(logs.begin() + i);
+				continue;
+			}
+			draw_text(Vector2(200, yPos), entry.message);
+			yPos += 15.0f;
+		}
+	}
+	static void RenderTracers() {
+		for (int i = 0; i < bulletTracers.size(); i++) {
+			BulletTracer tracer = bulletTracers[i];
+
+			Vector2 s_pos_start; Vector2 s_pos_end;
+			if (Camera::world_to_screen(tracer.start, s_pos_start) && Camera::world_to_screen(tracer.end, s_pos_end)) {
+				draw_line(s_pos_start, s_pos_end);
+			}
+		}
+	}
+	static void RenderTraceResults() {
+		for (int i = 0; i < traceResults.size(); i++) {
+			TraceResult tracer = traceResults[i];
+
+			Vector2 s_pos_end;
+			if (Camera::world_to_screen(tracer.hitPosition, s_pos_end)) {
+				//draw_line(s_pos_start, s_pos_end);
+				Renderer::filled_circle(s_pos_end, { 56, 104, 186 }, 5.f);
+			}
+		}
+	}
+	static void RenderExplosions() {
+		for (int i = 0; i < LogSystem::loggedExplosions.size(); i++) {
+			if ((get_time_since_startup() - LogSystem::loggedExplosions[i].timeSince) >= timee) {
+				LogSystem::loggedExplosions.erase(LogSystem::loggedExplosions.begin() + i);
+				continue;
+			}
+			Explosion explosion = LogSystem::loggedExplosions.at(i);
+
+			Vector2 explPos;
+			if (Camera::world_to_screen(explosion.position, explPos)) {
+				Renderer::text(
+					explPos,
+					{ 156, 14, 45 },
+					14.f,
+					true,
+					true,
+					StringConverter::ToUnicode(StringFormat::format(xorstr_("%s [%.2fm] [%d]"),
+						explosion.name.c_str(),
+						explosion.position.distance(LocalPlayer::Entity()->transform()->position()),
+						(int)(timee - (get_time_since_startup() - LogSystem::loggedExplosions[i].timeSince)))).c_str()
+				);
+			}
+		}
+	}
+};
+void LogSystem::draw_text(Vector2 pos, std::wstring str) {
+	Renderer::text(pos, { 177, 177, 177 }, 14.f, false, true, str.c_str());
+}
+void LogSystem::draw_line(Vector2 pos, Vector2 pos2) {
+	Renderer::line(pos, pos2, { 156, 14, 45 }, 1.f, true);
+}
+
+class Projectile : public Component {
+public:
+	FIELD("Assembly-CSharp::Projectile::swimRandom", swimRandom, float);
+	FIELD("Assembly-CSharp::Projectile::drag", drag, float);
+	FIELD("Assembly-CSharp::Projectile::thickness", thickness, float);
+	FIELD("Assembly-CSharp::Projectile::projectileID", projectileID, int);
+	FIELD("Assembly-CSharp::Projectile::mod", mod, ItemModProjectile*);
+	FIELD("Assembly-CSharp::Projectile::traveledDistance", traveledDistance, float);
+	FIELD("Assembly-CSharp::Projectile::initialDistance", initialDistance, float);
+	FIELD("Assembly-CSharp::Projectile::initialVelocity", initialVelocity, Vector3);
+	FIELD("Assembly-CSharp::Projectile::ricochetChance", ricochetChance, float);
+	FIELD("Assembly-CSharp::Projectile::currentPosition", currentPosition, Vector3);
+	FIELD("Assembly-CSharp::Projectile::hitTest", hitTest, HitTest*);
+	FIELD("Assembly-CSharp::Projectile::currentVelocity", currentVelocity, Vector3);
+	FIELD("Assembly-CSharp::Projectile::gravityModifier", gravityModifier, float);
+
+	static inline void(*Launch_)(Projectile*) = nullptr;
+	void Launch() {
+		
+		auto mpv = target_ply->find_mpv_bone();
+		Vector3 target;
+		if (mpv != nullptr)
+			target = mpv->position;
+		else
+			target = target_ply->bones()->head->position;
+
+		TraceResult f = traceProjectile(LocalPlayer::Entity()->eyes()->get_position(),
+			this->initialVelocity(),
+			this->drag(),
+			Vector3(0, -9.1 * this->gravityModifier(), 0),
+			target);
+
+		LogSystem::AddTraceResult(f);
+		
+		return Launch_(this);
+	}
+	static inline void(*DoMovement_)(Projectile*, float) = nullptr;
+	void DoMovement(float deltaTime) {
+		return DoMovement_(this, deltaTime);
+	}
+	static inline void(*Update_)(Projectile*) = nullptr;
+	void Update() {
+		return Update_(this);
+	}
+	static inline void(*Retire_)(Projectile*) = nullptr;
+	void Retire() {
+		return Retire_(this);
+	}
+	static inline bool(*Refract_)(Projectile*, uint64_t&, Vector3, Vector3, float) = nullptr;
+	bool Refract(uint64_t& seed, Vector3 point, Vector3 normal, float resistance) {
+		return Refract_(this, seed, point, normal, resistance);
+	}
+	static inline void(*SetEffectScale_)(Projectile*, float) = nullptr;
+	void SetEffectScale(float sca) {
+		return SetEffectScale_(this, sca);
+	}
+	static inline bool(*DoHit_)(Projectile*, HitTest*, Vector3, Vector3) = nullptr;
+	bool DoHit(HitTest* test, Vector3 point, Vector3 world) {
+		return DoHit_(this, test, point, world);
+	}
+
+	bool isAuthoritative() {
+		if (!this) return false;
+		static auto off = METHOD("Assembly-CSharp::Projectile::get_isAuthoritative(): Boolean");
+		return reinterpret_cast<bool(__fastcall*)(Projectile*)>(off)(this);
+	}
+	bool isAlive() {
+		if (!this) return false;
+		static auto off = METHOD("Assembly-CSharp::Projectile::get_isAlive(): Boolean");
+		return reinterpret_cast<bool(__fastcall*)(Projectile*)>(off)(this);
+	}
+};
+
+void TestFlying() {
+	flyhackPauseTime = MAX(0.f, flyhackPauseTime - Time::deltaTime());
+	bool inAir = false;
+	float radius = LocalPlayer::Entity()->GetHeight();
+	float height = LocalPlayer::Entity()->GetRadius();
+	Vector3 vector = (LocalPlayer::Entity()->lastSentTick()->position() + LocalPlayer::Entity()->transform()->position()) * 0.5f;
+	Vector3 vector2 = vector + Vector3(0.f, radius - 2.f, 0.f);
+	Vector3 vector3 = vector + Vector3(0.f, height - radius, 0.f);
+	float radius2 = radius - 0.05f;
+	bool a = GamePhysics::CheckCapsule(vector2, vector3, radius2, 1503731969, GamePhysics::QueryTriggerInteraction::Ignore);
+	inAir = !a;
+
+	if (inAir) {
+		bool flag = false;
+		//read(read(LocalPlayer::Entity() + 0x4B0, uintptr_t) + 0x1D8, Vector3) = LocalPlayer::Entity()->transform()->position()
+		Vector3 vector4 = LocalPlayer::Entity()->transform()->position() - LocalPlayer::Entity()->lastSentTick()->position();
+		float num3 = std::abs(vector4.y);
+		float num4 = vector4.magnitude2d();
+		if (vector4.y >= 0.f) {
+			flyhackDistanceVertical += vector4.y;
+			flag = true;
+		}
+		if (num3 < num4) {
+			flyhackDistanceHorizontal += num4;
+			flag = true;
+		}
+		if (flag) {
+			float num5 = MAX((flyhackPauseTime > 0.f) ? 10 : 1.5, 0.f);
+			float num6 = LocalPlayer::Entity()->GetJumpHeight() + num5;
+			if (flyhackDistanceVertical > num6) {
+				printf("idk but ok? 1\n");
+				//return true;
+			}
+			float num7 = MAX((flyhackPauseTime > 0.f) ? 10 : 1.5, 0.f);
+			float num8 = 5.f + num7;
+			if (flyhackDistanceHorizontal > num8) {
+				printf("idk but ok? 2\n");
+				//return true;
+			}
+		}
+	}
+	else {
+		flyhackDistanceHorizontal = 0.f;
+		flyhackDistanceVertical = 0.f;
+	}
+}
+void CheckFlyhack() {
+	TestFlying();
+	float num5 = MAX((flyhackPauseTime > 0.f) ? 10 : 1.5, 0.f);
+	float num6 = LocalPlayer::Entity()->GetJumpHeight() + num5;
+	settings::max_flyhack = num6;
+	if (flyhackDistanceVertical <= num6) {
+		settings::flyhack = flyhackDistanceVertical;
+	}
+
+	float num7 = MAX((flyhackPauseTime > 0.f) ? 10 : 1.5, 0.f);
+	float num8 = 5.f + num7;
+	settings::max_hor_flyhack = num8;
+	if (flyhackDistanceHorizontal <= num8) {
+		settings::hor_flyhack = flyhackDistanceHorizontal;
+	}
+}
+
 /*
 bool isInAir = false;
 //bool isOnPlayer = false;
@@ -2320,101 +2724,7 @@ public:
 		return GetModifiedAimConeDirection_(aimCone, inputVec, anywhereInside);
 	}
 };
-Matrix viewMatrix = {};
-class Camera {
-public:
-	static char* memstr(char* haystack, const char* needle, int size) {
-		char* p;
-		char needlesize = strlen(needle);
 
-		for (p = haystack; p <= (haystack - needlesize + size); p++) {
-			if (memcmp(p, needle, needlesize) == 0)
-				return p; /* found */
-		}
-
-		return NULL;
-	}
-	static uint64_t GetCamera() {
-		const auto base = (uint64_t)GetModuleHandleA(xorstr_("UnityPlayer.dll"));
-
-		if (!base)
-			return 0;
-
-		const auto dos_header = reinterpret_cast<IMAGE_DOS_HEADER*>(base);
-		const auto nt_header = reinterpret_cast<IMAGE_NT_HEADERS64*>(base + dos_header->e_lfanew);
-
-		uint64_t data_base;
-		uint64_t data_size;
-
-		for (int i = 0;;) {
-			const auto section = reinterpret_cast<IMAGE_SECTION_HEADER*>(
-				base + dos_header->e_lfanew + // nt_header base 
-				sizeof(IMAGE_NT_HEADERS64) +  // start of section headers
-				(i * sizeof(IMAGE_SECTION_HEADER))); // section header at our index
-
-			if (strcmp((char*)section->Name, xorstr_(".data")) == 0) {
-				data_base = section->VirtualAddress + base;
-				data_size = section->SizeOfRawData;
-				break;
-			}
-
-			i++;
-
-			if (i >= nt_header->FileHeader.NumberOfSections) {
-				return 0;
-			}
-		}
-
-		uint64_t camera_table = 0;
-
-		const auto camera_string = memstr((char*)data_base, xorstr_("AllCameras"), data_size);
-		for (auto walker = (uint64_t*)camera_string; walker > 0; walker -= 1) {
-			if (*walker > 0x100000 && *walker < 0xF00000000000000) {
-				// [[[[unityplayer.dll + ctable offset]]] + 0x30] = Camera
-				camera_table = *walker;
-				break;
-			}
-		}
-
-		if (camera_table)
-			return camera_table;
-
-		return 0;
-	}
-	static bool world_to_screen(Vector3 world, Vector2& screen) {
-		const auto matrix = viewMatrix.transpose();
-
-		const Vector3 translation = { matrix[3][0], matrix[3][1], matrix[3][2] };
-		const Vector3 up = { matrix[1][0], matrix[1][1], matrix[1][2] };
-		const Vector3 right = { matrix[0][0], matrix[0][1], matrix[0][2] };
-
-		const auto w = translation.dot_product(world) + matrix[3][3];
-
-		if (w < 0.1f)
-			return false;
-
-		const auto x = right.dot_product(world) + matrix[0][3];
-		const auto y = up.dot_product(world) + matrix[1][3];
-
-		screen =
-		{
-			screen_center.x * (1.f + x / w),
-			screen_center.y * (1.f - y / w)
-		};
-
-		return true;
-	}
-
-	static Matrix getViewMatrix() {
-		static auto camera_list = GetCamera();
-		if (!camera_list) return Matrix();
-
-		auto camera_table = *reinterpret_cast<uint64_t*>(camera_list);
-		auto cam = *reinterpret_cast<uint64_t*>(camera_table);
-
-		return *reinterpret_cast<Matrix*>(cam + 0x2E4);
-	}
-};
 void initialize_cheat( ) {
 	VM_DOLPHIN_BLACK_START
 	init_classes( );
@@ -2456,6 +2766,8 @@ void initialize_cheat( ) {
 	ASSIGN_HOOK("UnityEngine.CoreModule::UnityEngine::Vector3::MoveTowards(Vector3,Vector3,Single): Vector3", Vector3_::MoveTowards_);
 
 	ASSIGN_HOOK("Assembly-CSharp::BasePlayer::SendClientTick(): Void", BasePlayer::SendClientTick_);
+
+	ASSIGN_HOOK("Assembly-CSharp::Projectile::Launch(): Void", Projectile::Launch_);
 
 	settings::cheat_init = true;
 

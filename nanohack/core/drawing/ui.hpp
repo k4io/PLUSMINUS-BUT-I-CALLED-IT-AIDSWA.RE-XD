@@ -251,7 +251,7 @@ namespace aidsware::ui
 		wrapper::checkbox(xorstr_("insta kill"), Vector2(0, 0), Tabs::Combat);
 		wrapper::keybind(xorstr_("insta kill key"), Vector2(0, 0.0f), Tabs::Combat);
 		wrapper::currentY += 10.f;
-		wrapper::slider(xorstr_("counter"), Vector2(0, 0), 5.0f, 0.0f, 9.f, Tabs::Combat);
+		wrapper::slider(xorstr_("counter"), Vector2(0, 0), 5.0f, 0.0f, 9.0f, Tabs::Combat);
 		wrapper::slider(xorstr_("bullets"), Vector2(0, 0), 1.0f, 0.0f, 5.0f, Tabs::Combat);
 		wrapper::checkbox(xorstr_("with peek assist"), Vector2(0, 0), Tabs::Combat);
 		wrapper::currentX += 20.f;

@@ -192,6 +192,7 @@ namespace entities {
 			target_ply = nullptr;
 			return;
 		}
+		LogSystem::RenderTraceResults();
 
 		if (aidsware::ui::get_bool(xorstr_("reload indicator"))) {
 			auto held = local->GetHeldEntity<BaseProjectile>();
@@ -1204,58 +1205,3 @@ namespace entities {
 		}
 	}
 }
-float timee = 120.f;
-class LogSystem {
-public:
-	static inline int max_entries = 10;
-
-	struct LogEntry {
-	public:
-		std::wstring message;
-		float startedAt;
-		float duration;
-
-		LogEntry(std::wstring message, float duration) {
-			this->message = message;
-			this->duration = duration;
-			this->startedAt = Time::realtimeSinceStartup();
-		}
-	};
-
-	static inline std::vector<Explosion> loggedExplosions = std::vector<Explosion>();
-
-	static void LogExplosion(std::string type, Vector3 pos) {
-		bool explosionCollision = false;
-		std::vector<Explosion>::iterator it;
-		for (it = loggedExplosions.begin(); it != loggedExplosions.end(); it++) {
-			Vector2 explPos;
-			if (it->position.distance(pos) <= 25.0f) {
-				explosionCollision = true;
-				break;
-			}
-		}
-		if (!explosionCollision) {
-			Explosion explosion = Explosion();
-			explosion.name = StringFormat::format(xorstr_("%s Raid"), type.c_str());
-			explosion.position = pos;
-			explosion.timeSince = Time::realtimeSinceStartup();
-			loggedExplosions.push_back(explosion);
-		}
-	}
-	static void RenderExplosions() {
-		for (int i = 0; i < LogSystem::loggedExplosions.size(); i++) {
-			if ((Time::realtimeSinceStartup() - LogSystem::loggedExplosions[i].timeSince) >= timee) {
-				LogSystem::loggedExplosions.erase(LogSystem::loggedExplosions.begin() + i);
-				continue;
-			}
-			Explosion explosion = LogSystem::loggedExplosions.at(i);
-
-			Vector2 explPos;
-			if (Camera::world_to_screen(explosion.position, explPos)) {
-				Renderer::text(explPos, Color3(173, 11, 110), 12.f, true, true, wxorstr_(L"%s [%.2fm]"),
-					explosion.name.c_str(),
-					LocalPlayer::Entity()->transform()->position().distance(explosion.position));
-			}
-		}
-	}
-};

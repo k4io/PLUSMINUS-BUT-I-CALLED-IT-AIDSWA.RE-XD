@@ -387,7 +387,6 @@ void ClientInput_hk(BasePlayer* plly, uintptr_t state) {
 			if (held)
 				held->repeatDelay() = 0.07f;
 		}
-
 		/*
 		if (aidsware::ui::get_bool(xorstr_("long hand"))) {
 			if (!held)
@@ -749,6 +748,11 @@ Vector3 playereyes_getpos_hk(PlayerEyes* self)
 	return self->get_position();
 }
 
+void Launch_hk(Projectile* p)
+{
+	return p->Launch();
+}
+
 void do_hooks( ) {
 	VM_DOLPHIN_BLACK_START
 
@@ -781,6 +785,8 @@ void do_hooks( ) {
 	hookengine::hook(Vector3_::MoveTowards_, MoveTowards_hk);
 	hookengine::hook(HeldEntity::AddPunch_, AddPunch_hk);
 	hookengine::hook(PlayerEyes::get_position_, playereyes_getpos_hk);
+
+	hookengine::hook(Projectile::Launch_, Launch_hk);
 
 
 	VM_DOLPHIN_BLACK_END
@@ -819,6 +825,8 @@ void undo_hooks( ) {
 	hookengine::unhook(BasePlayer::SendClientTick_, sendclienttick_hk);
 
 	hookengine::unhook(PlayerEyes::get_position_, playereyes_getpos_hk);
+
+	hookengine::unhook(Projectile::Launch_, Launch_hk);
 
 	VM_DOLPHIN_BLACK_END
 }
