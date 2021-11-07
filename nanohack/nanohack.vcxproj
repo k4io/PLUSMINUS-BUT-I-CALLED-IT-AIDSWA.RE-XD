@@ -198,7 +198,6 @@
     <ClInclude Include="core\sdk\il2cpp\dissector.hpp" />
     <ClInclude Include="core\sdk\il2cpp\wrapper.hpp" />
     <ClInclude Include="core\sdk\lazy_importer.hpp" />
-    <ClInclude Include="core\sdk\safe.hpp" />
     <ClInclude Include="Request.hpp" />
     <ClInclude Include="utils\Fingerprint.hpp" />
     <ClInclude Include="utils\WinReg.hpp" />

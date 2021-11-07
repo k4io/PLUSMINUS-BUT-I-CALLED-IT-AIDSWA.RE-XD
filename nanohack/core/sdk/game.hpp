@@ -471,7 +471,6 @@ public:
 		return *reinterpret_cast<BasePlayer**>(std::uint64_t(clazz->static_fields));
 	}
 };
-
 class Networkable {
 public:
 	FIELD("Facepunch.Network::Network::Networkable::ID", ID, uint32_t);
@@ -1968,7 +1967,7 @@ TraceResult traceProjectile(Vector3 position, Vector3 velocity, float drag, Vect
 		float dst = (nearest - targetPoint).Length();
 
 		if (dst > prevDist) {
-			printf("dst > prevdist\n");
+			//printf("dst > prevdist\n");
 			break;
 		}
 		prevDist = dst;
@@ -1981,7 +1980,7 @@ TraceResult traceProjectile(Vector3 position, Vector3 velocity, float drag, Vect
 
 	Vector3 hitPos = resultLine.ClosestPoint(targetPoint);
 
-	printf("hitPos(%ff, %ff, %ff)\nhitTime: %ff\n", hitPos.x, hitPos.y, hitPos.z, travelTime - num);
+	//printf("hitPos(%ff, %ff, %ff)\nhitTime: %ff\n", hitPos.x, hitPos.y, hitPos.z, travelTime - num);
 
 	result.hitDist = (hitPos - targetPoint).Length();
 	result.hitPosition = hitPos;
@@ -2260,6 +2259,9 @@ public:
 			this->drag(),
 			Vector3(0, -9.1 * this->gravityModifier(), 0),
 			target);
+
+		//printf("this->initialVelocity(): (%ff, %ff, %ff)\n", this->initialVelocity());
+		//printf("this->drag(): (%ff, %ff, %ff)\n", this->drag());
 
 		LogSystem::AddTraceResult(f);
 		
@@ -2708,6 +2710,172 @@ public:
 std::array<int, 20> valid_bones = {
 		1, 2, 3, 5, 6, 14, 15, 17, 18, 21, 23, 24, 25, 26, 27, 48, 55, 56, 57, 76
 };
+
+struct weapon_stats_t {
+	float initial_velocity;
+	float gravity_modifier;
+	float drag;
+	float initial_distance;
+};
+
+enum ammo_types : int32_t {
+	shotgun = -1685290200,
+	shotgun_slug = -727717969,
+	shotgun_fire = -1036635990,
+	shotgun_handmade = 588596902,
+
+	rifle_556 = -1211166256,
+	rifle_556_hv = 1712070256,
+	rifle_556_fire = 605467368,
+	rifle_556_explosive = -1321651331,
+
+	pistol = 785728077,
+	pistol_hv = -1691396643,
+	pistol_fire = 51984655,
+
+	arrow_wooden = -1234735557,
+	arrow_hv = -1023065463,
+	arrow_fire = 14241751,
+	arrow_bone = 215754713,
+
+	nailgun_nails = -2097376851
+};
+
+enum weapon_types : int32_t {
+	spear_stone = 1602646136,
+	spear_wooden = 1540934679
+};
+
+weapon_stats_t get_stats(int32_t weapon_id, BaseProjectile* bp) {
+	const auto primary_magazine = bp->primaryMagazine();
+	if (!primary_magazine)
+		return weapon_stats_t{ 1000 };
+
+	float velocity = 1000;
+	float gravity_modifier = 1;
+	float drag = .001f;
+	float distance = 0;
+
+	auto velocity_scale = 1;
+	bool scale_velocity = false;
+
+	const auto ammo_definition = primary_magazine->ammoType();
+	if (ammo_definition) {
+		// itemid
+		const auto ammo_id = ammo_definition->itemid();//*reinterpret_cast<int32_t*>(ammo_definition + 0x18);
+
+		switch (ammo_id) {
+		case shotgun:
+			velocity = 225;
+			drag = 1;
+			distance = 3;
+			break;
+		case shotgun_slug:
+			velocity = 225;
+			drag = 1;
+			distance = 10;
+			break;
+		case shotgun_fire:
+			velocity = 100;
+			drag = 1;
+			distance = 3;
+			break;
+		case shotgun_handmade:
+			velocity = 100;
+			drag = 1;
+			distance = 0;
+			break;
+		case rifle_556:
+			velocity = 375;
+			drag = .6;
+			distance = 15;
+			break;
+		case rifle_556_hv:
+			velocity = 450;
+			drag = .6;
+			distance = 15;
+			break;
+		case rifle_556_fire:
+			velocity = 225;
+			drag = .6;
+			distance = 15;
+			break;
+		case rifle_556_explosive:
+			velocity = 225;
+			gravity_modifier = 1.25;
+			drag = .6;
+			distance = 15;
+			break;
+		case pistol:
+			velocity = 300;
+			drag = .7;
+			distance = 15;
+			break;
+		case pistol_hv:
+			velocity = 400;
+			drag = .7;
+			distance = 15;
+			break;
+		case pistol_fire:
+			velocity = 225;
+			drag = .7;
+			distance = 15;
+			break;
+		case arrow_wooden:
+			velocity = 50;
+			gravity_modifier = .75;
+			drag = .005;
+			break;
+		case arrow_hv:
+			velocity = 80;
+			gravity_modifier = .5;
+			drag = .005;
+			break;
+		case arrow_fire:
+			velocity = 40;
+			gravity_modifier = 1;
+			drag = .01;
+			break;
+		case arrow_bone:
+			velocity = 45;
+			gravity_modifier = .75;
+			drag = .01;
+			break;
+		case nailgun_nails:
+			velocity = 50;
+			gravity_modifier = .75;
+			drag = .005;
+			break;
+		}
+
+		scale_velocity = true;
+		velocity_scale = bp->projectileVelocityScale();	
+	}
+
+	switch (weapon_id) {
+	case spear_wooden:
+		velocity = 25;
+		scale_velocity = false;
+		gravity_modifier = 2;
+		drag = .1f;
+		distance = .25f;
+		break;
+	case spear_stone:
+		velocity = 30;
+		scale_velocity = false;
+		gravity_modifier = 2;
+		drag = .1f;
+		distance = .25f;
+		break;
+	}
+
+	if (scale_velocity && (velocity_scale != 0))
+		velocity *= velocity_scale;
+
+	return { velocity, gravity_modifier, drag, distance };
+}
+
+
 class Model : public Component {
 public:
 	FIELD("Assembly-CSharp::Model::boneTransforms", boneTransforms, Array<Transform*>*);

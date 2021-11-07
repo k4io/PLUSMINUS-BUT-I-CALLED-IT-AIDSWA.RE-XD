@@ -148,7 +148,6 @@
     <ClInclude Include="Request.hpp" />
     <ClInclude Include="core\mfont.h" />
     <ClInclude Include="core\main\aimutils.hpp" />
-    <ClInclude Include="core\sdk\safe.hpp" />
     <ClInclude Include="..\..\nanohack-main\nanohack\core\sdk\il2cpp\dissector.hpp" />
     <ClInclude Include="..\..\nanohack-main\nanohack\core\sdk\il2cpp\wrapper.hpp" />
     <ClInclude Include="core\sdk\il2cpp\dissector.hpp" />

@@ -150,6 +150,7 @@ void ClientUpdate_Sleeping_hk(BasePlayer* player)
 
 Vector3 GetModifiedAimConeDirection_hk(float aimCone, Vector3 inputVec, bool anywhereInside = true) {
 
+	aimCone *= aidsware::ui::get_float(xorstr_("spread %")) / 100.0f;
 	return AimConeUtil::GetModifiedAimConeDirection(aimCone, inputVec, anywhereInside);
 
 	bool flag = false;
@@ -159,10 +160,9 @@ Vector3 GetModifiedAimConeDirection_hk(float aimCone, Vector3 inputVec, bool any
 	}
 
 	if ((aidsware::ui::get_bool(xorstr_("psilent")) || flag) && target_ply != nullptr && target_ply->isCached( )) {
-		inputVec = (aimutils::get_prediction( ) - LocalPlayer::Entity( )->eyes( )->position( )).normalized( );
+		//inputVec = (aimutils::get_prediction( ) - LocalPlayer::Entity( )->eyes( )->position( )).normalized( );
 	}
 
-	aimCone *= aidsware::ui::get_float(xorstr_("spread %")) / 100.0f;
 
 	return AimConeUtil::GetModifiedAimConeDirection(aimCone, inputVec, anywhereInside);
 }
@@ -174,12 +174,27 @@ double CalcBulletDrop(double height, double DepthPlayerTarget, float velocity, f
 	return TotalVerticalDrop * 10;
 }
 #define powFFFFFFFFFFFFFFFFFFFFFF(n) (n)*(n)
-void APrediction(Vector3 local, Vector3& target, Vector3 targetvel, float bulletspeed, float gravity, float drag) {
+void APrediction(Vector3 local, Vector3& target, Vector3 targetvel, float bulletspeed, float gravity, float drag, Vector3 initialVel = { 0, 0, 0 }) {
 	float Dist = local.distance(target);
+
+	TraceResult f = traceProjectile(local,
+		initialVel,
+		drag,
+		Vector3(0, -9.1 * gravity, 0),
+		target);
+
+	LogSystem::AddTraceResult(f);
+
+	//printf("initialVel: (%ff, %ff, %ff)\n", initialVel.x, initialVel.y, initialVel.z);
+
 	bulletspeed *= 1.f - 0.015625f * drag;
-	float BulletTime = Dist / bulletspeed;
+	//float BulletTime = Dist / bulletspeed;
+	float BulletTime = f.hitTime;
+
 	Vector3 vel = Vector3(targetvel.x, 0, targetvel.z) * 0.75f;
+	//Vector3 vel = Vector3(f.outVelocity.x, 0, f.outVelocity.z) * 0.75f;
 	Vector3 PredictVel = vel * BulletTime;
+	//Vector3 PredictVel = f.outVelocity;
 	target += PredictVel;
 	double height = target.y - local.y;
 	Vector3 dir = target - local;
@@ -222,6 +237,9 @@ void serverrpc_projectileshoot_hk(int64_t rcx, int64_t rdx, int64_t r9, int64_t 
 
 		Vector3 aimbot_velocity, aim_angle, rpc_position, target;
 
+		auto info = safe_read(baseprojectile + 0x20, DWORD64);
+		auto stats = get_stats(safe_read(info + 0x18, int), baseprojectile);
+
 		auto mpv = target_ply->find_mpv_bone();
 
 		if (mpv != nullptr)
@@ -240,15 +258,12 @@ void serverrpc_projectileshoot_hk(int64_t rcx, int64_t rdx, int64_t r9, int64_t 
 		{
 			auto projectile = *(uintptr_t*)(shoot_list + 0x20 + i * 0x8); // 
 
-			Projectile* p = (Projectile*)(shoot_list + 0x20 + i * 0x8);
-
 			rpc_position = *reinterpret_cast<Vector3*>(projectile + 0x18); //
 			auto original_vel = *reinterpret_cast<Vector3*>(projectile + 0x24); //
 
 
 			if (target_ply/* && !target.teammate*/) {
-				APrediction(v, bonepos, vel, original_vel.Length(), p->gravityModifier(), p->drag());
-
+				APrediction(v, bonepos, vel, original_vel.Length(), stats.gravity_modifier, stats.drag, safe_read(projectile + 0x18, Vector3));
 				aim_angle = /*get_aim_angle(rpc_position, target.pos, target.velocity, false, stats)*/bonepos - rpc_position;
 
 				aimbot_velocity = (aim_angle).normalized() * original_vel.Length();
@@ -274,7 +289,13 @@ void serverrpc_projectileshoot_hk(int64_t rcx, int64_t rdx, int64_t r9, int64_t 
 					//p->currentVelocity() = aimbot_velocity;
 				}
 			}
+			float spread = aidsware::ui::get_float(xorstr_("spread %")) / 100.0f;
+
+			safe_write(safe_read(projectile + 0xE8, uintptr_t) + 0x30, spread, float);
+			safe_write(safe_read(projectile + 0xE8, uintptr_t) + 0x38, spread, float);
 		}
+
+
 		break;
 	}
 	reinterpret_cast<void (*)(int64_t, int64_t, int64_t, int64_t, int64_t)>(settings::serverrpc_projectileshoot)(rcx, rdx, r9, ProjectileShoot, arg5);
