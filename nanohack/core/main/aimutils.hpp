@@ -109,8 +109,8 @@ namespace aimutils {
 		float travel_time = distance / bullet_speed;
 		//float travel_time = f.hitTime;
 
-		Vector3 vel = Vector3(targetvel.x, 0, targetvel.z) * 0.75f;
-		//Vector3 vel = target_ply->playerModel()->velocity();
+		//Vector3 vel = Vector3(targetvel.x, 0, targetvel.z) * 0.75f;
+		Vector3 vel = target_ply->playerModel()->newVelocity();
 		Vector3 predicted_velocity = vel * travel_time;
 		//Vector3 predicted_velocity = f.outVelocity;
 

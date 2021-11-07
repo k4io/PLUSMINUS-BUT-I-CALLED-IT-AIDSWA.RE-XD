@@ -2283,6 +2283,7 @@ void CheckFlyhack() {
 	settings::max_flyhack = num6;
 	if (flyhackDistanceVertical <= num6) {
 		settings::flyhack = flyhackDistanceVertical;
+		printf("CheckFlyhack 1\n");
 	}
 
 	float num7 = MAX((flyhackPauseTime > 0.f) ? 10 : 1.5, 0.f);
@@ -2290,6 +2291,7 @@ void CheckFlyhack() {
 	settings::max_hor_flyhack = num8;
 	if (flyhackDistanceHorizontal <= num8) {
 		settings::hor_flyhack = flyhackDistanceHorizontal;
+		printf("CheckFlyhack 2\n");
 	}
 }
 
