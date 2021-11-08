@@ -1,4 +1,47 @@
 #include <core/sdk/lazy_importer.hpp>
+#define safe_read(Addr, Type) (((((ULONG64)Addr) > 0x400000) && (((ULONG64)Addr + sizeof(Type)) < 0x00007FFFFFFF0000)) ? *(Type*)((ULONG64)Addr) : Type{})
+#define safe_write(Addr, Data, Type) if ((((ULONG64)Addr) > 0x400000) && (((ULONG64)Addr + sizeof(Type)) < 0x00007FFFFFFF0000)) { *(Type*)((ULONG64)Addr) = (Data); }
+#define safe_memcpy(Dst, Src, Size) safe_memcpy_wrapper(((ULONG64)Dst), ((ULONG64)Src), Size)
+void safe_memcpy_wrapper(ULONG64 Dst, ULONG64 Src, ULONG Sz)
+{
+	if ((((ULONG64)Dst) > 0x400000) && (((ULONG64)Dst + Sz) < 0x00007FFFFFFF0000))
+	{
+		while (true)
+		{
+			//copy 8 byte
+			if (Sz >= 8)
+			{
+				*(ULONG64*)Dst = *(ULONG64*)Src;
+				Dst += 8; Src += 8; Sz -= 8;
+			}
+
+			//copy 4 byte
+			else if (Sz >= 4)
+			{
+				*(ULONG*)Dst = *(ULONG*)Src;
+				Dst += 4; Src += 4; Sz -= 4;
+			}
+
+			//copy 2 byte
+			else if (Sz >= 2)
+			{
+				*(WORD*)Dst = *(WORD*)Src;
+				Dst += 2; Src += 2; Sz -= 2;
+			}
+
+			//copy last byte
+			else if (Sz)
+			{
+				*(BYTE*)Dst = *(BYTE*)Src;
+				break;
+			}
+
+			//if(Sz == 0)
+			else
+				break;
+		}
+	}
+}
 #define in_range(x,a,b) (x>=a&&x<=b) 
 #define get_bits(x) (in_range((x&(~0x20)),'A','F')?((x&(~0x20))-'A'+0xa):(in_range(x,'0','9')?x-'0':0))
 #define get_byte(x) (get_bits(x[0])<<4|get_bits(x[1]))
@@ -1630,6 +1673,7 @@ float MAX(const float& A, const float& B) { return (A > B ? A : B); }
 float flyhackDistanceVertical = 0.f;
 float flyhackDistanceHorizontal = 0.f;
 float flyhackPauseTime;
+Vector3 cLastTickPos{};
 class BasePlayer;
 
 BasePlayer* target_ply = nullptr;
@@ -2303,23 +2347,25 @@ public:
 		return reinterpret_cast<bool(__fastcall*)(Projectile*)>(off)(this);
 	}
 };
-
 void TestFlying() {
+	BasePlayer* loco = LocalPlayer::Entity();
+	if (!loco) return;
 	flyhackPauseTime = MAX(0.f, flyhackPauseTime - Time::deltaTime());
 	bool inAir = false;
 	float radius = LocalPlayer::Entity()->GetHeight();
 	float height = LocalPlayer::Entity()->GetRadius();
-	Vector3 vector = (LocalPlayer::Entity()->lastSentTick()->position() + LocalPlayer::Entity()->transform()->position()) * 0.5f;
+	Vector3 vector = (cLastTickPos + LocalPlayer::Entity()->transform()->position()) * 0.5f;
 	Vector3 vector2 = vector + Vector3(0.f, radius - 2.f, 0.f);
 	Vector3 vector3 = vector + Vector3(0.f, height - radius, 0.f);
 	float radius2 = radius - 0.05f;
 	bool a = GamePhysics::CheckCapsule(vector2, vector3, radius2, 1503731969, GamePhysics::QueryTriggerInteraction::Ignore);
 	inAir = !a;
-
+	//printf("flyhackPauseTime: %f\n", flyhackPauseTime);
+	//printf("lastSentTick()->position(): (%ff, %ff, %ff)\n", LocalPlayer::Entity()->lastSentTick()->position().x, LocalPlayer::Entity()->lastSentTick()->position().y, LocalPlayer::Entity()->lastSentTick()->position().z);
+	//printf("cLastTickPos: (%ff, %ff, %ff)\n", cLastTickPos.x, cLastTickPos.y, cLastTickPos.z);
 	if (inAir) {
 		bool flag = false;
-		//read(read(LocalPlayer::Entity() + 0x4B0, uintptr_t) + 0x1D8, Vector3) = LocalPlayer::Entity()->transform()->position()
-		Vector3 vector4 = LocalPlayer::Entity()->transform()->position() - LocalPlayer::Entity()->lastSentTick()->position();
+		Vector3 vector4 = LocalPlayer::Entity()->transform()->position() - cLastTickPos; //idk about this lasttickpos stuff
 		float num3 = std::abs(vector4.y);
 		float num4 = vector4.magnitude2d();
 		if (vector4.y >= 0.f) {
@@ -2330,17 +2376,19 @@ void TestFlying() {
 			flyhackDistanceHorizontal += num4;
 			flag = true;
 		}
+		//printf("$ flyhackDistanceVertical: %ff\n", flyhackDistanceVertical);
+		//printf("$ flyhackDistanceHorizontal: %ff\n", flyhackDistanceHorizontal);
 		if (flag) {
 			float num5 = MAX((flyhackPauseTime > 0.f) ? 10 : 1.5, 0.f);
 			float num6 = LocalPlayer::Entity()->GetJumpHeight() + num5;
 			if (flyhackDistanceVertical > num6) {
-				printf("idk but ok? 1\n");
+				//printf("$ flying vertical\n");
 				//return true;
 			}
 			float num7 = MAX((flyhackPauseTime > 0.f) ? 10 : 1.5, 0.f);
 			float num8 = 5.f + num7;
 			if (flyhackDistanceHorizontal > num8) {
-				printf("idk but ok? 2\n");
+				//printf("$ flying horizontal\n");
 				//return true;
 			}
 		}
@@ -2357,7 +2405,6 @@ void CheckFlyhack() {
 	settings::max_flyhack = num6;
 	if (flyhackDistanceVertical <= num6) {
 		settings::flyhack = flyhackDistanceVertical;
-		printf("CheckFlyhack 1\n");
 	}
 
 	float num7 = MAX((flyhackPauseTime > 0.f) ? 10 : 1.5, 0.f);
@@ -2365,7 +2412,6 @@ void CheckFlyhack() {
 	settings::max_hor_flyhack = num8;
 	if (flyhackDistanceHorizontal <= num8) {
 		settings::hor_flyhack = flyhackDistanceHorizontal;
-		printf("CheckFlyhack 2\n");
 	}
 }
 

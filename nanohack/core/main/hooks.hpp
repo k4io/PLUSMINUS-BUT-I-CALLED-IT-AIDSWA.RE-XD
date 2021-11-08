@@ -1,50 +1,6 @@
 #include <intrin.h>
 #include <vector>
 
-#define safe_read(Addr, Type) (((((ULONG64)Addr) > 0x400000) && (((ULONG64)Addr + sizeof(Type)) < 0x00007FFFFFFF0000)) ? *(Type*)((ULONG64)Addr) : Type{})
-#define safe_write(Addr, Data, Type) if ((((ULONG64)Addr) > 0x400000) && (((ULONG64)Addr + sizeof(Type)) < 0x00007FFFFFFF0000)) { *(Type*)((ULONG64)Addr) = (Data); }
-#define safe_memcpy(Dst, Src, Size) safe_memcpy_wrapper(((ULONG64)Dst), ((ULONG64)Src), Size)
-void safe_memcpy_wrapper(ULONG64 Dst, ULONG64 Src, ULONG Sz)
-{
-	if ((((ULONG64)Dst) > 0x400000) && (((ULONG64)Dst + Sz) < 0x00007FFFFFFF0000))
-	{
-		while (true)
-		{
-			//copy 8 byte
-			if (Sz >= 8)
-			{
-				*(ULONG64*)Dst = *(ULONG64*)Src;
-				Dst += 8; Src += 8; Sz -= 8;
-			}
-
-			//copy 4 byte
-			else if (Sz >= 4)
-			{
-				*(ULONG*)Dst = *(ULONG*)Src;
-				Dst += 4; Src += 4; Sz -= 4;
-			}
-
-			//copy 2 byte
-			else if (Sz >= 2)
-			{
-				*(WORD*)Dst = *(WORD*)Src;
-				Dst += 2; Src += 2; Sz -= 2;
-			}
-
-			//copy last byte
-			else if (Sz)
-			{
-				*(BYTE*)Dst = *(BYTE*)Src;
-				break;
-			}
-
-			//if(Sz == 0)
-			else
-				break;
-		}
-	}
-}
-
 #define CALLED_BY(func,off) (reinterpret_cast<std::uint64_t>(_ReturnAddress()) > func && reinterpret_cast<std::uint64_t>(_ReturnAddress()) < func + off)
 
 void ClientUpdate_hk(BasePlayer* plly) {
@@ -432,6 +388,12 @@ void UpdateVelocity_hk(PlayerWalkMovement* self) {
 				self->TargetMovement( ) = target_vel;
 			}
 		}
+		if (aidsware::ui::get_bool(xorstr_("flyhack stop")))
+		{
+			float threshold = aidsware::ui::get_float(xorstr_("threshold"));
+			if (settings::hor_flyhack > threshold || settings::flyhack > threshold)
+				self->TargetMovement() = Vector3::Zero(); //maybe lerp towards last position?
+		}
 		if (aidsware::ui::get_bool(xorstr_("peek assist")) && (get_key(aidsware::ui::get_keybind(xorstr_("peek assist key"))) || settings::tr::manipulate_visible)) {
 			float max_speed = (self->swimming( ) || self->Ducking( ) > 0.5) ? 1.7f : 5.5f;
 			if (vel.length( ) > 0.f) {
@@ -623,9 +585,12 @@ void ClientInput_hk(BasePlayer* plly, uintptr_t state) {
 			plly->eyes( )->viewOffset( ) = Vector3(0, max_eye_value, 0);
 		}*/
 
-		if (aidsware::ui::get_bool(xorstr_("flyhack stop")))
+		if (aidsware::ui::get_bool(xorstr_("flyhack indicator"))
+			|| aidsware::ui::get_bool(xorstr_("flyhack stop")))
 		{
 			CheckFlyhack();
+			printf("settings::flyhack: %ff\n", settings::flyhack);
+			printf("settings::hor_flyhack: %ff\n", settings::hor_flyhack);
 		}
 
 		if (aidsware::ui::get_bool(xorstr_("autoshoot")) && aidsware::ui::get_bool(xorstr_("insta kill")) && aidsware::ui::get_bool(xorstr_("with peek assist")))
@@ -955,6 +920,8 @@ void sendclienttick_hk(BasePlayer* self)
 	{
 		self->input()->state()->current()->aimAngles() = Vector3((rand() % 999 + -999), (rand() % 999 + -999), (rand() % 999 + -999));
 	}
+	cLastTickPos = self->transform()->position(); //try headpos then try footpos?
+
 	return self->SendClientTick();
 }
 
@@ -1004,6 +971,8 @@ void do_hooks( ) {
 	hookengine::hook(PlayerEyes::get_position_, playereyes_getpos_hk);
 
 	hookengine::hook(Projectile::Launch_, Launch_hk);
+
+	hookengine::hook(BasePlayer::SendClientTick_, sendclienttick_hk);
 
 
 	VM_DOLPHIN_BLACK_END

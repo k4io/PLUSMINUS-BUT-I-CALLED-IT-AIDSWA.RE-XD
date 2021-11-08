@@ -316,6 +316,7 @@ namespace aidsware::ui
 		wrapper::checkbox(xorstr_("tool cupboards"), Vector2(170, 0), Tabs::Visual);
 		wrapper::checkbox(xorstr_("storage"), Vector2(170, 0), Tabs::Visual);
 		wrapper::checkbox(xorstr_("vehicles"), Vector2(170, 0), Tabs::Visual);
+		wrapper::checkbox(xorstr_("flyhack indicator"), Vector2(170, 0), Tabs::Visual);
 		//wrapper::checkbox(xorstr_("raid esp"), Vector2(170, 0), Tabs::Visual);
 		//wrapper::checkbox(xorstr_("chams"), Vector2(170, 0), Tabs::Visual);
 		wrapper::checkbox(xorstr_("debug"), Vector2(170, 0), Tabs::Visual);
@@ -345,7 +346,6 @@ namespace aidsware::ui
 		wrapper::checkbox(xorstr_("infinite jump"), Vector2(0, 0), Tabs::Misc);
 		wrapper::checkbox(xorstr_("can hold items"), Vector2(0, 0), Tabs::Misc);
 		wrapper::checkbox(xorstr_("omnisprint"), Vector2(0, 0), Tabs::Misc);
-		//wrapper::checkbox(xorstr_("flyhack stop"), Vector2(0, 0), Tabs::Misc);
 		wrapper::checkbox(xorstr_("no fall"), Vector2(0, 0), Tabs::Misc);
 		wrapper::checkbox(xorstr_("fake shots"), Vector2(0, 0), Tabs::Misc, true, false);
 		wrapper::reset_height();
@@ -378,6 +378,9 @@ namespace aidsware::ui
 
 		//wrapper::checkbox(xorstr_("invisible gun"), Vector2(325.0f, 0), Tabs::Misc);
 		//wrapper::keybind(xorstr_("silent walk key"), Vector2(325.f, 0), Tabs::Misc);
+		wrapper::checkbox(xorstr_("flyhack stop"), Vector2(170, 0), Tabs::Misc);
+		wrapper::currentY += 20.f;
+		wrapper::slider(xorstr_("threshold"), Vector2(170, 0), 100.0f, 0.0f, 400.0f, Tabs::Misc);
 		wrapper::reset_height();
 		wrapper::reset_width();
 

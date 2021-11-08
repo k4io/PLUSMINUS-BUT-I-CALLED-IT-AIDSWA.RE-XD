@@ -187,6 +187,14 @@ namespace entities {
 			Renderer::rounded_rectangle_filled(belt::pos.x + 5.0f, belt::pos.y + 20.0f + 5.0f, w - 10, h - 10, Color3(25, 25, 25), 5.f);
 		}
 
+		if (aidsware::ui::get_bool(xorstr_("flyhack indicator"))
+			&& LocalPlayer::Entity())
+		{
+			float threshold = aidsware::ui::get_float(xorstr_("threshold"));
+			Renderer::ProgressBar({ screen_center.x - 300, screen_center.y - 400 }, { screen_center.x + 300, screen_center.y - 400 }, { 51, 88, 181 }, { 38, 38, 60 }, (settings::flyhack / threshold) < 0.f ? 0.f : (settings::flyhack > threshold ? threshold : settings::flyhack), 600);
+			Renderer::ProgressBar({ screen_center.x - 300, screen_center.y - 350 }, { screen_center.x + 300, screen_center.y - 350 }, { 51, 88, 181 }, { 38, 38, 60 }, (settings::hor_flyhack / threshold) < 0.f ? 0.f : (settings::hor_flyhack > threshold ? threshold : settings::hor_flyhack), 600);
+		}
+
 		auto local = LocalPlayer::Entity();
 		if (local == nullptr) {
 			target_ply = nullptr;
