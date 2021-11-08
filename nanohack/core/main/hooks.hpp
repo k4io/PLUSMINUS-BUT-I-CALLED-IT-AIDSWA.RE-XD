@@ -170,7 +170,7 @@ void serverrpc_projectileshoot_hk(int64_t rcx, int64_t rdx, int64_t r9, int64_t 
 
 		auto baseprojectile = LocalPlayer::Entity()->GetHeldEntity<BaseProjectile>();
 		if (!baseprojectile) break;
-		auto wep_class_name = baseprojectile->class_name();
+		auto wep_class_name = baseprojectile->class_name(); 
 
 		if (!baseprojectile->Empty() && (baseprojectile->class_name_hash() != STATIC_CRC32("BaseProjectile")
 			&& baseprojectile->class_name_hash() != STATIC_CRC32("BowWeapon")
@@ -275,7 +275,6 @@ Attack* BuildAttackMessage_hk(HitTest* self) {
 
 	auto localPlayer = LocalPlayer::Entity( );
 	if (localPlayer) {
-
 		if (reinterpret_cast<BasePlayer*>(self->ignoreEntity( ))->userID( ) == localPlayer->userID( )) { // isAuthoritative
 			if (aidsware::ui::get_bool(xorstr_("bullet tracers"))) {
 				DDraw::Line(localPlayer->eyes( )->get_position( ), ret->hitPositionWorld( ), Color(1, 0, 0, 1), 10.f, false, true);
@@ -523,13 +522,9 @@ void ClientInput_hk(BasePlayer* plly, uintptr_t state) {
 
 	if (!has_intialized_methods) {
 		auto il2cpp_codegen_initialize_method = reinterpret_cast<void (*)(unsigned int)>(settings::il_init_methods);
-		//56229 for real rust or 56204 for cracked rust
+
 		for (int i = 0; i <
-			//#ifdef cracked_rust
-			56204
-			//#else
-							//56229
-			//#endif
+			56204 //56229 for real rust
 			; i++) {
 			il2cpp_codegen_initialize_method(i);
 		}
@@ -564,23 +559,32 @@ void ClientInput_hk(BasePlayer* plly, uintptr_t state) {
 		
 		if (get_key(aidsware::ui::get_keybind(xorstr_("desync key"))))
 			LocalPlayer::Entity()->clientTickInterval() = 0.99f;
+		if (held)
+		{	
+			auto wep_class_name = held->class_name();
 
-		if (aidsware::ui::get_bool(xorstr_("long hand")) && !held) {
-			auto melee = plly->GetHeldEntity<BaseMelee>();
-			if (melee)
-			{
-				float mm_max_eye = ((0.1f + ((desyncTime + 2.f / 60.f + 0.125f) * 1.5f) * LocalPlayer::Entity()->MaxVelocity()));
-				melee->maxDistance() = 5.f + mm_max_eye;
+			if (aidsware::ui::get_bool(xorstr_("long hand")) && *(int*)(wep_class_name + 4) == 'eleM') {
+				//auto melee = reinterpret_cast<BaseMelee*>(held);//plly->GetHeldEntity<BaseMelee>();
+
+				float mm_max_eye = ((0.1f + ((desyncTime + 2.f / 60.f + 0.125f) * 1.5f) * LocalPlayer::Entity()->MaxVelocity())) + 5.f;
+				//melee->maxDistance() = 5.f + mm_max_eye;
+				safe_write(held + 0x290 /*maxDistance*/, mm_max_eye, float);
 			}
 		}
 
-		/*
-		if (aidsware::ui::get_bool(xorstr_("chams")))
-		{
-			SkinSet::BodyMaterial() = 0;
-			SkinSet::HeadMaterial() = 0;
-		}
+		//todo:
+		/*	
+			remake flyhack indicator with testflying from +- old and my antihack class from new
 
+			walk to marker
+			instant jackhammer refill
+			stack crafting tcs
+			weapon spam
+			legit recoil
+			hitsound
+		*/
+
+		/*
 		if (settings::desync && get_key(settings::desync_key)) {
 			float desyncTime = (Time::realtimeSinceStartup( ) - plly->lastSentTickTime( )) - 0.03125 * 3;
 			float max_eye_value = (0.1f + ((desyncTime + 2.f / 60.f + 0.125f) * 1.5f) * plly->MaxVelocity( )) - 0.05f;

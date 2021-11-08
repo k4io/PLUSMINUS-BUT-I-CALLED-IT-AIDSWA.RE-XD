@@ -486,7 +486,7 @@ namespace entities {
 							if (aidsware::ui::get_bool(xorstr_("looking direction")) && !player->HasPlayerFlag(PlayerFlags::Sleeping))
 								Renderer::line(player->bones()->dfc, player->bones()->forward, aidsware::ui::get_color(xorstr_("looking direction color")), true);
 
-							if (aidsware::ui::get_bool(xorstr_("insta kill")) || aidsware::ui::get_bool(xorstr_("peek assist")))
+							if (aidsware::ui::get_bool(xorstr_("insta kill")) || aidsware::ui::get_bool(xorstr_("peek assist")) || get_key(aidsware::ui::get_keybind(xorstr_("desync key"))))
 							{
 								//GUI::Render.ProgressBar(v, v2, D2D1::ColorF::White, D2D1::ColorF::Gray, (antihack::functions::current_desync_value < 0.f) ? 0.f : antihack::functions::current_desync_value, 40);
 								Renderer::ProgressBar({ screen_center.x - 30, screen_center.y + 20 }, { screen_center.x + 30, screen_center.y + 20 }, { 51, 88, 181 }, { 38, 38, 60 }, desyncTime < 0.f ? 0.f : desyncTime, 60);
