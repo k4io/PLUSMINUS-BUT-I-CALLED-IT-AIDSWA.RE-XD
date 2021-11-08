@@ -352,6 +352,7 @@ namespace aidsware::ui
 		wrapper::currentX += 20.f;
 		wrapper::combobox(xorstr_("light"), { xorstr_("default"), xorstr_("dark"), xorstr_("light") }, Vector2(170, 0), Tabs::Misc);
 		wrapper::keybind(xorstr_("timescale key"), Vector2(170, 0), Tabs::Misc);
+		wrapper::keybind(xorstr_("desync on key"), Vector2(170, 0), Tabs::Misc);
 		wrapper::combobox(xorstr_("crosshair"), { xorstr_("none"), xorstr_("plusminus"), xorstr_("evilcheats"), xorstr_("circle"), xorstr_("swastika") }, Vector2(170, 0), Tabs::Misc);
 
 		wrapper::textbox(xorstr_("config name"), Vector2(170, 0), Tabs::Misc, xorstr_("default"));

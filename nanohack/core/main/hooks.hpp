@@ -278,7 +278,7 @@ Attack* BuildAttackMessage_hk(HitTest* self) {
 
 		if (reinterpret_cast<BasePlayer*>(self->ignoreEntity( ))->userID( ) == localPlayer->userID( )) { // isAuthoritative
 			if (aidsware::ui::get_bool(xorstr_("bullet tracers"))) {
-				DDraw::Line(localPlayer->eyes( )->position( ), ret->hitPositionWorld( ), Color(1, 0, 0, 1), 10.f, false, true);
+				DDraw::Line(localPlayer->eyes( )->get_position( ), ret->hitPositionWorld( ), Color(1, 0, 0, 1), 10.f, false, true);
 			}
 
 			if (entity) {
@@ -561,13 +561,16 @@ void ClientInput_hk(BasePlayer* plly, uintptr_t state) {
 			if (held)
 				held->repeatDelay() = 0.07f;
 		}
-		/*
-		if (aidsware::ui::get_bool(xorstr_("long hand"))) {
-			if (!held)
+		
+		if (get_key(aidsware::ui::get_keybind(xorstr_("desync key"))))
+			LocalPlayer::Entity()->clientTickInterval() = 0.99f;
+
+		if (aidsware::ui::get_bool(xorstr_("long hand")) && !held) {
+			auto melee = plly->GetHeldEntity<BaseMelee>();
+			if (melee)
 			{
-				auto melee = plly->GetHeldEntity<BaseMelee>();
-				if (melee)
-					melee->maxDistance() = 5.f;
+				float mm_max_eye = ((0.1f + ((desyncTime + 2.f / 60.f + 0.125f) * 1.5f) * LocalPlayer::Entity()->MaxVelocity()));
+				melee->maxDistance() = 5.f + mm_max_eye;
 			}
 		}
 
