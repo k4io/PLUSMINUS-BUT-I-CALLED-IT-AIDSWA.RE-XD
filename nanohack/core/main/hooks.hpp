@@ -557,7 +557,7 @@ void ClientInput_hk(BasePlayer* plly, uintptr_t state) {
 				held->repeatDelay() = 0.07f;
 		}
 		
-		if (get_key(aidsware::ui::get_keybind(xorstr_("desync key"))))
+		if (get_key(aidsware::ui::get_keybind(xorstr_("desync on key"))))
 			LocalPlayer::Entity()->clientTickInterval() = 0.99f;
 		if (held)
 		{	
