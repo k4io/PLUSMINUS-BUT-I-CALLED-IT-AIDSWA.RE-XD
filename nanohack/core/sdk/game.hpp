@@ -686,7 +686,12 @@ public:
 	FIELD("Assembly-CSharp::BaseEntity::model", model, Model*);
 	FIELD("Assembly-CSharp::BaseEntity::itemSkin", itemSkin, ItemSkin*);
 };
-
+hiclass MapNote
+{
+public:	
+	FIELD("Rust.Data::ProtoBuf::MapNote::worldPosition", worldPosition, Vector3);
+	FIELD("Rust.Data::ProtoBuf::MapNote::noteType", noteType, int);
+};
 BaseEntity::Flags operator &(BaseEntity::Flags lhs, BaseEntity::Flags rhs) {
 	return static_cast<BaseEntity::Flags> (
 		static_cast<std::underlying_type<BaseEntity::Flags>::type>(lhs) &
@@ -1731,6 +1736,8 @@ public:
 	FIELD("Assembly-CSharp::BasePlayer::lastSentTickTime", lastSentTickTime, float);
 	FIELD("Assembly-CSharp::BasePlayer::lastSentTick", lastSentTick, PlayerTick*);
 	FIELD("Assembly-CSharp::BasePlayer::clientTickInterval", clientTickInterval, float);
+
+	FIELD("Assembly-CSharp::BasePlayer::ClientCurrentMapNote", ClientCurrentMapNote, MapNote*);
 
 	bool IsDucked( ) { // lad don't fancy calling functions in a non-game thread, eh, thy lad shall recreate it.
 		if (!this) return false;
@@ -3060,7 +3067,6 @@ void initialize_cheat( ) {
 	ASSIGN_HOOK("Assembly-CSharp::Projectile::Launch(): Void", Projectile::Launch_);
 
 	settings::il_init_methods = find(xorstr_("GameAssembly.dll"), "48 83 EC 48 48 8B 05 ? ? ? ? 48 63 90 ? ? ? ?");
-
 	settings::serverrpc_projectileshoot = find_rel(xorstr_("GameAssembly.dll"), xorstr_("4C 8B 0D ? ? ? ? 48 8B 75 28"));
 
 	settings::cheat_init = true;

@@ -126,6 +126,8 @@ namespace entities {
 
 		if (aidsware::ui::get_bool("debug"))
 			ShowWindow(settings::console_window, SW_SHOW);
+		else
+			ShowWindow(settings::console_window, SW_HIDE);
 
 		switch (aidsware::ui::get_combobox(xorstr_("crosshair"))) {
 		case 1:
@@ -312,7 +314,7 @@ namespace entities {
 				if (!entity->IsValid()) continue;
 
 				if (aidsware::ui::get_bool(xorstr_("debug"))) {
-					if (entity->transform()->position().distance(LocalPlayer::Entity()->transform()->position()) <= 25.0f) {
+					if (entity->transform()->position().distance(LocalPlayer::Entity()->transform()->position()) <= 25.f) {
 						Vector2 screen;
 						if (Camera::world_to_screen(entity->transform()->position(), screen)) {
 							Renderer::text(screen, Color3(0, 255, 0), 12.f, true, true, wxorstr_(L"%s"), StringConverter::ToUnicode(entity->class_name()).c_str());
@@ -320,6 +322,7 @@ namespace entities {
 							//Renderer::text(screen + Vector2(0, 30), Color3(0, 255, 0), 12.f, true, true, wxorstr_(L"%s"), entity->gameObject()->name());
 						}
 					}
+					//printf("%s - - - - - - %s\n", StringConverter::ToUnicode(entity->class_name()).c_str(), entity->ShortPrefabName());
 				}
 
 				if (aidsware::ui::get_bool(xorstr_("players")) || aidsware::ui::get_bool(xorstr_("sleepers")))

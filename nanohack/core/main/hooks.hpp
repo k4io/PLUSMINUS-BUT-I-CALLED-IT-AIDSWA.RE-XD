@@ -245,10 +245,6 @@ void serverrpc_projectileshoot_hk(int64_t rcx, int64_t rdx, int64_t r9, int64_t 
 					//p->currentVelocity() = aimbot_velocity;
 				}
 			}
-			float spread = aidsware::ui::get_float(xorstr_("spread %")) / 100.0f;
-
-			safe_write(safe_read(projectile + 0xE8, uintptr_t) + 0x30, spread, float);
-			safe_write(safe_read(projectile + 0xE8, uintptr_t) + 0x38, spread, float);
 		}
 
 
@@ -378,6 +374,19 @@ bool CanAttack_hk(BasePlayer* self) {
 }
 
 void UpdateVelocity_hk(PlayerWalkMovement* self) {
+	if (aidsware::ui::get_bool(xorstr_("walk to marker")))
+	{
+		float speed = (self->swimming() || self->Ducking() > 0.5) ? 1.7f : 5.5f;
+		MapNote* m = LocalPlayer::Entity()->ClientCurrentMapNote();
+		if (m)
+		{
+			Vector3 pos = LocalPlayer::Entity()->transform()->position();
+			Vector3 marker_pos = m->worldPosition();
+			Vector3 dir = (marker_pos - pos).normalized();
+			self->TargetMovement() = { (dir.x / dir.length() * speed), dir.y,(dir.z / dir.length() * speed) };
+		}
+	}
+
 	if (!self->flying( )) {
 		Vector3 vel = self->TargetMovement( );
 		if (aidsware::ui::get_bool(xorstr_("omnisprint"))) {
@@ -387,6 +396,7 @@ void UpdateVelocity_hk(PlayerWalkMovement* self) {
 				self->TargetMovement( ) = target_vel;
 			}
 		}
+
 		if (aidsware::ui::get_bool(xorstr_("flyhack stop")))
 		{
 			float threshold = aidsware::ui::get_float(xorstr_("threshold"));
@@ -571,7 +581,6 @@ void ClientInput_hk(BasePlayer* plly, uintptr_t state) {
 				safe_write(held + 0x290 /*maxDistance*/, mm_max_eye, float);
 			}
 		}
-
 		//todo:
 		/*	
 			remake flyhack indicator with testflying from +- old and my antihack class from new
@@ -636,8 +645,8 @@ void ClientInput_hk(BasePlayer* plly, uintptr_t state) {
 									for (int j = 0; j < aidsware::ui::get_float(xorstr_("bullets")); j++)
 										held->LaunchProjectile();
 							}
-							LocalPlayer::Entity()->clientTickInterval() = 0.05f;
 						}
+			LocalPlayer::Entity()->clientTickInterval() = 0.05f;
 			held->UpdateAmmoDisplay();
 		}
 		else
