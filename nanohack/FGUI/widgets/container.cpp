@@ -185,7 +185,7 @@ namespace FGUI
 
             // container title
             if (flag)
-                FGUI::RENDER.Image(m_ptPosition.m_iX + 10, m_ptPosition.m_iY - 14, 75, 75, wxorstr_(L"C:\\awlogo.png"));
+                FGUI::RENDER.Image(m_ptPosition.m_iX + 13, m_ptPosition.m_iY - 14, 75, 75, 0);
             else
                 FGUI::RENDER.Text(m_ptPosition.m_iX + 17, m_ptPosition.m_iY + 10, m_anyFont, { 219, 219, 219 }, m_strTitle);
 

@@ -28,9 +28,9 @@ namespace FGUI_D3D11
 		return { (int)text_size.x, (int)text_size.y };
 	}
 
-	inline void Image(int x, int y, int w, int h, const wchar_t* filename)
+	inline void Image(int x, int y, int w, int h, int index)
 	{
-		Renderer::draw_image(x, y, w, h, filename);
+		Renderer::draw_image(x, y, w, h, index);
 	}
 
 	inline void Text(int _x, int _y, FGUI::FONT _font, FGUI::COLOR _color, std::string _text)

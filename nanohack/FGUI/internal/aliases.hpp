@@ -39,7 +39,7 @@ namespace FGUI
     using pDrawIcon = std::add_pointer_t<void(int, int, FGUI::FONT, FGUI::COLOR, std::string)>;
     using pDrawRoundedRectangleFilled = std::add_pointer_t<void(int, int, int, int, FGUI::COLOR, float)>;
     using pDrawRoundedRectangle = std::add_pointer_t<void(int, int, int, int, FGUI::COLOR, float)>;
-    using pDrawImage = std::add_pointer_t<void(int, int, int, int, const wchar_t*)>;
+    using pDrawImage = std::add_pointer_t<void(int, int, int, int, int)>;
 
 
     // input functions pointers
