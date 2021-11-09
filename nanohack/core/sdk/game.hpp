@@ -686,7 +686,7 @@ public:
 	FIELD("Assembly-CSharp::BaseEntity::model", model, Model*);
 	FIELD("Assembly-CSharp::BaseEntity::itemSkin", itemSkin, ItemSkin*);
 };
-hiclass MapNote
+class MapNote
 {
 public:	
 	FIELD("Rust.Data::ProtoBuf::MapNote::worldPosition", worldPosition, Vector3);

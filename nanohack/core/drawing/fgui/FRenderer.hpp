@@ -28,6 +28,11 @@ namespace FGUI_D3D11
 		return { (int)text_size.x, (int)text_size.y };
 	}
 
+	inline void Image(int x, int y, int w, int h, const wchar_t* filename)
+	{
+		Renderer::draw_image(x, y, w, h, filename);
+	}
+
 	inline void Text(int _x, int _y, FGUI::FONT _font, FGUI::COLOR _color, std::string _text)
 	{
 		Renderer::text({ (float)_x, (float)_y }, Color3(_color.m_ucRed, _color.m_ucGreen, _color.m_ucBlue, _color.m_ucAlpha), _font->size, false, true, StringConverter::ToUnicode(_text));
@@ -92,5 +97,6 @@ namespace FGUI_D3D11
 		FGUI::RENDER.Circle = FGUI_D3D11::Circle;
 		FGUI::RENDER.RoundedRectangleFilled = FGUI_D3D11::Rounded_Rectangle_Filled;
 		FGUI::RENDER.RoundedRectangle = FGUI_D3D11::Rounded_Rectangle;
+		FGUI::RENDER.Image = FGUI_D3D11::Image;
 	}
 }

@@ -6,6 +6,7 @@
 #include "container.hpp"
 
 #include <d2d1.h>
+#include <core/sdk/utils/xorstr.hpp>
 
 namespace FGUI
 {
@@ -158,6 +159,7 @@ namespace FGUI
     }
 
     void CContainer::Geometry( )   {
+        bool flag = false; if (m_strTitle == "aidswa.re") flag = true;
         FGUI::AREA arWidgetRegion = { GetAbsolutePosition( ).m_iX, GetAbsolutePosition( ).m_iY, m_dmSize.m_iWidth, m_dmSize.m_iHeight };
 
         FGUI::DIMENSION dmTitleTextSize = FGUI::RENDER.GetTextSize(m_anyFont, m_strTitle);
@@ -182,7 +184,10 @@ namespace FGUI
             //FGUI::RENDER.Line(arWidgetRegion.m_iLeft + 138, arWidgetRegion.m_iTop, arWidgetRegion.m_iLeft + 138, arWidgetRegion.m_iTop + 440, {45, 83, 122});
 
             // container title
-            FGUI::RENDER.Text(m_ptPosition.m_iX + 17, m_ptPosition.m_iY + 10, m_anyFont, { 219, 219, 219 }, m_strTitle);
+            if (flag)
+                FGUI::RENDER.Image(m_ptPosition.m_iX + 10, m_ptPosition.m_iY - 14, 75, 75, wxorstr_(L"C:\\awlogo.png"));
+            else
+                FGUI::RENDER.Text(m_ptPosition.m_iX + 17, m_ptPosition.m_iY + 10, m_anyFont, { 219, 219, 219 }, m_strTitle);
 
             if (m_fnctCallback)       {
                 // invoke function

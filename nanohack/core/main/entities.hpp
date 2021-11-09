@@ -187,6 +187,8 @@ namespace entities {
 			Renderer::rounded_rectangle_filled(belt::pos.x, belt::pos.y, w, 20, Color3(25, 25, 25), 5.f);
 			Renderer::rounded_rectangle_filled(belt::pos.x, belt::pos.y + 20.0f, w, h, Color3(45, 83, 122), 5.f);
 			Renderer::rounded_rectangle_filled(belt::pos.x + 5.0f, belt::pos.y + 20.0f + 5.0f, w - 10, h - 10, Color3(25, 25, 25), 5.f);
+			//draw_image(float x, float y, float w, float h, const wchar_t* filename)
+			//Renderer::draw_image(100, 100, 200, 200, wxorstr_(L"C:\\awlogo.png"));
 		}
 
 		if (aidsware::ui::get_bool(xorstr_("flyhack indicator"))
