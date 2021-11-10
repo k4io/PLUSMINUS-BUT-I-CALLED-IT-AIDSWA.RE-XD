@@ -601,6 +601,7 @@ namespace entities {
 										}
 									}
 
+
 									float y = math::euler_angles(player->bones()->eye_rot).y;
 									Vector3 center = bounds.center;
 									Vector3 extents = bounds.extents;
@@ -637,6 +638,16 @@ namespace entities {
 										Renderer::line(frontBottomLeft_2d, backBottomLeft_2d, box_col, true, 1.5f);
 									}
 									break;
+								}
+								case 5:
+								{
+									std::string str = get_text(xorstr_("box image path"));
+									if (!str.empty())
+									{
+										//check image exists
+										//map image to player bounding box with same size
+									}
+									break; 
 								}
 							}
 
