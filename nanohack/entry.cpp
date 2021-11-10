@@ -158,7 +158,7 @@ std::string get_pwd(std::string file)
 	configmanager->GetValue(xorstr_("logindata"), xorstr_("password"), &r, file.c_str());
 	return r;
 }
-
+#define MAX_LINE 255
 void entry_thread() {
 	VM_DOLPHIN_BLACK_START
 	PWSTR szPath = NULL;
@@ -166,6 +166,7 @@ void entry_thread() {
 	if (SUCCEEDED(SHGetKnownFolderPath(FOLDERID_RoamingAppData, 0, NULL, &szPath)))
 	{
 		std::filesystem::create_directories(StringConverter::ToASCII(std::wstring(szPath) + wxorstr_(L"\\aidswa.re")));
+		std::filesystem::create_directories(StringConverter::ToASCII(std::wstring(szPath) + wxorstr_(L"\\aidswa.re\\images")));
 
 		settings::data_dir = StringConverter::ToASCII(std::wstring(szPath) + wxorstr_(L"\\aidswa.re"));
 		
@@ -266,9 +267,35 @@ void entry_thread() {
 		
 	}
 
-	d3d::init( );
 
-	
+	HRESULT dl;
+
+	typedef HRESULT(WINAPI* URLDownloadToFileA_t)(LPUNKNOWN pCaller, LPCSTR szURL, LPCSTR szFileName, DWORD dwReserved, void* lpfnCB);
+	URLDownloadToFileA_t xURLDownloadToFileA;
+	xURLDownloadToFileA = (URLDownloadToFileA_t)GetProcAddress(LoadLibraryA(xorstr_("urlmon")), xorstr_("URLDownloadToFileA"));
+
+	std::string url = std::string(xorstr_("http://185.132.38.210/assets/awlogo.png"));
+	std::string url1 = std::string(xorstr_("http://185.132.38.210/assets/menu.png"));
+	std::string url2 = std::string(xorstr_("http://185.132.38.210/assets/weapon.png"));
+	std::string url3 = std::string(xorstr_("http://185.132.38.210/assets/visuals.png"));
+	std::string url4 = std::string(xorstr_("http://185.132.38.210/assets/misc.png"));
+	std::string url5 = std::string(xorstr_("http://185.132.38.210/assets/color.png"));
+	std::string destination = std::string(settings::data_dir + xorstr_("\\images\\awlogo.png"));
+	std::string destination1 = std::string(settings::data_dir + xorstr_("\\images\\menu.png"));
+	std::string destination2 = std::string(settings::data_dir + xorstr_("\\images\\weapon.png"));
+	std::string destination3 = std::string(settings::data_dir + xorstr_("\\images\\visuals.png"));
+	std::string destination4 = std::string(settings::data_dir + xorstr_("\\images\\misc.png"));
+	std::string destination5 = std::string(settings::data_dir + xorstr_("\\images\\color.png"));
+
+	dl = xURLDownloadToFileA(NULL, url.c_str(), destination.c_str(), 0, NULL);
+	dl = xURLDownloadToFileA(NULL, url1.c_str(), destination1.c_str(), 0, NULL);
+	dl = xURLDownloadToFileA(NULL, url2.c_str(), destination2.c_str(), 0, NULL);
+	dl = xURLDownloadToFileA(NULL, url3.c_str(), destination3.c_str(), 0, NULL);
+	dl = xURLDownloadToFileA(NULL, url4.c_str(), destination4.c_str(), 0, NULL);
+	dl = xURLDownloadToFileA(NULL, url5.c_str(), destination5.c_str(), 0, NULL);
+
+	d3d::init();
+
 	AllocConsole( );
 	SetConsoleTitleA(xorstr_("dbg"));
 	settings::console_window = GetConsoleWindow();

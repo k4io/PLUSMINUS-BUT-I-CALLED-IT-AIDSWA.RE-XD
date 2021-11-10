@@ -94,7 +94,7 @@ namespace FGUI
           return;
       }
 
-      FGUI::AREA arWidgetRegion = { 0, 0, 0, 0 };
+      FGUI::AREA arWidgetRegion = { 0, 100, 0, 0 };
 
       for (std::size_t i = 0; i < m_prgpTabButtons.size(); i++)
       {
@@ -124,9 +124,14 @@ namespace FGUI
           }
           else if (m_nStyle == static_cast<int>(TAB_STYLE::VERTICAL))
           {
-              m_iEntrySpacing = 50;
+              m_iEntrySpacing = 100;
+              int index = 0;
+              if (m_prgpTabButtons[i] == "Combat") index = 1;
+              if (m_prgpTabButtons[i] == "Visuals") index = 2;
+              if (m_prgpTabButtons[i] == "Misc") index = 3;
+              if (m_prgpTabButtons[i] == "Colors") index = 4;
 
-              arWidgetRegion = { GetAbsolutePosition().m_iX - 8, GetAbsolutePosition().m_iY + (static_cast<int>(i) * m_iEntrySpacing) + 10, m_dmSize.m_iWidth, m_dmSize.m_iHeight };
+              arWidgetRegion = { GetAbsolutePosition().m_iX - 8, GetAbsolutePosition().m_iY + (static_cast<int>(i) * m_iEntrySpacing) + 30, m_dmSize.m_iWidth, m_dmSize.m_iHeight + 30 };
 
               if (m_ullSelectedEntry == i)
               {
@@ -138,10 +143,10 @@ namespace FGUI
                   FGUI::RENDER.Line(arWidgetRegion.m_iLeft - 2, arWidgetRegion.m_iTop, arWidgetRegion.m_iLeft + 98, arWidgetRegion.m_iTop, { 100, 100, 117 }, 1.f);
                   FGUI::RENDER.Line(arWidgetRegion.m_iLeft - 2, arWidgetRegion.m_iTop + arWidgetRegion.m_iBottom, arWidgetRegion.m_iLeft + 98, arWidgetRegion.m_iTop + arWidgetRegion.m_iBottom, { 100, 100, 117 }, 1.f);
 
-                  //APPARENTLY I HAVE TO CREATE 5 LINES FOR IT TO BE SOLID OVER ANOTHER LINE? WTF?
-                  FGUI::RENDER.RoundedRectangleFilled(arWidgetRegion.m_iLeft, arWidgetRegion.m_iTop + 1, 101, arWidgetRegion.m_iBottom - 2, { 23, 25, 31 }, 0.f);
+                  FGUI::RENDER.RoundedRectangleFilled(arWidgetRegion.m_iLeft - 1, arWidgetRegion.m_iTop + 1, 99, arWidgetRegion.m_iBottom - 2, { 23, 25, 31, 190 }, 0.f);
 
-                  FGUI::RENDER.Text((arWidgetRegion.m_iLeft + 15), (arWidgetRegion.m_iTop + (arWidgetRegion.m_iBottom / 2) - 8), m_anyFont, { 38, 148, 206 }, m_prgpTabButtons[i]);
+                  //FGUI::RENDER.Text((arWidgetRegion.m_iLeft + 15), (arWidgetRegion.m_iTop + (arWidgetRegion.m_iBottom / 2) - 8), m_anyFont, { 38, 148, 206 }, m_prgpTabButtons[i]);
+                  FGUI::RENDER.Image((arWidgetRegion.m_iLeft + 20), arWidgetRegion.m_iTop + 2, 50, 50, index);
               }
               else
               {
@@ -152,7 +157,8 @@ namespace FGUI
 
                   FGUI::RENDER.Line(arWidgetRegion.m_iLeft - 2, arWidgetRegion.m_iTop, arWidgetRegion.m_iLeft + 96, arWidgetRegion.m_iTop, { 121,121,140 }, 1.f);
                   FGUI::RENDER.Line(arWidgetRegion.m_iLeft - 2, arWidgetRegion.m_iTop + arWidgetRegion.m_iBottom, arWidgetRegion.m_iLeft + 96, arWidgetRegion.m_iTop + arWidgetRegion.m_iBottom, { 121,121,140 }, 1.f);
-                  FGUI::RENDER.Text((arWidgetRegion.m_iLeft + 15), (arWidgetRegion.m_iTop + (arWidgetRegion.m_iBottom / 2) - 8), m_anyFont, { 38, 148, 206 }, m_prgpTabButtons[i]);
+                  //FGUI::RENDER.Text((arWidgetRegion.m_iLeft + 15), (arWidgetRegion.m_iTop + (arWidgetRegion.m_iBottom / 2) - 8), m_anyFont, { 38, 148, 206 }, m_prgpTabButtons[i]);
+                  FGUI::RENDER.Image((arWidgetRegion.m_iLeft + 20), arWidgetRegion.m_iTop + 2, 50, 50, index);
               }
           }
       }
@@ -172,9 +178,9 @@ namespace FGUI
       }
       else if (m_nStyle == static_cast<int>(TAB_STYLE::VERTICAL))
       {
-        m_iEntrySpacing = 50;
+        m_iEntrySpacing = 100;
 
-        arWidgetRegion = { GetAbsolutePosition().m_iX - 8, GetAbsolutePosition().m_iY + (static_cast<int>(i) * m_iEntrySpacing) + 10, m_dmSize.m_iWidth, m_dmSize.m_iHeight + 7 };
+        arWidgetRegion = { GetAbsolutePosition().m_iX - 8, GetAbsolutePosition().m_iY + (static_cast<int>(i) * m_iEntrySpacing) + 10, m_dmSize.m_iWidth, m_dmSize.m_iHeight + 57 };
       }
 
       if (FGUI::INPUT.IsCursorInArea(arWidgetRegion))

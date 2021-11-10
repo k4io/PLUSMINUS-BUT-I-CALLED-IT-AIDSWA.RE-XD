@@ -106,7 +106,7 @@ namespace FGUI {
         float size;
         CFont(bool icons = false)
         {
-            name = L"Courier";
+            name = L"Courier New";
             size = 11.0f;
         }
 

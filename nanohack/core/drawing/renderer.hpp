@@ -30,7 +30,7 @@ namespace Renderer {
 	ID2D1SolidColorBrush* m_pSolidBrush;
 	bool initialized = false;
 
-	ID2D1Bitmap* bitmaps[] = { NULL };
+	ID2D1Bitmap* bitmaps[] = { NULL, NULL, NULL, NULL, NULL, NULL, NULL };
 
 	HRESULT LoadBitmapFromFile(const wchar_t* filename, ID2D1Bitmap** pBitmap)
 	{
@@ -73,7 +73,7 @@ namespace Renderer {
 			D2D1_FACTORY_OPTIONS CreateOpt = { D2D1_DEBUG_LEVEL_NONE };
 			DWriteCreateFactory(DWRITE_FACTORY_TYPE_SHARED, __uuidof(m_pTextEngine), (IUnknown**)&m_pTextEngine);
 			D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, __uuidof(ID2D1Factory), &CreateOpt, (void**)&m_pInterface);
-			m_pTextEngine->CreateTextFormat(wxorstr_(L"Courier"), NULL, DWRITE_FONT_WEIGHT_REGULAR, DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STRETCH_NORMAL, 10.f, L"", &m_pTextFormat);
+			m_pTextEngine->CreateTextFormat(wxorstr_(L"Courier New"), NULL, DWRITE_FONT_WEIGHT_REGULAR, DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STRETCH_NORMAL, 10.f, L"", &m_pTextFormat);
 			
 			if (!m_pInterface || !m_pTextEngine || !m_pTextFormat || !m_pIconFormat) return false;
 		}
@@ -111,6 +111,21 @@ namespace Renderer {
 		//logo image is always first in index
 		std::wstring logo_dir = data_dir + wxorstr_(L"\\images\\awlogo.png");
 		if (!SUCCEEDED(LoadBitmapFromFile(logo_dir.c_str(), &bitmaps[0])))
+			return false;
+		logo_dir = data_dir + wxorstr_(L"\\images\\weapon.png");
+		if (!SUCCEEDED(LoadBitmapFromFile(logo_dir.c_str(), &bitmaps[1])))
+			return false;
+		logo_dir = data_dir + wxorstr_(L"\\images\\visuals.png");
+		if (!SUCCEEDED(LoadBitmapFromFile(logo_dir.c_str(), &bitmaps[2])))
+			return false;
+		logo_dir = data_dir + wxorstr_(L"\\images\\misc.png");
+		if (!SUCCEEDED(LoadBitmapFromFile(logo_dir.c_str(), &bitmaps[3])))
+			return false;
+		logo_dir = data_dir + wxorstr_(L"\\images\\color.png");
+		if (!SUCCEEDED(LoadBitmapFromFile(logo_dir.c_str(), &bitmaps[4])))
+			return false;
+		logo_dir = data_dir + wxorstr_(L"\\images\\menu.png");
+		if (!SUCCEEDED(LoadBitmapFromFile(logo_dir.c_str(), &bitmaps[5])))
 			return false;
 
 		return true;

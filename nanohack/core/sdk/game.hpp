@@ -3066,6 +3066,8 @@ void initialize_cheat( ) {
 
 	ASSIGN_HOOK("Assembly-CSharp::Projectile::Launch(): Void", Projectile::Launch_);
 
+	ASSIGN_HOOK("Assembly-CSharp::EffectLibrary::CreateEffect(String,Effect): GameObject", EffectLibrary::CreateEffect_);
+
 	settings::il_init_methods = find(xorstr_("GameAssembly.dll"), "48 83 EC 48 48 8B 05 ? ? ? ? 48 63 90 ? ? ? ?");
 	settings::serverrpc_projectileshoot = find_rel(xorstr_("GameAssembly.dll"), xorstr_("4C 8B 0D ? ? ? ? 48 8B 75 28"));
 

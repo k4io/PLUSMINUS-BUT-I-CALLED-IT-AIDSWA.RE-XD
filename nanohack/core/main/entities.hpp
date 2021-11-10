@@ -1,4 +1,5 @@
 namespace entities {
+	Shader* og_shader = nullptr;
 	std::vector<BasePlayer*> current_visible_players;
 	namespace belt {
 		Vector2 pos = Vector2(200, 200);
@@ -115,7 +116,7 @@ namespace entities {
 		return distr(eng);
 	}
 
-	Shader* og_shader = nullptr;
+	Color get_c(Color3 c) { return Color(c.r / 255.f, c.g / 255.f, c.b / 255.f, c.a / 255.f); }
 
 	void loop() {
 		static Color3 clr = Color3(RandomInteger(100, 255), RandomInteger(100, 255), RandomInteger(100, 255), 255);
@@ -349,32 +350,45 @@ namespace entities {
 						if (player->playerModel()->isNpc() && !aidsware::ui::get_bool(xorstr_("npc"))) continue;
 						if (player->userID() == LocalPlayer::Entity()->userID()) continue;
 
-						/*
 						if (aidsware::ui::get_bool(xorstr_("chams")))
 						{
 							auto list = player->playerModel()->_multiMesh()->Renderers();
 
 							if (list) {
 								for (int i = 0; i < list->size; i++) {
+									if (i == list->size) continue;
 									auto _renderer = reinterpret_cast<Renderer_*>(list->get(i));
 									if (_renderer)
 									{
 										auto material = _renderer->material();
 										if (material)
 										{
-											if (og_shader != material->shader())
-											{
-												if (!og_shader)
-													og_shader = Shader::Find(xorstr_("Hidden/Internal-Colored"));
-												material->set_shader(og_shader);
-												material->SetColor(xorstr_("_Color"), Color(1, 0, 0, 1));
-											}
+											entities::og_shader = Shader::Find(xorstr_("Hidden/Internal-Colored"));
+											material->set_shader(entities::og_shader);
+
+											auto info = player->bones()->head;
+											if (player->playerModel()->isNpc() && player->is_visible())
+												material->SetColor(Shader::PropertyToID(xorstr_("_Color")), get_c(aidsware::ui::get_color("visible npc chams")));
+											else if (player->playerModel()->isNpc() && !player->is_visible())
+												material->SetColor(Shader::PropertyToID(xorstr_("_Color")), get_c(aidsware::ui::get_color("invisible npc chams")));
+
+											if (!player->playerModel()->isNpc() && player->is_visible())
+												material->SetColor(Shader::PropertyToID(xorstr_("_Color")), get_c(aidsware::ui::get_color("visible chams")));
+											else if (!player->playerModel()->isNpc() && !player->is_visible())
+												material->SetColor(Shader::PropertyToID(xorstr_("_Color")), get_c(aidsware::ui::get_color("invisible chams")));
+
+											if (!player->playerModel()->isNpc() && player->is_visible() && player->is_teammate())
+												material->SetColor(Shader::PropertyToID(xorstr_("_Color")), get_c(aidsware::ui::get_color("visible teammate chams")));
+											else if (!player->playerModel()->isNpc() && !player->is_visible() && player->is_teammate())
+												material->SetColor(Shader::PropertyToID(xorstr_("_Color")), get_c(aidsware::ui::get_color("invisible teammate chams")));
+
+											material->SetInt(xorstr_("_ZTest"), 8);
 										}
 									}
 								}
 							}
 						}
-						*/
+
 						auto bounds = player->bones()->bounds;
 						if (!bounds.empty()) {
 							int y_ = 0;

@@ -14,12 +14,14 @@ void ClientUpdate_hk(BasePlayer* plly) {
 			return plly->ClientUpdate( );
 		}
 		
+		/*
 		if (aidsware::ui::get_bool(xorstr_("chams")))
 		{
 			auto list = plly->playerModel()->_multiMesh()->Renderers();
 
 			if (list) {
 				for (int i = 0; i < list->size; i++) {
+					if (i == list->size) continue;
 					auto member = reinterpret_cast<Renderer_*>(list->get(i));
 					if (!member) continue;
 
@@ -27,7 +29,7 @@ void ClientUpdate_hk(BasePlayer* plly) {
 				}
 			}
 		}
-
+*/
 		if (get_key(aidsware::ui::get_keybind(xorstr_("timescale key"))))
 			Time::set_timeScale(2.f);
 		else Time::set_timeScale(1.f);
@@ -569,6 +571,12 @@ void ClientInput_hk(BasePlayer* plly, uintptr_t state) {
 		
 		if (get_key(aidsware::ui::get_keybind(xorstr_("desync on key"))))
 			LocalPlayer::Entity()->clientTickInterval() = 0.99f;
+
+		if (aidsware::ui::get_bool(xorstr_("raid esp")))
+		{
+			//LogSystem::RenderExplosions();
+		}
+
 		if (held)
 		{	
 			auto wep_class_name = held->class_name();
@@ -605,8 +613,8 @@ void ClientInput_hk(BasePlayer* plly, uintptr_t state) {
 			|| aidsware::ui::get_bool(xorstr_("flyhack stop")))
 		{
 			CheckFlyhack();
-			printf("settings::flyhack: %ff\n", settings::flyhack);
-			printf("settings::hor_flyhack: %ff\n", settings::hor_flyhack);
+			//printf("settings::flyhack: %ff\n", settings::flyhack);
+			//printf("settings::hor_flyhack: %ff\n", settings::hor_flyhack);
 		}
 
 		if (aidsware::ui::get_bool(xorstr_("autoshoot")) && aidsware::ui::get_bool(xorstr_("insta kill")) && aidsware::ui::get_bool(xorstr_("with peek assist")))
@@ -646,8 +654,6 @@ void ClientInput_hk(BasePlayer* plly, uintptr_t state) {
 										held->LaunchProjectile();
 							}
 						}
-			LocalPlayer::Entity()->clientTickInterval() = 0.05f;
-			held->UpdateAmmoDisplay();
 		}
 		else
 		{
@@ -1029,6 +1035,8 @@ void undo_hooks( ) {
 	hookengine::unhook(PlayerEyes::get_position_, playereyes_getpos_hk);
 
 	hookengine::unhook(Projectile::Launch_, Launch_hk);
+
+	hookengine::unhook(EffectLibrary::CreateEffect_, CreateEffect_hk);
 
 	VM_DOLPHIN_BLACK_END
 }

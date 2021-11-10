@@ -172,7 +172,8 @@ namespace FGUI
             //FGUI::RENDER.Rectangle(arWidgetRegion.m_iLeft + 1, arWidgetRegion.m_iTop + 31, arWidgetRegion.m_iRight - 2, (arWidgetRegion.m_iBottom - 30) - 2, { /*36, 36, 36*/45, 83, 122 });
 
             FGUI::RENDER.RoundedRectangle(arWidgetRegion.m_iLeft - 1, arWidgetRegion.m_iTop - 1, arWidgetRegion.m_iRight + 2, arWidgetRegion.m_iBottom + 2, { 44, 44, 46 }, 15.f);
-            FGUI::RENDER.RoundedRectangleFilled(arWidgetRegion.m_iLeft, arWidgetRegion.m_iTop, arWidgetRegion.m_iRight, arWidgetRegion.m_iBottom, { 23, 25, 31, 255 }, 15.f);
+            //FGUI::RENDER.RoundedRectangleFilled(arWidgetRegion.m_iLeft, arWidgetRegion.m_iTop, arWidgetRegion.m_iRight, arWidgetRegion.m_iBottom, { 23, 25, 31, 255 }, 15.f);
+            FGUI::RENDER.Image(arWidgetRegion.m_iLeft - 29, arWidgetRegion.m_iTop - 36, 594, 495, 5);
             FGUI::RENDER.RoundedRectangle(arWidgetRegion.m_iLeft - 1, arWidgetRegion.m_iTop - 1, 100, arWidgetRegion.m_iBottom + 2, { 44, 44, 46 }, 15.f);
 
             
@@ -184,11 +185,12 @@ namespace FGUI
             //FGUI::RENDER.Line(arWidgetRegion.m_iLeft + 138, arWidgetRegion.m_iTop, arWidgetRegion.m_iLeft + 138, arWidgetRegion.m_iTop + 440, {45, 83, 122});
 
             // container title
+            /*
             if (flag)
-                FGUI::RENDER.Image(m_ptPosition.m_iX + 13, m_ptPosition.m_iY - 14, 75, 75, 0);
+                FGUI::RENDER.Image(m_ptPosition.m_iX + 10, m_ptPosition.m_iY - 14, 75, 75, 0);
             else
                 FGUI::RENDER.Text(m_ptPosition.m_iX + 17, m_ptPosition.m_iY + 10, m_anyFont, { 219, 219, 219 }, m_strTitle);
-
+                */
             if (m_fnctCallback)       {
                 // invoke function
                 m_fnctCallback( );

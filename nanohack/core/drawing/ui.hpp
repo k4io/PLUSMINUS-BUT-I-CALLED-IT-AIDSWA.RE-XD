@@ -116,13 +116,13 @@ namespace aidsware::ui
 
 		void create_window(std::string name, Vector2 position, Vector2 size, std::uint32_t menu_key)
 		{
-			ptrnBuilder.Widget(vars::Container).Title(name).Position(position.x + currentX, position.y).Size(size.x, size.y).Key(menu_key).Font(xorstr_("Courier"), 12, true, 1);
+			ptrnBuilder.Widget(vars::Container).Title(name).Position(position.x + currentX, position.y).Size(size.x, size.y).Key(menu_key).Font(xorstr_("Courier New"), 12, true, 1);
 		}
 
 		void button(std::string name, std::function<void()> callback, Vector2 position, Tabs tab = Tabs::Visual)
 		{
 			vars::buttons[name] = std::make_shared<FGUI::CButton>();
-			ptrnBuilder.Widget(vars::buttons[name]).Title(name).Position(position.x + currentX, currentY + position.y).Font(xorstr_("Courier"), 11).Medium(vars::Tabs, (int)tab).Callback(callback).SpawnIn(vars::Container, false);
+			ptrnBuilder.Widget(vars::buttons[name]).Title(name).Position(position.x + currentX, currentY + position.y).Font(xorstr_("Courier New"), 11).Medium(vars::Tabs, (int)tab).Callback(callback).SpawnIn(vars::Container, false);
 			currentY += 25.0f;
 		}
 
@@ -130,17 +130,17 @@ namespace aidsware::ui
 		{
 			auto text_size = Renderer::get_text_size(StringConverter::ToUnicode(name), 11.0f);
 			vars::checkBoxes[name] = std::make_shared<FGUI::CCheckBox>();
-			auto cb = ptrnBuilder.Widget(vars::checkBoxes[name]).Title(name).Position(position.x + currentX, position.y + currentY).Font(xorstr_("Courier"), 11).Medium(vars::Tabs, (int)tab).SpawnIn(vars::Container, false);
+			auto cb = ptrnBuilder.Widget(vars::checkBoxes[name]).Title(name).Position(position.x + currentX, position.y + currentY).Font(xorstr_("Courier New"), 11).Medium(vars::Tabs, (int)tab).SpawnIn(vars::Container, false);
 			if (colorpick)
 			{
 				vars::colorPickers[name] = std::make_shared<FGUI::CColorPicker>();
-				ptrnBuilder.Widget(vars::colorPickers[name]).Title(name + xorstr_(" color")).Position((text_size.x * 1.5) + 10.0f + position.x + cppos.x, currentY + position.y).Font(xorstr_("Courier"), 11).Medium(vars::Tabs, (int)tab).SpawnIn(vars::Container, false);
+				ptrnBuilder.Widget(vars::colorPickers[name]).Title(name + xorstr_(" color")).Position((text_size.x * 1.5) + 10.0f + position.x + cppos.x, currentY + position.y).Font(xorstr_("Courier New"), 11).Medium(vars::Tabs, (int)tab).SpawnIn(vars::Container, false);
 			}
 			currentY += 20.0f;
 			if (keybind)
 			{
 				vars::keybinders[name + xorstr_(" key")] = std::make_shared<FGUI::CKeyBinder>();
-				ptrnBuilder.Widget(vars::keybinders[name + xorstr_(" key")]).Title(name + xorstr_(" key")).Position(position.x + currentX, position.y + currentY).Font(xorstr_("Courier"), 11).Medium(vars::Tabs, (int)tab).SpawnIn(vars::Container, false);
+				ptrnBuilder.Widget(vars::keybinders[name + xorstr_(" key")]).Title(name + xorstr_(" key")).Position(position.x + currentX, position.y + currentY).Font(xorstr_("Courier New"), 11).Medium(vars::Tabs, (int)tab).SpawnIn(vars::Container, false);
 				currentY += 25.0f;
 			}
 			currentY += 5.0f;
@@ -149,7 +149,7 @@ namespace aidsware::ui
 		void label(std::string name, Vector2 position, Tabs tab = Tabs::Visual, bool newline = true, bool fonticon = false, std::string e = "")
 		{
 			vars::labels[name] = std::make_shared<FGUI::CLabel>();
-			ptrnBuilder.Widget(vars::labels[name]).Title(name).Position(position.x + currentX, position.y + currentY).Font(xorstr_("Courier"), 11).Medium(vars::Tabs, (int)tab).SpawnIn(vars::Container, false);
+			ptrnBuilder.Widget(vars::labels[name]).Title(name).Position(position.x + currentX, position.y + currentY).Font(xorstr_("Courier New"), 11).Medium(vars::Tabs, (int)tab).SpawnIn(vars::Container, false);
 			if(newline)
 				currentY += 20.0f;
 		}
@@ -157,21 +157,21 @@ namespace aidsware::ui
 		void color_picker(std::string name, Vector2 position, Tabs tab = Tabs::Visual)
 		{
 			vars::colorPickers[name] = std::make_shared<FGUI::CColorPicker>();
-			ptrnBuilder.Widget(vars::colorPickers[name]).Title(name).Position(position.x + currentX, currentY + position.y).Font(xorstr_("Courier"), 11).Medium(vars::Tabs, (int)tab).SpawnIn(vars::Container, false);
+			ptrnBuilder.Widget(vars::colorPickers[name]).Title(name).Position(position.x + currentX, currentY + position.y).Font(xorstr_("Courier New"), 11).Medium(vars::Tabs, (int)tab).SpawnIn(vars::Container, false);
 			currentY += 20.0f;
 		}
 
 		void textbox(std::string name, Vector2 position, Tabs tab = Tabs::Visual, std::string value = "")
 		{
 			vars::textBoxes[name] = std::make_shared<FGUI::CTextBox>();
-			ptrnBuilder.Widget(vars::textBoxes[name]).Title(name).Position(position.x + currentX, position.y + currentY).Font(xorstr_("Courier"), 11).Text(value).Medium(vars::Tabs, (int)tab).SpawnIn(vars::Container, false);
+			ptrnBuilder.Widget(vars::textBoxes[name]).Title(name).Position(position.x + currentX, position.y + currentY).Font(xorstr_("Courier New"), 11).Text(value).Medium(vars::Tabs, (int)tab).SpawnIn(vars::Container, false);
 			currentY += 25.0f;
 		}
 
 		void combobox(std::string name, std::vector<std::string> options, Vector2 position, Tabs tab = Tabs::Visual)
 		{
 			vars::comboBoxes[name] = std::make_shared<FGUI::CComboBox>();
-			auto widget = ptrnBuilder.Widget(vars::comboBoxes[name]).Title(name).Position(position.x + currentX, currentY + position.y).Font(xorstr_("Courier"), 11).Medium(vars::Tabs, (int)tab);
+			auto widget = ptrnBuilder.Widget(vars::comboBoxes[name]).Title(name).Position(position.x + currentX, currentY + position.y).Font(xorstr_("Courier New"), 11).Medium(vars::Tabs, (int)tab);
 			
 			for(auto opt : options)
 				widget.Entry(opt);
@@ -183,20 +183,20 @@ namespace aidsware::ui
 		void keybind(std::string name, Vector2 position, Tabs tab = Tabs::Visual)
 		{
 			vars::keybinders[name] = std::make_shared<FGUI::CKeyBinder>();
-			ptrnBuilder.Widget(vars::keybinders[name]).Title(name).Position(position.x + currentX, position.y + currentY).Font(xorstr_("Courier"), 11).Medium(vars::Tabs, (int)tab).SpawnIn(vars::Container, false);
+			ptrnBuilder.Widget(vars::keybinders[name]).Title(name).Position(position.x + currentX, position.y + currentY).Font(xorstr_("Courier New"), 11).Medium(vars::Tabs, (int)tab).SpawnIn(vars::Container, false);
 			currentY += 25.0f;
 		}
 
 		void slider(std::string name, Vector2 position, float value, float min, float max, Tabs tab = Tabs::Combat)
 		{
 			vars::sliders[name] = std::make_shared<FGUI::CSlider>();
-			ptrnBuilder.Widget(vars::sliders[name]).Title(name).Range(min, max).Value(value).Position(position.x + currentX, position.y + currentY).Font(xorstr_("Courier"), 11).Medium(vars::Tabs, (int)tab).SpawnIn(vars::Container, false);
+			ptrnBuilder.Widget(vars::sliders[name]).Title(name).Range(min, max).Value(value).Position(position.x + currentX, position.y + currentY).Font(xorstr_("Courier New"), 11).Medium(vars::Tabs, (int)tab).SpawnIn(vars::Container, false);
 			currentY += 30.0f;
 		}
 
 		void tabs(std::vector<std::string> tabs)
 		{
-			auto builder = ptrnBuilder.Widget(vars::Tabs).Position(0, 0).Font(xorstr_("Courier"), 16, true, 1);
+			auto builder = ptrnBuilder.Widget(vars::Tabs).Position(0, 0).Font(xorstr_("Courier New"), 16, true, 1);
 			for (auto tab : tabs)
 				builder.Tab(tab);
 			
@@ -228,6 +228,7 @@ namespace aidsware::ui
 		vars::Container = std::make_shared<FGUI::CContainer>();
 		vars::Tabs = std::make_shared<FGUI::CTabPanel>();
 		wrapper::create_window(xorstr_("aidswa.re"), Vector2(200, 200), Vector2(530, 450), VK_INSERT);
+		wrapper::currentY += 20.0f;
 		wrapper::tabs({xorstr_("Combat"), xorstr_("Visuals"), xorstr_("Misc"), xorstr_("Colors") });
 
 		// == Combat == \\
@@ -317,8 +318,8 @@ namespace aidsware::ui
 		wrapper::checkbox(xorstr_("storage"), Vector2(170, 0), Tabs::Visual);
 		wrapper::checkbox(xorstr_("vehicles"), Vector2(170, 0), Tabs::Visual);
 		wrapper::checkbox(xorstr_("flyhack indicator"), Vector2(170, 0), Tabs::Visual);
-		//wrapper::checkbox(xorstr_("raid esp"), Vector2(170, 0), Tabs::Visual);
-		//wrapper::checkbox(xorstr_("chams"), Vector2(170, 0), Tabs::Visual);
+		wrapper::checkbox(xorstr_("raid esp"), Vector2(170, 0), Tabs::Visual);
+		wrapper::checkbox(xorstr_("chams"), Vector2(170, 0), Tabs::Visual);
 		wrapper::checkbox(xorstr_("debug"), Vector2(170, 0), Tabs::Visual);
 		wrapper::currentY += 30.f;
 		wrapper::slider(xorstr_("esp dist"), Vector2(170, 0), 100.0f, 0.0f, 400.0f, Tabs::Visual);
@@ -391,12 +392,20 @@ namespace aidsware::ui
 		wrapper::label(xorstr_("players"), Vector2(0, 0), Tabs::Colors);
 		wrapper::label(xorstr_("visible"), Vector2(30, 0), Tabs::Colors, false);
 		wrapper::color_picker(xorstr_("visible players"), Vector2(75, 0), Tabs::Colors);
+		wrapper::label(xorstr_("chams"), Vector2(30, 0), Tabs::Colors, false);
+		wrapper::color_picker(xorstr_("visible chams"), Vector2(75, 0), Tabs::Colors);
 		wrapper::label(xorstr_("invisible"), Vector2(10, 0), Tabs::Colors, false);
 		wrapper::color_picker(xorstr_("invisible players"), Vector2(80, 0), Tabs::Colors);
+		wrapper::label(xorstr_("chams"), Vector2(30, 0), Tabs::Colors, false);
+		wrapper::color_picker(xorstr_("invisible chams"), Vector2(80, 0), Tabs::Colors);
 		wrapper::label(xorstr_("visible teammate"), Vector2(10, 0), Tabs::Colors, false);
 		wrapper::color_picker(xorstr_("visible teammate"), Vector2(125, 0), Tabs::Colors);
+		wrapper::label(xorstr_("chams"), Vector2(10, 0), Tabs::Colors, false);
+		wrapper::color_picker(xorstr_("visible teammate chams"), Vector2(125, 0), Tabs::Colors);
 		wrapper::label(xorstr_("invisible teammate"), Vector2(10, 0), Tabs::Colors, false);
 		wrapper::color_picker(xorstr_("invisible teammate"), Vector2(135, 0), Tabs::Colors);
+		wrapper::label(xorstr_("chams"), Vector2(10, 0), Tabs::Colors, false);
+		wrapper::color_picker(xorstr_("invisible teammate chams"), Vector2(135, 0), Tabs::Colors);
 		wrapper::label(xorstr_("visible skeleton"), Vector2(10, 0), Tabs::Colors, false);
 		wrapper::color_picker(xorstr_("visible skeleton players"), Vector2(115, 0), Tabs::Colors);
 		wrapper::label(xorstr_("invisible skeleton"), Vector2(10, 0), Tabs::Colors, false);
@@ -421,10 +430,11 @@ namespace aidsware::ui
 		wrapper::color_picker(xorstr_("workbench color"), Vector2(75, 0), Tabs::Colors);
 		wrapper::label(xorstr_("crates"), Vector2(10, 0), Tabs::Colors, false);
 		wrapper::color_picker(xorstr_("crate color"), Vector2(65, 0), Tabs::Colors);
-		wrapper::label(xorstr_("tc"), Vector2(10, 0), Tabs::Colors, false);
-		wrapper::color_picker(xorstr_("tc color"), Vector2(55, 0), Tabs::Colors);
-		wrapper::label(xorstr_("boxes"), Vector2(10, 0), Tabs::Colors, false);
-		wrapper::color_picker(xorstr_("box color"), Vector2(55, 0), Tabs::Colors);
+		wrapper::currentY -= 75.f;
+		wrapper::label(xorstr_("tc"), Vector2(100, 0), Tabs::Colors, false);
+		wrapper::color_picker(xorstr_("tc color"), Vector2(145, 0), Tabs::Colors);
+		wrapper::label(xorstr_("boxes"), Vector2(100, 0), Tabs::Colors, false);
+		wrapper::color_picker(xorstr_("box color"), Vector2(145, 0), Tabs::Colors);
 		wrapper::reset_height();
 		wrapper::currentX += 20.f;
 		wrapper::label(xorstr_("looking direction"), Vector2(130, 0), Tabs::Colors, false);
@@ -434,8 +444,12 @@ namespace aidsware::ui
 		wrapper::label(xorstr_("npcs"), Vector2(130, 0), Tabs::Colors);
 		wrapper::label(xorstr_("visible"), Vector2(140, 0), Tabs::Colors, false);
 		wrapper::color_picker(xorstr_("visible npcs"), Vector2(195, 0), Tabs::Colors);
+		wrapper::label(xorstr_("chams"), Vector2(140, 0), Tabs::Colors, false);
+		wrapper::color_picker(xorstr_("visible npcs chams"), Vector2(195, 0), Tabs::Colors);
 		wrapper::label(xorstr_("invisible"), Vector2(140, 0), Tabs::Colors, false);
 		wrapper::color_picker(xorstr_("invisible npcs"), Vector2(210, 0), Tabs::Colors);
+		wrapper::label(xorstr_("chams"), Vector2(140, 0), Tabs::Colors, false);
+		wrapper::color_picker(xorstr_("invisible npcs chams"), Vector2(210, 0), Tabs::Colors);
 		wrapper::label(xorstr_("visible skeleton"), Vector2(140, 0), Tabs::Colors, false);
 		wrapper::color_picker(xorstr_("visible skeleton npc"), Vector2(255, 0), Tabs::Colors);
 		wrapper::label(xorstr_("invisible skeleton"), Vector2(140, 0), Tabs::Colors, false);
