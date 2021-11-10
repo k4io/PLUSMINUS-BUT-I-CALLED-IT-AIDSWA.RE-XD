@@ -1,6 +1,12 @@
 namespace entities {
 	Shader* og_shader = nullptr;
 	std::vector<BasePlayer*> current_visible_players;
+
+	inline bool exists(const std::string& name) {
+		struct stat buffer;
+		return (stat(name.c_str(), &buffer) == 0);
+	}
+
 	namespace belt {
 		Vector2 pos = Vector2(200, 200);
 		bool should_drag = false;
@@ -641,11 +647,16 @@ namespace entities {
 								}
 								case 5:
 								{
-									std::string str = get_text(xorstr_("box image path"));
-									if (!str.empty())
+									std::string str = get_text(xorstr_("box image name"));
+									if (!str.empty() && str != "none")
 									{
-										//check image exists
-										//map image to player bounding box with same size
+										str = settings::data_dir + "\\" + str;
+										if (exists())
+										{
+
+										}
+											//check image exists
+											//map image to player bounding box with same size
 									}
 									break; 
 								}

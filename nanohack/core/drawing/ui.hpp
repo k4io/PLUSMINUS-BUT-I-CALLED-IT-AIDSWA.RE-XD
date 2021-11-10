@@ -384,6 +384,8 @@ namespace aidsware::ui
 		wrapper::currentY += 20.f;
 		wrapper::slider(xorstr_("threshold"), Vector2(170, 0), 100.0f, 0.0f, 400.0f, Tabs::Misc);
 		wrapper::checkbox(xorstr_("walk to marker"), Vector2(170, 0), Tabs::Misc);
+		wrapper::checkbox(xorstr_("custom box"), Vector2(170, 0), Tabs::Misc);
+		wrapper::textbox(xorstr_("custom box image"), Vector2(170, 0), Tabs::Misc, xorstr_("none"));
 		wrapper::reset_height();
 		wrapper::reset_width();
 

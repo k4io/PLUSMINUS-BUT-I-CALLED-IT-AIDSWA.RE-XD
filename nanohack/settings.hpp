@@ -21,6 +21,8 @@ namespace settings {
 	uintptr_t il_init_methods;
 	uintptr_t serverrpc_projectileshoot;
 
+	uintptr_t custom_box_image;
+
 	namespace tr {
 		bool manipulated = false;
 		bool manipulate_visible = false;
