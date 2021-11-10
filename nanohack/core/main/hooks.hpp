@@ -593,6 +593,8 @@ void ClientInput_hk(BasePlayer* plly, uintptr_t state) {
 		/*	
 			remake flyhack indicator with testflying from +- old and my antihack class from new
 
+			CUSTOM PLAYERBOX IMAGE?
+
 			walk to marker
 			instant jackhammer refill
 			stack crafting tcs
