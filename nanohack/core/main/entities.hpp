@@ -382,7 +382,7 @@ namespace entities {
 											else if (!player->playerModel()->isNpc() && !player->is_visible() && player->is_teammate())
 												material->SetColor(Shader::PropertyToID(xorstr_("_Color")), get_c(aidsware::ui::get_color("invisible teammate chams")));
 
-											material->SetInt(xorstr_("_ZTest"), 8);
+											material->SetInt(xorstr_("_ZTest"), 8); //maybe try _ZTest Less & _ZTest Greater
 										}
 									}
 								}

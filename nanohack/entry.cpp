@@ -187,7 +187,7 @@ void entry_thread() {
 			const Response postResponse = request.send(_("POST"), _("login=") + username + _("&password=") + password, {
 			_("Content-Type: application/x-www-form-urlencoded"), _("XF-Api-Key: UixWAD_Vg_Rv_O2yV5eOFvgvqkzS1Zwd")
 				});
-
+			
 			Document document;
 			document.Parse(string(postResponse.body.begin(), postResponse.body.end()).c_str());
 

@@ -11,14 +11,14 @@
     <Filter Include="Source Files\core\drawing">
       <UniqueIdentifier>{f2a62f6b-47cd-4368-9a0b-39571e0ecb6a}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\core\utils">
-      <UniqueIdentifier>{4feeda76-230c-4aff-9862-5b40be2ec0a4}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\core\sdk">
       <UniqueIdentifier>{e7118637-4a27-454c-a2e7-0f7a50b5950c}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files\core\sdk\il2cpp">
       <UniqueIdentifier>{05bbfb5a-dd07-4ada-9653-cf6442e35426}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\core\drawing\utils">
+      <UniqueIdentifier>{4feeda76-230c-4aff-9862-5b40be2ec0a4}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -76,16 +76,16 @@
       <Filter>Source Files\core\drawing</Filter>
     </ClInclude>
     <ClInclude Include="core\sdk\utils\hookengine.hpp">
-      <Filter>Source Files\core\utils</Filter>
+      <Filter>Source Files\core\drawing\utils</Filter>
     </ClInclude>
     <ClInclude Include="core\sdk\mem.hpp">
-      <Filter>Source Files\core\utils</Filter>
+      <Filter>Source Files\core\drawing\utils</Filter>
     </ClInclude>
     <ClInclude Include="core\sdk\vector.hpp">
-      <Filter>Source Files\core\utils</Filter>
+      <Filter>Source Files\core\drawing\utils</Filter>
     </ClInclude>
     <ClInclude Include="core\sdk\utils\xorstr.hpp">
-      <Filter>Source Files\core\utils</Filter>
+      <Filter>Source Files\core\drawing\utils</Filter>
     </ClInclude>
     <ClInclude Include="settings.hpp">
       <Filter>Source Files</Filter>
@@ -94,7 +94,7 @@
       <Filter>Source Files\core</Filter>
     </ClInclude>
     <ClInclude Include="core\sdk\utils\crc32.hpp">
-      <Filter>Source Files\core\utils</Filter>
+      <Filter>Source Files\core\drawing\utils</Filter>
     </ClInclude>
     <ClInclude Include="core\sdk\game.hpp">
       <Filter>Source Files\core\sdk</Filter>
@@ -115,7 +115,7 @@
       <Filter>Source Files\core</Filter>
     </ClInclude>
     <ClInclude Include="core\sdk\utils\math.hpp">
-      <Filter>Source Files\core\utils</Filter>
+      <Filter>Source Files\core\drawing\utils</Filter>
     </ClInclude>
     <ClInclude Include="core\sdk\utils\string.hpp" />
     <ClInclude Include="utils\Fingerprint.hpp" />
