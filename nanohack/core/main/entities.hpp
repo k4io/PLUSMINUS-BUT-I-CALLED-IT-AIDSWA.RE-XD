@@ -568,9 +568,13 @@ namespace entities {
 								{
 									if (settings::custom_box_path != image_path)
 									{
+										std::wstring w(image_path.begin(), image_path.end());
+										Renderer::set_custom_box(w);
 										//set custom box bitmap in renderer
 										//call draw image instead of drawing box
 									}
+									else
+										Renderer::custom_box(bounds.left, bounds.top, box_width, box_height);
 								}
 							}
 
