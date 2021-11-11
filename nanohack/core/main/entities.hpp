@@ -130,6 +130,8 @@ namespace entities {
 		else
 			ShowWindow(settings::console_window, SW_HIDE);
 
+
+
 		switch (aidsware::ui::get_combobox(xorstr_("crosshair"))) {
 		case 1:
 			Renderer::circle(screen_center - Vector2(2, 2), clr, 4.f, 0.75f);
@@ -558,7 +560,21 @@ namespace entities {
 								}
 							}
 
-							if (aidsware::ui::get_bool(xorstr_("box"))) {
+							if (aidsware::ui::get_bool(xorstr_("custom box")))
+							{
+								std::string image_path = aidsware::ui::get_text(xorstr_("custom box path"));
+								bool exists = std::filesystem::exists(image_path);
+								if (exists)
+								{
+									if (settings::custom_box_path != image_path)
+									{
+										//set custom box bitmap in renderer
+										//call draw image instead of drawing box
+									}
+								}
+							}
+
+							if (aidsware::ui::get_bool(xorstr_("box")) && !aidsware::ui::get_bool(xorstr_("custom box"))) {
 								switch (aidsware::ui::get_combobox(xorstr_("box type"))) {
 								case 0: // cornered
 									Renderer::line({ bounds.left, bounds.top }, { bounds.left + (box_width / 3.5f), bounds.top }, box_col, true, 1.5f);
@@ -638,16 +654,6 @@ namespace entities {
 										Renderer::line(frontBottomLeft_2d, backBottomLeft_2d, box_col, true, 1.5f);
 									}
 									break;
-								}
-								case 5:
-								{
-									std::string str = get_text(xorstr_("box image path"));
-									if (!str.empty())
-									{
-										//check image exists
-										//map image to player bounding box with same size
-									}
-									break; 
 								}
 							}
 

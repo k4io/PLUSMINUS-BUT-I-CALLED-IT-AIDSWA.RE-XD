@@ -132,6 +132,8 @@ double CalcBulletDrop(double height, double DepthPlayerTarget, float velocity, f
 	return TotalVerticalDrop * 10;
 }
 #define powFFFFFFFFFFFFFFFFFFFFFF(n) (n)*(n)
+#define maxSimulateSeconds 5
+#define stepRate 0.01666666666
 void APrediction(Vector3 local, Vector3& target, Vector3 targetvel, float bulletspeed, float gravity, float drag, Vector3 initialVel = { 0, 0, 0 }) {
 	float Dist = local.distance(target);
 
@@ -219,6 +221,7 @@ void serverrpc_projectileshoot_hk(int64_t rcx, int64_t rdx, int64_t r9, int64_t 
 			rpc_position = *reinterpret_cast<Vector3*>(projectile + 0x18); //
 			auto original_vel = *reinterpret_cast<Vector3*>(projectile + 0x24); //
 
+			//auto itemmodvel = safe_read(safe_read(projectile + 0xE8, uintptr_t) + 0x34, float);
 
 			if (target_ply/* && !target.teammate*/) {
 				APrediction(v, bonepos, vel, original_vel.Length(), stats.gravity_modifier, stats.drag, safe_read(projectile + 0x18, Vector3));

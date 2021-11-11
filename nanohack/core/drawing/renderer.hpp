@@ -32,6 +32,8 @@ namespace Renderer {
 
 	ID2D1Bitmap* bitmaps[] = { NULL, NULL, NULL, NULL, NULL, NULL, NULL };
 
+	ID2D1Bitmap* boxBitmap = nullptr;
+
 	HRESULT LoadBitmapFromFile(const wchar_t* filename, ID2D1Bitmap** pBitmap)
 	{
 		HRESULT hr = S_FALSE;
@@ -146,10 +148,36 @@ namespace Renderer {
 		}
 	}
 	
+	/*
+	void draw_custom_box(float x, float y, float w, float h)
+	{
+		ID2D1Bitmap* image = (ID2D1Bitmap*)settings::custom_image_box;
+		D2D1_SIZE_F size = image->GetSize();
+		m_pCanvas->DrawBitmap(image, D2D1::RectF(x, y, x + w, y + h), 1.0f, D2D1_BITMAP_INTERPOLATION_MODE_LINEAR, D2D1::RectF(0, 0, size.width, size.height));
+	}
+	*/
 	void draw_image(float x, float y, float w, float h, int file)
 	{
 		D2D1_SIZE_F size = bitmaps[file]->GetSize();
 		m_pCanvas->DrawBitmap(bitmaps[file], D2D1::RectF(x, y, x + w, y + h), 1.0f, D2D1_BITMAP_INTERPOLATION_MODE_LINEAR, D2D1::RectF(0, 0, size.width, size.height));
+	}
+
+	void set_custom_box(std::wstring image_path)
+	{
+		std::wstring data_dir(settings::data_dir.begin(), settings::data_dir.end());
+
+		//logo image is always first in index
+		std::wstring logo_dir = data_dir + wxorstr_(L"\\images\\") + image_path;
+		if (!SUCCEEDED(LoadBitmapFromFile(logo_dir.c_str(), &boxBitmap)))
+			return;
+	}
+
+	void custom_box(float x, float y, float w, float h)
+	{
+		if (!boxBitmap)
+			return;
+		D2D1_SIZE_F size = boxBitmap->GetSize();
+		m_pCanvas->DrawBitmap(boxBitmap, D2D1::RectF(x, y, x + w, y + h), 1.0f, D2D1_BITMAP_INTERPOLATION_MODE_LINEAR, D2D1::RectF(0, 0, size.width, size.height));
 	}
 
 	void rectangle_filled(Vector2 pos, Vector2 size, const Color3 color) {
