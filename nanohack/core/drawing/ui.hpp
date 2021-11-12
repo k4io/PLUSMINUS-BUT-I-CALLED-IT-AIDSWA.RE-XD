@@ -239,11 +239,12 @@ namespace aidsware::ui
 		wrapper::checkbox(xorstr_("psilent"), Vector2(0, 0), Tabs::Combat, true);
 		wrapper::currentY += 5.0f;
 		wrapper::checkbox(xorstr_("peek assist"), Vector2(0, 0), Tabs::Combat, true, false);
-		wrapper::currentY += 5.0f;
+		wrapper::currentY += 10.0f;
 		//wrapper::checkbox(xorstr_("silent melee"), Vector2(0, 0), Tabs::Combat);
+		wrapper::slider(xorstr_("lerp"), Vector2(0, 0), 0.75f, 0.01f, 1.0f, Tabs::Combat);
+		wrapper::currentY -= 5.f;	
 		wrapper::checkbox(xorstr_("autoshoot"), Vector2(0, 0), Tabs::Combat);
 		wrapper::checkbox(xorstr_("pierce"), Vector2(0, 0), Tabs::Combat);
-		//wrapper::checkbox(xorstr_("test"), Vector2(0, 0), Tabs::Combat);
 		wrapper::checkbox(xorstr_("rapid fire"), Vector2(0, 0), Tabs::Combat);
 		wrapper::checkbox(xorstr_("hitbox attraction"), Vector2(0, 0), Tabs::Combat);
 		wrapper::checkbox(xorstr_("fat bullet"), Vector2(0, 0), Tabs::Combat);
@@ -254,6 +255,7 @@ namespace aidsware::ui
 		wrapper::currentY += 10.f;
 		wrapper::slider(xorstr_("counter"), Vector2(0, 0), 5.0f, 0.0f, 9.0f, Tabs::Combat);
 		wrapper::slider(xorstr_("bullets"), Vector2(0, 0), 1.0f, 0.0f, 5.0f, Tabs::Combat);
+		wrapper::currentY -= 5.f;
 		wrapper::checkbox(xorstr_("with peek assist"), Vector2(0, 0), Tabs::Combat);
 		wrapper::currentX += 20.f;
 		wrapper::reset_height();
@@ -318,7 +320,7 @@ namespace aidsware::ui
 		wrapper::checkbox(xorstr_("storage"), Vector2(170, 0), Tabs::Visual);
 		wrapper::checkbox(xorstr_("vehicles"), Vector2(170, 0), Tabs::Visual);
 		wrapper::checkbox(xorstr_("flyhack indicator"), Vector2(170, 0), Tabs::Visual);
-		wrapper::checkbox(xorstr_("raid esp"), Vector2(170, 0), Tabs::Visual);
+		//wrapper::checkbox(xorstr_("raid esp"), Vector2(170, 0), Tabs::Visual);
 		wrapper::checkbox(xorstr_("chams"), Vector2(170, 0), Tabs::Visual);
 		wrapper::checkbox(xorstr_("debug"), Vector2(170, 0), Tabs::Visual);
 		wrapper::currentY += 30.f;
@@ -385,7 +387,8 @@ namespace aidsware::ui
 		wrapper::slider(xorstr_("threshold"), Vector2(170, 0), 100.0f, 0.0f, 400.0f, Tabs::Misc);
 		wrapper::checkbox(xorstr_("walk to marker"), Vector2(170, 0), Tabs::Misc);
 		wrapper::checkbox(xorstr_("custom box"), Vector2(170, 0), Tabs::Misc);
-		wrapper::textbox(xorstr_("custom box path"), Vector2(170, 0), Tabs::Misc, xorstr_("default"));
+		wrapper::textbox(xorstr_("custom box path"), Vector2(170, 0), Tabs::Misc, xorstr_("path"));
+		//wrapper::checkbox(xorstr_("test"), Vector2(170, 0), Tabs::Combat);
 		wrapper::reset_height();
 		wrapper::reset_width();
 

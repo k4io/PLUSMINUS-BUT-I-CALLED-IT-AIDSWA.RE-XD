@@ -1,5 +1,6 @@
 namespace settings {
 	std::string data_dir = xorstr_("");
+	std::string custom_box_path = xorstr_("");
 
 	bool cheat_init = false;
 
@@ -21,7 +22,6 @@ namespace settings {
 	uintptr_t il_init_methods;
 	uintptr_t serverrpc_projectileshoot;
 
-	std::string custom_box_path = "";
 
 	namespace tr {
 		bool manipulated = false;
