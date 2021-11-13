@@ -202,8 +202,8 @@ namespace entities {
 			&& LocalPlayer::Entity())
 		{
 			float threshold = aidsware::ui::get_float(xorstr_("threshold"));
-			Renderer::ProgressBar({ screen_center.x - 300, screen_center.y - 400 }, { screen_center.x + 300, screen_center.y - 400 }, { 51, 88, 181 }, { 38, 38, 60 }, (settings::flyhack / threshold) < 0.f ? 0.f : (settings::flyhack > threshold ? threshold : settings::flyhack), 600);
-			Renderer::ProgressBar({ screen_center.x - 300, screen_center.y - 350 }, { screen_center.x + 300, screen_center.y - 350 }, { 51, 88, 181 }, { 38, 38, 60 }, (settings::hor_flyhack / threshold) < 0.f ? 0.f : (settings::hor_flyhack > threshold ? threshold : settings::hor_flyhack), 600);
+			Renderer::ProgressBar({ screen_center.x - 300, screen_center.y - 500 }, { screen_center.x + 300, screen_center.y - 500 }, { 51, 88, 181 }, { 38, 38, 60 }, ((settings::flyhack * 100.f) / threshold) < 0.f ? 0.f : ((settings::flyhack * 100.f) >= threshold ? threshold : settings::flyhack), 600);
+			Renderer::ProgressBar({ screen_center.x - 300, screen_center.y - 480 }, { screen_center.x + 300, screen_center.y - 480 }, { 51, 88, 181 }, { 38, 38, 60 }, ((settings::hor_flyhack * 100.f) / threshold) < 0.f ? 0.f : ((settings::hor_flyhack * 100.f) >= threshold ? threshold : settings::hor_flyhack), 600);
 		}
 
 		auto local = LocalPlayer::Entity();
@@ -319,8 +319,14 @@ namespace entities {
 				
 			for (int i = 0; i < entityList->vals->size; i++) {
 				auto entity = *reinterpret_cast<BaseEntity**>(std::uint64_t(entityList->vals->buffer) + (0x20 + (sizeof(void*) * i)));
-				if (!entity) continue;
-				if (!entity->IsValid()) continue;
+				if (!entity)
+				{
+					SleepEx(1, 0);
+					continue;
+				}
+				if (!entity->IsValid()) {
+					continue;
+				}
 
 				if (aidsware::ui::get_bool(xorstr_("debug"))) {
 					if (entity->transform()->position().distance(LocalPlayer::Entity()->transform()->position()) <= 25.f) {

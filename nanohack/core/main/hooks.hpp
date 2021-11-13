@@ -130,10 +130,10 @@ double CalcBulletDrop(double height, double DepthPlayerTarget, float velocity, f
 	double TotalVerticalDrop = (0.5f * gravity * Time * Time);
 	return TotalVerticalDrop * 10;
 }
+
 #define powFFFFFFFFFFFFFFFFFFFFFF(n) (n)*(n)
 #define maxSimulateSeconds 5
 #define stepRate 0.01666666666
-
 
 void APrediction(Vector3 local, Vector3& target, float bulletspeed, float gravity, float drag) {
 	float Dist = local.distance(target);
@@ -226,7 +226,7 @@ void APrediction(Vector3 local, Vector3& target, float bulletspeed, float gravit
 		float speed_modifier = 1.0f - m_flTimeStep * projectile->drag();
 		m_flBulletSpeed *= speed_modifier;
 
-		if (m_flBulletSpeed <= 0.f || m_flBulletSpeed >= 10000.f || m_flYTravelled >= 10000.f || m_flYTravelled < 0.f)
+		if (m_flBulletSpeed <= 0.f || m_flBulletSpeed >= 50000.f || m_flYTravelled >= 50000.f || m_flYTravelled < 0.f)
 			break;
 
 		if (m_flBulletTime > 8.f)
@@ -510,30 +510,45 @@ void UpdateVelocity_hk(PlayerWalkMovement* self) {
 		}
 	}
 
-	if (!self->flying( )) {
-		Vector3 vel = self->TargetMovement( );
-		if (aidsware::ui::get_bool(xorstr_("omnisprint"))) {
-			float max_speed = (self->swimming( ) || self->Ducking( ) > 0.5) ? 1.7f : 5.5f;
-			if (vel.length( ) > 0.f) {
-				Vector3 target_vel = Vector3(vel.x / vel.length( ) * max_speed, vel.y, vel.z / vel.length( ) * max_speed);
-				self->TargetMovement( ) = target_vel;
-			}
-		}
+	Vector3 vel = self->TargetMovement();
 
-		if (aidsware::ui::get_bool(xorstr_("flyhack stop")))
-		{
-			float threshold = aidsware::ui::get_float(xorstr_("threshold"));
-			if (settings::hor_flyhack > threshold || settings::flyhack > threshold)
-				self->TargetMovement() = Vector3::Zero(); //maybe lerp towards last position?
-		}
-		if (aidsware::ui::get_bool(xorstr_("peek assist")) && (get_key(aidsware::ui::get_keybind(xorstr_("peek assist key"))) || settings::tr::manipulate_visible)) {
-			float max_speed = (self->swimming( ) || self->Ducking( ) > 0.5) ? 1.7f : 5.5f;
-			if (vel.length( ) > 0.f) {
-				//elf->TargetMovement( ) = Vector3::Zero( );
-			}
+	if (aidsware::ui::get_bool(xorstr_("peek assist")) && (get_key(aidsware::ui::get_keybind(xorstr_("peek assist key"))) || settings::tr::manipulate_visible)) {
+		float max_speed = (self->swimming() || self->Ducking() > 0.5) ? 1.7f : 5.5f;
+		if (vel.length() > 0.f) {
+			//self->TargetMovement( ) = Vector3::Zero( );
 		}
 	}
 
+	if (aidsware::ui::get_bool(xorstr_("flyhack stop")))
+	{
+		Vector3 fvel = vel;
+		float threshold = aidsware::ui::get_float(xorstr_("threshold"));
+		if (settings::hor_flyhack * 100.f >= threshold)
+		{
+			fvel.x = 0.0f;
+			fvel.z = 0.0f;
+		}
+		if (settings::flyhack * 100.f >= threshold)
+		{
+			fvel.y = 0.0f;
+		}
+		self->TargetMovement() = fvel;
+	}
+
+	if (!self->flying()) {
+		float threshold = aidsware::ui::get_float(xorstr_("threshold"));
+		if (settings::hor_flyhack * 100.f < threshold
+			&& settings::flyhack * 100.f < threshold)
+		{
+			if (aidsware::ui::get_bool(xorstr_("omnisprint"))) {
+				float max_speed = (self->swimming() || self->Ducking() > 0.5) ? 1.7f : 5.5f;
+				if (vel.length() > 0.f) {
+					Vector3 target_vel = Vector3(vel.x / vel.length() * max_speed, vel.y, vel.z / vel.length() * max_speed);
+					self->TargetMovement() = target_vel;
+				}
+			}
+		}
+	}
 	return self->UpdateVelocity( );
 }
 
@@ -548,6 +563,13 @@ Vector3 EyePositionForPlayer_hk(BaseMountable* mount, BasePlayer* player, Quater
 }
 
 void HandleJumping_hk(PlayerWalkMovement* a1, ModelState* state, bool wantsJump, bool jumpInDirection = false) {
+	if (aidsware::ui::get_bool(xorstr_("flyhack stop")))
+	{
+		float threshold = aidsware::ui::get_float(xorstr_("threshold"));
+		if (settings::hor_flyhack * 100.f >= threshold
+			|| settings::flyhack * 100.f >= threshold)
+			return;
+	}
 	if (aidsware::ui::get_bool(xorstr_("infinite jump"))) {
 		if (!wantsJump)
 			return;
@@ -701,6 +723,7 @@ void ClientInput_hk(BasePlayer* plly, uintptr_t state) {
 				safe_write(held + 0x290 /*maxDistance*/, 5.f, float);
 			}
 		}
+
 		//todo:
 		/*	
 			remake flyhack indicator with testflying from +- old and my antihack class from new
@@ -1022,24 +1045,25 @@ void set_flying_hk(ModelState* modelState, bool state) {
 	modelState->set_flying(false);
 }
 /*
-void FinalizeTick(float deltaTime, BasePlayer* ply)
+void FinalizeTick(float deltaTime)
 {
-	ply->tickDeltaTime += deltaTime;
-	printf("ply->tickDeltaTime: %.3f\n", ply->tickDeltaTime);
-	bool flag = ply->tickInterpolator.startPoint != ply->tickInterpolator.endPoint;
+	tickDeltaTime += deltaTime;
+	bool flag = tickInterpolator.startPoint != tickInterpolator.endPoint;
 	if (flag)
 	{
-		if (antihack::ValidateMove(ply, ply->tickInterpolator, ply->tickDeltaTime))
+		if (antihack::ValidateMove(tickDeltaTime)
+			&& aidsware::ui::get_bool(xorstr_("flyhack stop")) || aidsware::ui::get_bool(xorstr_("flyhack indicator")))
 		{
-			printf("GOOD\n");
+			//printf("GOOD\n");
 		}
 		else
 		{
-			printf("BAD\n");
+			//printf("BAD\n");
 		}
 	}
-}
-
+	tickInterpolator.Reset(LocalPlayer::Entity()->eyes()->transform()->position());
+}*/
+/*
 void ServerUpdate(float deltaTime, BasePlayer* ply)
 {
 	ply->desyncTimeRaw = MAX(ply->lastSentTickTime() - deltaTime, 0.f);
@@ -1056,9 +1080,17 @@ void sendclienttick_hk(BasePlayer* self)
 	{
 		self->input()->state()->current()->aimAngles() = Vector3((rand() % 999 + -999), (rand() % 999 + -999), (rand() % 999 + -999));
 	}
-	cLastTickPos = self->transform()->position(); //try headpos then try footpos?
+	
 
-	return self->SendClientTick();
+	self->SendClientTick();
+
+
+	cLastTickPos = self->transform()->position();	//try headpos then try footpos?
+													//do server tick stuff here
+	//tickInterpolator.AddPoint(self->eyes()->transform()->position());
+	//printf("self->eyes()->transform()->position() = (%ff, %ff, %ff)\n", p.x, p.y, p.z);
+	//FinalizeTick(Time::deltaTime());
+	return;
 }
 
 Vector3 playereyes_getpos_hk(PlayerEyes* self)
