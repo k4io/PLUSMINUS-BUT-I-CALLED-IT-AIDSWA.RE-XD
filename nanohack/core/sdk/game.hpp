@@ -2226,7 +2226,7 @@ public:
 				logs.erase(logs.begin() + i);
 				continue;
 			}
-			draw_text(Vector2(200, yPos), entry.message);
+			draw_text(Vector2(20, yPos), entry.message);
 			yPos += 15.0f;
 		}
 	}
@@ -2277,11 +2277,14 @@ public:
 	}
 };
 void LogSystem::draw_text(Vector2 pos, std::wstring str) {
-	Renderer::text(pos, { 120, 120, 199 }, 14.f, false, true, str.c_str());
+	//Renderer::text(pos, { 120, 120, 199 }, 14.f, false, true, str.c_str());
+	Renderer::text(pos, { 42, 112, 209 }, 14.f, false, true, str.c_str());
 }
 void LogSystem::draw_line(Vector2 pos, Vector2 pos2) {
 	Renderer::line(pos, pos2, { 156, 14, 45 }, 1.f, true);
 }
+
+std::map<uint64_t, BaseNetworkable*> projectile_targets = std::map<uint64_t, BaseNetworkable*>();
 
 class Projectile : public Component {
 public:

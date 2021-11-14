@@ -346,7 +346,29 @@ namespace aidsware::ui
 		wrapper::checkbox(xorstr_("no collisions"), Vector2(0, 0), Tabs::Misc);
 		wrapper::checkbox(xorstr_("fake lag"), Vector2(0, 0), Tabs::Misc);
 		wrapper::checkbox(xorstr_("spiderman"), Vector2(0, 0), Tabs::Misc);
-		wrapper::checkbox(xorstr_("spinbot"), Vector2(0, 0), Tabs::Misc);
+
+		//wrapper::checkbox(xorstr_("spinbot"), Vector2(0, 0), Tabs::Misc);
+		wrapper::combobox(xorstr_("anti-aim"),
+			{
+				xorstr_("none"),
+				xorstr_("backwards"),
+				xorstr_("backwards (down)"),
+				xorstr_("backwards (up)"),
+				xorstr_("left"),
+				xorstr_("left (down)"),
+				xorstr_("left (up)"),
+				xorstr_("right"),
+				xorstr_("left (down)"),
+				xorstr_("left (up)"),
+				xorstr_("jitter"),
+				xorstr_("jitter (down)"),
+				xorstr_("jitter (up)"),
+				xorstr_("spin"),
+				xorstr_("spin (down)"),
+				xorstr_("spin (up)"),
+				xorstr_("random")
+			}, Vector2(0, 0), Tabs::Misc);
+
 		wrapper::checkbox(xorstr_("infinite jump"), Vector2(0, 0), Tabs::Misc);
 		wrapper::checkbox(xorstr_("can hold items"), Vector2(0, 0), Tabs::Misc);
 		wrapper::checkbox(xorstr_("omnisprint"), Vector2(0, 0), Tabs::Misc);
@@ -357,6 +379,7 @@ namespace aidsware::ui
 		wrapper::combobox(xorstr_("light"), { xorstr_("default"), xorstr_("dark"), xorstr_("light") }, Vector2(170, 0), Tabs::Misc);
 		wrapper::keybind(xorstr_("timescale key"), Vector2(170, 0), Tabs::Misc);
 		wrapper::keybind(xorstr_("desync on key"), Vector2(170, 0), Tabs::Misc);
+		wrapper::checkbox(xorstr_("long neck"), Vector2(170, 0), Tabs::Misc);
 		wrapper::combobox(xorstr_("crosshair"), { xorstr_("none"), xorstr_("plusminus"), xorstr_("evilcheats"), xorstr_("circle"), xorstr_("swastika") }, Vector2(170, 0), Tabs::Misc);
 
 		wrapper::textbox(xorstr_("config name"), Vector2(170, 0), Tabs::Misc, xorstr_("default"));
@@ -390,6 +413,7 @@ namespace aidsware::ui
 		wrapper::textbox(xorstr_("custom box path"), Vector2(170, 0), Tabs::Misc, xorstr_("box name"));
 		wrapper::checkbox(xorstr_("custom hitsound"), Vector2(170, 0), Tabs::Misc);
 		wrapper::textbox(xorstr_("hitsound path"), Vector2(170, 0), Tabs::Misc, xorstr_("hitsound"));
+		wrapper::checkbox(xorstr_("weapon spam"), Vector2(170, 0), Tabs::Misc);
 		//wrapper::checkbox(xorstr_("test"), Vector2(170, 0), Tabs::Combat);
 		wrapper::reset_height();
 		wrapper::reset_width();

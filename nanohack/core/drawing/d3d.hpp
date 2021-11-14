@@ -63,8 +63,8 @@ namespace d3d {
 				if (aidsware::ui::get_bool(xorstr_("draw targeting fov")))
 					Renderer::circle(screen_center, aidsware::ui::get_color(xorstr_("targeting fov color")), aidsware::ui::get_float(xorstr_("target fov")), 1.f);
 				//SleepEx(1, 0);
-				Renderer::end_frame( );
 			}
+			Renderer::end_frame();
 		}
 		else {
 			static bool once = false;

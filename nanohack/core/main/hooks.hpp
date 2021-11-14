@@ -229,7 +229,7 @@ void APrediction(Vector3 local, Vector3& target, float bulletspeed, float gravit
 		if (m_flBulletSpeed <= 0.f || m_flBulletSpeed >= 50000.f || m_flYTravelled >= 50000.f || m_flYTravelled < 0.f)
 			break;
 
-		if (m_flBulletTime > 8.f)
+		if (m_flBulletTime > 60.f)
 			break;
 
 		m_flYSpeed += (9.81f * projectile->gravityModifier()) * m_flTimeStep;
@@ -325,9 +325,19 @@ void serverrpc_projectileshoot_hk(int64_t rcx, int64_t rdx, int64_t r9, int64_t 
 		Vector3 bonepos = target;
 		Vector3 vel = target_ply->playerModel()->newVelocity();
 
+
 		for (size_t i = 0; i < sz; i++)
 		{
 			auto projectile = *(uintptr_t*)(shoot_list + 0x20 + i * 0x8); // 
+
+			if (target_ply)
+			{
+				int id = *reinterpret_cast<int*>(projectile + 0x14);
+				if (!map_contains_key(projectile_targets, id))
+					projectile_targets.insert(std::make_pair(id, target_ply));
+				else
+					projectile_targets[id] = target_ply;
+			}
 
 			rpc_position = *reinterpret_cast<Vector3*>(projectile + 0x18); //
 			auto original_vel = *reinterpret_cast<Vector3*>(projectile + 0x24); //
@@ -731,16 +741,7 @@ void ClientInput_hk(BasePlayer* plly, uintptr_t state) {
 			stack crafting tcs
 			weapon spam
 			legit recoil
-			hitsound
 		*/
-
-		/*
-		if (settings::desync && get_key(settings::desync_key)) {
-			float desyncTime = (Time::realtimeSinceStartup( ) - plly->lastSentTickTime( )) - 0.03125 * 3;
-			float max_eye_value = (0.1f + ((desyncTime + 2.f / 60.f + 0.125f) * 1.5f) * plly->MaxVelocity( )) - 0.05f;
-
-			plly->eyes( )->viewOffset( ) = Vector3(0, max_eye_value, 0);
-		}*/
 
 		if (aidsware::ui::get_bool(xorstr_("flyhack indicator"))
 			|| aidsware::ui::get_bool(xorstr_("flyhack stop")))
@@ -813,6 +814,17 @@ void ClientInput_hk(BasePlayer* plly, uintptr_t state) {
 			else {
 				settings::tr::manipulate_visible = false;
 			}
+
+		if (aidsware::ui::get_bool(xorstr_("long neck")) && get_key(aidsware::ui::get_keybind(xorstr_("desync on key")))) {
+			float desyncTime = (Time::realtimeSinceStartup() - plly->lastSentTickTime()) - 0.03125 * 3;
+			float max_eye_value = (0.1f + ((desyncTime + 2.f / 60.f + 0.125f) * 1.5f) * plly->MaxVelocity()) - 0.05f;
+
+			plly->eyes()->viewOffset() = Vector3(0, max_eye_value, 0);
+		}
+		else if (aidsware::ui::get_bool(xorstr_("long neck")))
+		{
+			plly->eyes()->viewOffset() = Vector3(0, 1.495f, 0);
+		}
 
 		Physics::IgnoreLayerCollision(4, 12, !aidsware::ui::get_bool(xorstr_("no collisions")));
 		Physics::IgnoreLayerCollision(30, 12, aidsware::ui::get_bool(xorstr_("no collisions")));
@@ -989,7 +1001,24 @@ bool DoHit_hk(Projectile* prj, HitTest* test, Vector3 point, Vector3 normal) {
 			}
 		}
 	}
-	return prj->DoHit(test, point, normal);
+	//check didhit?
+	bool r = prj->DoHit(test, point, normal);
+
+	BaseNetworkable* h = nullptr;
+	if (!map_contains_key(projectile_targets, prj->projectileID()))
+		return prj;
+	else
+		h = projectile_targets[prj->projectileID()];
+
+	if (test->HitEntity() != h)
+	{
+		std::wstring name(reinterpret_cast<BasePlayer*>(h)->_displayName());
+		wchar_t buffer[255];
+		swprintf(buffer, 255, L"missed [%s] due to prediction", name.c_str());
+		LogSystem::Log(buffer, 5.f);
+	}
+	projectile_targets.erase(prj->projectileID());
+	return r;
 }
 
 void SetEffectScale_hk(Projectile* self, float eScale) {
@@ -1073,22 +1102,151 @@ void ServerUpdate(float deltaTime, BasePlayer* ply)
 	return;
 }
 */
+
+int jitter = 1;
+int jitter_speed = 10;
+int spin_speed = 70;
+int spin = 0;
+
 void sendclienttick_hk(BasePlayer* self)
 {
-	if (aidsware::ui::get_bool(xorstr_("spinbot")))
+	printf("jitter: %i\n", jitter);
+	int sb = aidsware::ui::get_combobox(xorstr_("anti-aim"));
+	auto input = safe_read(self + 0x4E0, uintptr_t);
+	auto state = safe_read(input + 0x20, uintptr_t);
+	auto current = safe_read(state + 0x10, uintptr_t);
+	if (!current)
+		return self->SendClientTick();
+	Vector3 real_angles = safe_read(current + 0x18, Vector3);
+	Vector3 spin_angles = Vector3::Zero();
+	switch (sb)
 	{
-		self->input()->state()->current()->aimAngles() = Vector3((rand() % 999 + -999), (rand() % 999 + -999), (rand() % 999 + -999));
+	case 0: //x = yaw (up/down), y = pitch (spin), z = roll?????;
+		break;
+	case 1: //backwards
+		spin_angles.y = real_angles.y - 180.f;
+		break;
+	case 2: //backwards (down)
+		spin_angles.x = 0.f;
+		spin_angles.z = 0.f;
+		spin_angles.y = real_angles.y - 180.f;
+		break;
+	case 3: //backwards (up)
+		spin_angles.x = 999.f;
+		spin_angles.z = 999.f;
+		spin_angles.y = real_angles.y - 180.f;
+		break;
+	case 4: //left
+		spin_angles.y = real_angles.y - 90.f;
+		break;
+	case 5: //left (down)
+		spin_angles.x = 0.f;
+		spin_angles.z = 0.f;
+		spin_angles.y = real_angles.y - 90.f;
+		break;
+	case 6: //left (up)
+		spin_angles.x = 999.f;
+		spin_angles.z = 999.f;
+		spin_angles.y = real_angles.y - 90.f;
+		break;
+	case 7: //right
+		spin_angles.y = real_angles.y + 90.f;
+		break;
+	case 8: //right (down)
+		spin_angles.x = 0.f;
+		spin_angles.z = 0.f;
+		spin_angles.y = real_angles.y + 90.f;
+		break;
+	case 9: //right (up)
+		spin_angles.x = 999.f;
+		spin_angles.z = 999.f;
+		spin_angles.y = real_angles.y + 90.f;
+		break;
+	case 10: //jitter
+		if (jitter <= jitter_speed * 1)
+		{
+			spin_angles.y = real_angles.y + 45.f;
+		}
+		else if(jitter <= jitter_speed * 2)
+		{
+			spin_angles.y = real_angles.y - 45.f;
+		}
+		else if (jitter <= jitter_speed * 3)
+		{
+			spin_angles.y = real_angles.y - 180.f;
+			jitter = 1;
+		}
+		jitter = jitter + 1;
+		spin_angles.y = real_angles.y;
+		break;
+	case 11: //jitter (down)
+		if (jitter <= jitter_speed * 1)
+		{
+			spin_angles.y = real_angles.y + 45.f;
+		}
+		else if (jitter <= jitter_speed * 2)
+		{
+			spin_angles.y = real_angles.y - 45.f;
+		}
+		else if (jitter <= jitter_speed * 3)
+		{
+			spin_angles.y = real_angles.y - 180.f;
+			jitter = 1;
+		}
+		jitter = jitter + 1;
+		spin_angles.x = 0.f;
+		spin_angles.z = 0.f;
+		spin_angles.y = real_angles.y;
+		break;
+	case 12: //jitter (up)
+		if (jitter <= jitter_speed * 1)
+		{
+			spin_angles.y = real_angles.y + 45.f;
+		}
+		else if(jitter <= jitter_speed * 2)
+		{
+			spin_angles.y = real_angles.y - 45.f;
+		}
+		else if (jitter <= jitter_speed * 3)
+		{
+			spin_angles.y = real_angles.y - 180.f;
+			jitter = 1;
+		}
+		jitter = jitter + 1;
+		spin_angles.x = 999.f;
+		spin_angles.z = 999.f;
+		spin_angles.y = real_angles.y;
+		break;
+	case 13: //spin
+		spin_angles.y = real_angles.y + (spin_speed * spin++);
+		if (spin > (360 / spin_speed))
+			spin = 1;
+		break;
+	case 14: //spin (down)
+		spin_angles.x = 0.f;
+		spin_angles.z = 0.f;
+		spin_angles.y = real_angles.y + (spin_speed * spin++);
+		if (spin > (360 / spin_speed))
+			spin = 1;
+		break;
+	case 15: //spin (up)
+		spin_angles.x = 999.f;
+		spin_angles.y = real_angles.y + (spin_speed * spin++);
+		spin_angles.z = 999.f;
+		if (spin > (360 / spin_speed))
+			spin = 1;
+		break;
+	case 16: //random
+		spin_angles = Vector3((rand() % 999 + -999), (rand() % 999 + -999), (rand() % 999 + -999));
+		break;
 	}
-	
+	if(spin_angles != Vector3::Zero())
+		safe_write(current + 0x18, spin_angles, Vector3);
 
 	self->SendClientTick();
 
 
-	cLastTickPos = self->transform()->position();	//try headpos then try footpos?
-													//do server tick stuff here
-	//tickInterpolator.AddPoint(self->eyes()->transform()->position());
-	//printf("self->eyes()->transform()->position() = (%ff, %ff, %ff)\n", p.x, p.y, p.z);
-	//FinalizeTick(Time::deltaTime());
+	cLastTickPos = self->transform()->position();
 	return;
 }
 
@@ -1112,7 +1270,7 @@ void DoHitNotify_hk(BaseCombatEntity* e, HitInfo* info)
 		std::wstring hitbone = StringPool::Get(info->HitBone())->buffer; 
 		float damage = info->damageTypes()->Total();
 		wchar_t buffer[255];
-		swprintf(buffer, 255, L"[%s] -%2.f (%s)", name.c_str(), damage, hitbone.c_str());
+		swprintf(buffer, 255, L"[%s] -%2.f (%s) (%.2fm)", name.c_str(), damage, hitbone.c_str(), info->ProjectileDistance());
 		//LogSystem::Log(StringFormat::format(wxorstr_(L"[%s] -%2.f (%s)"), reinterpret_cast<BasePlayer*>(e)->_displayName(), StringPool::Get(info->HitBone())->buffer, info->damageTypes()->Total()), 5.f);
 		LogSystem::Log(buffer, 5.f);
 
@@ -1133,6 +1291,14 @@ void DoHitNotify_hk(BaseCombatEntity* e, HitInfo* info)
 		}
 	}
 	return e->DoHitNotify(info);
+}
+
+Projectile* CreateProjectile_hk(BaseProjectile* self, String* prefabPath, Vector3 pos, Vector3 forward, Vector3 velocity)
+{
+	Projectile* p = self->CreateProjectile(prefabPath, pos, forward, velocity);
+	if (!target_ply) return p;
+
+	return p;
 }
 
 void do_hooks( ) {
@@ -1173,6 +1339,8 @@ void do_hooks( ) {
 	hookengine::hook(BasePlayer::SendClientTick_, sendclienttick_hk);
 
 	hookengine::hook(BaseCombatEntity::DoHitNotify_, DoHitNotify_hk);
+
+	hookengine::hook(BaseProjectile::CreateProjectile_, CreateProjectile_hk);
 
 
 	VM_DOLPHIN_BLACK_END
@@ -1215,6 +1383,8 @@ void undo_hooks( ) {
 	hookengine::unhook(Projectile::Launch_, Launch_hk);
 
 	hookengine::unhook(BaseCombatEntity::DoHitNotify_, DoHitNotify_hk);
+
+	hookengine::unhook(BaseProjectile::CreateProjectile_, CreateProjectile_hk);
 
 	VM_DOLPHIN_BLACK_END
 }

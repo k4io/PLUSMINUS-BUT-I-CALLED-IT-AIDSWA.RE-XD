@@ -202,6 +202,8 @@ namespace entities {
 			&& LocalPlayer::Entity())
 		{
 			float threshold = aidsware::ui::get_float(xorstr_("threshold"));
+			settings::flyhack = (settings::flyhack * 100.f) > threshold ? threshold : settings::flyhack;
+			settings::hor_flyhack = (settings::hor_flyhack * 100.f) > threshold ? threshold : settings::hor_flyhack;
 			Renderer::ProgressBar({ screen_center.x - 300, screen_center.y - 500 }, { screen_center.x + 300, screen_center.y - 500 }, { 51, 88, 181 }, { 38, 38, 60 }, ((settings::flyhack * 100.f) / threshold) < 0.f ? 0.f : ((settings::flyhack * 100.f) >= threshold ? threshold : settings::flyhack), 600);
 			Renderer::ProgressBar({ screen_center.x - 300, screen_center.y - 480 }, { screen_center.x + 300, screen_center.y - 480 }, { 51, 88, 181 }, { 38, 38, 60 }, ((settings::hor_flyhack * 100.f) / threshold) < 0.f ? 0.f : ((settings::hor_flyhack * 100.f) >= threshold ? threshold : settings::hor_flyhack), 600);
 		}
@@ -600,7 +602,8 @@ namespace entities {
 								}
 							}
 							
-							if (aidsware::ui::get_bool(xorstr_("box")) && !aidsware::ui::get_bool(xorstr_("custom box"))) {
+							if (aidsware::ui::get_bool(xorstr_("box")) && !aidsware::ui::get_bool(xorstr_("custom box"))) 
+							{
 								switch (aidsware::ui::get_combobox(xorstr_("box type"))) {
 								case 0: // cornered
 									Renderer::line({ bounds.left, bounds.top }, { bounds.left + (box_width / 3.5f), bounds.top }, box_col, true, 1.5f);
@@ -695,6 +698,7 @@ namespace entities {
 
 							if (entities::dfc(player) < aidsware::ui::get_float(xorstr_("target fov"))) 
 								temp_target_list.push_back(player);
+							continue;
 						}
 					}
 				}
