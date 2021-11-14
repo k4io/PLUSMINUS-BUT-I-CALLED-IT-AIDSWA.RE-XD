@@ -835,6 +835,10 @@ public:
 	void OnAttacked(HitInfo* info) {
 		return OnAttacked_(this, info);
 	}
+	static inline void(*DoHitNotify_)(BaseCombatEntity*, HitInfo*) = nullptr;
+	void DoHitNotify(HitInfo* info) {
+		return DoHitNotify_(this, info);
+	}
 };
 class ConsoleSystem {
 public:
@@ -2273,7 +2277,7 @@ public:
 	}
 };
 void LogSystem::draw_text(Vector2 pos, std::wstring str) {
-	Renderer::text(pos, { 177, 177, 177 }, 14.f, false, true, str.c_str());
+	Renderer::text(pos, { 120, 120, 199 }, 14.f, false, true, str.c_str());
 }
 void LogSystem::draw_line(Vector2 pos, Vector2 pos2) {
 	Renderer::line(pos, pos2, { 156, 14, 45 }, 1.f, true);
@@ -3141,6 +3145,8 @@ void initialize_cheat( ) {
 	ASSIGN_HOOK("Assembly-CSharp::Projectile::Launch(): Void", Projectile::Launch_);
 
 	ASSIGN_HOOK("Assembly-CSharp::EffectLibrary::CreateEffect(String,Effect): GameObject", EffectLibrary::CreateEffect_);
+
+	ASSIGN_HOOK("Assembly-CSharp::BaseCombatEntity::DoHitNotify(HitInfo): Void", BaseCombatEntity::DoHitNotify_);
 
 	settings::il_init_methods = find(xorstr_("GameAssembly.dll"), "48 83 EC 48 48 8B 05 ? ? ? ? 48 63 90 ? ? ? ?");
 	settings::serverrpc_projectileshoot = find_rel(xorstr_("GameAssembly.dll"), xorstr_("4C 8B 0D ? ? ? ? 48 8B 75 28"));

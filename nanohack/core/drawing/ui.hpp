@@ -322,6 +322,7 @@ namespace aidsware::ui
 		wrapper::checkbox(xorstr_("flyhack indicator"), Vector2(170, 0), Tabs::Visual);
 		//wrapper::checkbox(xorstr_("raid esp"), Vector2(170, 0), Tabs::Visual);
 		wrapper::checkbox(xorstr_("chams"), Vector2(170, 0), Tabs::Visual);
+		wrapper::checkbox(xorstr_("logs"), Vector2(170, 0), Tabs::Visual);
 		wrapper::checkbox(xorstr_("debug"), Vector2(170, 0), Tabs::Visual);
 		wrapper::currentY += 30.f;
 		wrapper::slider(xorstr_("esp dist"), Vector2(170, 0), 100.0f, 0.0f, 400.0f, Tabs::Visual);
@@ -375,7 +376,6 @@ namespace aidsware::ui
 					vars::Container->LoadFromFile(settings::data_dir + xorstr_("\\") + configs[i] + xorstr_(".cfg"));*/
 		}, Vector2(170, 0), Tabs::Misc);
 
-
 		wrapper::button(xorstr_("Panic"), [&]() {
 			settings::panic = true;
 		}, Vector2(170, 0), Tabs::Misc);
@@ -387,7 +387,9 @@ namespace aidsware::ui
 		wrapper::slider(xorstr_("threshold"), Vector2(170, 0), 100.0f, 0.0f, 400.0f, Tabs::Misc);
 		wrapper::checkbox(xorstr_("walk to marker"), Vector2(170, 0), Tabs::Misc);
 		wrapper::checkbox(xorstr_("custom box"), Vector2(170, 0), Tabs::Misc);
-		wrapper::textbox(xorstr_("custom box path"), Vector2(170, 0), Tabs::Misc, xorstr_("path"));
+		wrapper::textbox(xorstr_("custom box path"), Vector2(170, 0), Tabs::Misc, xorstr_("box name"));
+		wrapper::checkbox(xorstr_("custom hitsound"), Vector2(170, 0), Tabs::Misc);
+		wrapper::textbox(xorstr_("hitsound path"), Vector2(170, 0), Tabs::Misc, xorstr_("hitsound"));
 		//wrapper::checkbox(xorstr_("test"), Vector2(170, 0), Tabs::Combat);
 		wrapper::reset_height();
 		wrapper::reset_width();

@@ -167,6 +167,7 @@ void entry_thread() {
 	{
 		std::filesystem::create_directories(StringConverter::ToASCII(std::wstring(szPath) + wxorstr_(L"\\aidswa.re")));
 		std::filesystem::create_directories(StringConverter::ToASCII(std::wstring(szPath) + wxorstr_(L"\\aidswa.re\\images")));
+		std::filesystem::create_directories(StringConverter::ToASCII(std::wstring(szPath) + wxorstr_(L"\\aidswa.re\\sounds")));
 
 		settings::data_dir = StringConverter::ToASCII(std::wstring(szPath) + wxorstr_(L"\\aidswa.re"));
 		

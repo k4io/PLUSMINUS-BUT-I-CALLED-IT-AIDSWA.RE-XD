@@ -1,6 +1,7 @@
 namespace settings {
 	std::string data_dir = xorstr_("");
 	std::string custom_box_path = xorstr_("");
+	std::string current_hitsound = xorstr_("");
 
 	bool cheat_init = false;
 

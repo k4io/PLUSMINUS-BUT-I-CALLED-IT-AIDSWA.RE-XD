@@ -316,12 +316,15 @@ namespace entities {
 				Renderer::boldtext({ screen_center.x - 20, screen_center.y + 20 }, Color3(230, 180, 44), 14.f, true, true, wxorstr_(L"[i]"));
 
 			std::vector<BasePlayer*> temp_target_list{};
-				
+			
+			if (aidsware::ui::get_bool(xorstr_("logs")))
+				LogSystem::Render();
+
 			for (int i = 0; i < entityList->vals->size; i++) {
 				auto entity = *reinterpret_cast<BaseEntity**>(std::uint64_t(entityList->vals->buffer) + (0x20 + (sizeof(void*) * i)));
 				if (!entity)
 				{
-					SleepEx(1, 0);
+					//SleepEx(1, 0);
 					continue;
 				}
 				if (!entity->IsValid()) {
