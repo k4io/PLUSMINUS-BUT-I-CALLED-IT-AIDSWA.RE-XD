@@ -1,12 +1,11 @@
 namespace entities {
 	Shader* og_shader = nullptr;
 	std::vector<BasePlayer*> current_visible_players;
-
+	
 	inline bool exists(const std::string& name) {
 		struct stat buffer;
 		return (stat(name.c_str(), &buffer) == 0);
 	}
-
 	namespace belt {
 		Vector2 pos = Vector2(200, 200);
 		bool should_drag = false;
@@ -52,6 +51,8 @@ namespace entities {
 	}
 
 	Color3 get_color(BasePlayer* player, bool boxes = false, bool flag1 = false) {
+		if (aidsware::ui::get_bool("insta kill") && flag1)
+			return aidsware::ui::get_color("insta kill indicator");
 		if (!boxes) {
 			if (player->HasPlayerFlag(PlayerFlags::Sleeping)) {
 				if (player->is_visible())
@@ -59,12 +60,9 @@ namespace entities {
 				else
 					return aidsware::ui::get_color("invisible sleepers");
 			}
-
 			if (!player->playerModel()->isNpc()) {
 				if (player->is_target())
 					if (player->is_visible()) {
-						if (aidsware::ui::get_bool("insta kill") && flag1)
-							return aidsware::ui::get_color("insta kill indicator");
 						return aidsware::ui::get_color("visible players");
 					}
 					else
@@ -136,6 +134,8 @@ namespace entities {
 		else
 			ShowWindow(settings::console_window, SW_HIDE);
 
+
+
 		switch (aidsware::ui::get_combobox(xorstr_("crosshair"))) {
 		case 1:
 			Renderer::circle(screen_center - Vector2(2, 2), clr, 4.f, 0.75f);
@@ -202,8 +202,10 @@ namespace entities {
 			&& LocalPlayer::Entity())
 		{
 			float threshold = aidsware::ui::get_float(xorstr_("threshold"));
-			Renderer::ProgressBar({ screen_center.x - 300, screen_center.y - 400 }, { screen_center.x + 300, screen_center.y - 400 }, { 51, 88, 181 }, { 38, 38, 60 }, (settings::flyhack / threshold) < 0.f ? 0.f : (settings::flyhack > threshold ? threshold : settings::flyhack), 600);
-			Renderer::ProgressBar({ screen_center.x - 300, screen_center.y - 350 }, { screen_center.x + 300, screen_center.y - 350 }, { 51, 88, 181 }, { 38, 38, 60 }, (settings::hor_flyhack / threshold) < 0.f ? 0.f : (settings::hor_flyhack > threshold ? threshold : settings::hor_flyhack), 600);
+			settings::flyhack = (settings::flyhack * 100.f) > threshold ? threshold : settings::flyhack;
+			settings::hor_flyhack = (settings::hor_flyhack * 100.f) > threshold ? threshold : settings::hor_flyhack;
+			Renderer::ProgressBar({ screen_center.x - 300, screen_center.y - 500 }, { screen_center.x + 300, screen_center.y - 500 }, { 51, 88, 181 }, { 38, 38, 60 }, ((settings::flyhack * 100.f) / threshold) < 0.f ? 0.f : ((settings::flyhack * 100.f) >= threshold ? threshold : settings::flyhack), 600);
+			Renderer::ProgressBar({ screen_center.x - 300, screen_center.y - 480 }, { screen_center.x + 300, screen_center.y - 480 }, { 51, 88, 181 }, { 38, 38, 60 }, ((settings::hor_flyhack * 100.f) / threshold) < 0.f ? 0.f : ((settings::hor_flyhack * 100.f) >= threshold ? threshold : settings::hor_flyhack), 600);
 		}
 
 		auto local = LocalPlayer::Entity();
@@ -211,7 +213,7 @@ namespace entities {
 			target_ply = nullptr;
 			return;
 		}
-		LogSystem::RenderTraceResults();
+		//LogSystem::RenderTraceResults();
 
 		if (aidsware::ui::get_bool(xorstr_("reload indicator"))) {
 			auto held = local->GetHeldEntity<BaseProjectile>();
@@ -316,11 +318,20 @@ namespace entities {
 				Renderer::boldtext({ screen_center.x - 20, screen_center.y + 20 }, Color3(230, 180, 44), 14.f, true, true, wxorstr_(L"[i]"));
 
 			std::vector<BasePlayer*> temp_target_list{};
-				
+			
+			if (aidsware::ui::get_bool(xorstr_("logs")))
+				LogSystem::Render();
+
 			for (int i = 0; i < entityList->vals->size; i++) {
 				auto entity = *reinterpret_cast<BaseEntity**>(std::uint64_t(entityList->vals->buffer) + (0x20 + (sizeof(void*) * i)));
-				if (!entity) continue;
-				if (!entity->IsValid()) continue;
+				if (!entity)
+				{
+					//SleepEx(1, 0);
+					continue;
+				}
+				if (!entity->IsValid()) {
+					continue;
+				}
 
 				if (aidsware::ui::get_bool(xorstr_("debug"))) {
 					if (entity->transform()->position().distance(LocalPlayer::Entity()->transform()->position()) <= 25.f) {
@@ -355,7 +366,7 @@ namespace entities {
 						if (player->HasPlayerFlag(PlayerFlags::Sleeping) && !aidsware::ui::get_bool(xorstr_("sleepers"))) continue;
 						if (player->playerModel()->isNpc() && !aidsware::ui::get_bool(xorstr_("npc"))) continue;
 						if (player->userID() == LocalPlayer::Entity()->userID()) continue;
-
+						
 						if (aidsware::ui::get_bool(xorstr_("chams")))
 						{
 							auto list = player->playerModel()->_multiMesh()->Renderers();
@@ -369,32 +380,36 @@ namespace entities {
 										auto material = _renderer->material();
 										if (material)
 										{
-											entities::og_shader = Shader::Find(xorstr_("Hidden/Internal-Colored"));
-											material->set_shader(entities::og_shader);
+											if (og_shader != material->shader())
+											{
+												if (!og_shader)
+													og_shader = Shader::Find(xorstr_("Hidden/Internal-Colored"));
+												material->set_shader(entities::og_shader);
 
-											auto info = player->bones()->head;
-											if (player->playerModel()->isNpc() && player->is_visible())
-												material->SetColor(Shader::PropertyToID(xorstr_("_Color")), get_c(aidsware::ui::get_color("visible npc chams")));
-											else if (player->playerModel()->isNpc() && !player->is_visible())
-												material->SetColor(Shader::PropertyToID(xorstr_("_Color")), get_c(aidsware::ui::get_color("invisible npc chams")));
+												auto info = player->bones()->head;
+												if (player->playerModel()->isNpc() && player->is_visible())
+													material->SetColor(Shader::PropertyToID(xorstr_("_Color")), get_c(aidsware::ui::get_color("visible npc chams")));
+												else if (player->playerModel()->isNpc() && !player->is_visible())
+													material->SetColor(Shader::PropertyToID(xorstr_("_Color")), get_c(aidsware::ui::get_color("invisible npc chams")));
 
-											if (!player->playerModel()->isNpc() && player->is_visible())
-												material->SetColor(Shader::PropertyToID(xorstr_("_Color")), get_c(aidsware::ui::get_color("visible chams")));
-											else if (!player->playerModel()->isNpc() && !player->is_visible())
-												material->SetColor(Shader::PropertyToID(xorstr_("_Color")), get_c(aidsware::ui::get_color("invisible chams")));
+												if (!player->playerModel()->isNpc() && player->is_visible())
+													material->SetColor(Shader::PropertyToID(xorstr_("_Color")), get_c(aidsware::ui::get_color("visible chams")));
+												else if (!player->playerModel()->isNpc() && !player->is_visible())
+													material->SetColor(Shader::PropertyToID(xorstr_("_Color")), get_c(aidsware::ui::get_color("invisible chams")));
 
-											if (!player->playerModel()->isNpc() && player->is_visible() && player->is_teammate())
-												material->SetColor(Shader::PropertyToID(xorstr_("_Color")), get_c(aidsware::ui::get_color("visible teammate chams")));
-											else if (!player->playerModel()->isNpc() && !player->is_visible() && player->is_teammate())
-												material->SetColor(Shader::PropertyToID(xorstr_("_Color")), get_c(aidsware::ui::get_color("invisible teammate chams")));
+												if (!player->playerModel()->isNpc() && player->is_visible() && player->is_teammate())
+													material->SetColor(Shader::PropertyToID(xorstr_("_Color")), get_c(aidsware::ui::get_color("visible teammate chams")));
+												else if (!player->playerModel()->isNpc() && !player->is_visible() && player->is_teammate())
+													material->SetColor(Shader::PropertyToID(xorstr_("_Color")), get_c(aidsware::ui::get_color("invisible teammate chams")));
 
-											material->SetInt(xorstr_("_ZTest"), 8); //maybe try _ZTest Less & _ZTest Greater
+												material->SetInt(xorstr_("_ZTest"), 8); //maybe try _ZTest Less & _ZTest Greater
+											}
 										}
 									}
 								}
 							}
 						}
-
+						
 						auto bounds = player->bones()->bounds;
 						if (!bounds.empty()) {
 							int y_ = 0;
@@ -563,8 +578,32 @@ namespace entities {
 									break;
 								}
 							}
-
-							if (aidsware::ui::get_bool(xorstr_("box"))) {
+							
+							if (aidsware::ui::get_bool(xorstr_("custom box")))
+							{
+								std::string ap = aidsware::ui::get_text(xorstr_("custom box path"));
+								std::string _path = ap; _path = settings::data_dir + "\\" + _path;
+								if (!ap.empty())
+								{
+									if (exists(_path))
+									{
+										if (_path != settings::custom_box_path)
+										{
+											settings::custom_box_path = _path;
+											std::wstring w(settings::custom_box_path.begin(), settings::custom_box_path.end());
+											Renderer::set_custom_box(w);
+											//printf("set box path\n");
+											//set custom box bitmap in renderer
+											//call draw image instead of drawing box
+										}
+										else
+											Renderer::custom_box(bounds.left, bounds.top, box_width, box_height);
+									}
+								}
+							}
+							
+							if (aidsware::ui::get_bool(xorstr_("box")) && !aidsware::ui::get_bool(xorstr_("custom box"))) 
+							{
 								switch (aidsware::ui::get_combobox(xorstr_("box type"))) {
 								case 0: // cornered
 									Renderer::line({ bounds.left, bounds.top }, { bounds.left + (box_width / 3.5f), bounds.top }, box_col, true, 1.5f);
@@ -645,21 +684,6 @@ namespace entities {
 									}
 									break;
 								}
-								case 5:
-								{
-									std::string str = get_text(xorstr_("box image name"));
-									if (!str.empty() && str != "none")
-									{
-										str = settings::data_dir + "\\" + str;
-										if (exists())
-										{
-
-										}
-											//check image exists
-											//map image to player bounding box with same size
-									}
-									break; 
-								}
 							}
 
 							if (player->GetHeldItem() && !player->HasPlayerFlag(PlayerFlags::Sleeping)) {
@@ -674,6 +698,7 @@ namespace entities {
 
 							if (entities::dfc(player) < aidsware::ui::get_float(xorstr_("target fov"))) 
 								temp_target_list.push_back(player);
+							continue;
 						}
 					}
 				}

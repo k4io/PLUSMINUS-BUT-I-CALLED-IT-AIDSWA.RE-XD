@@ -835,6 +835,10 @@ public:
 	void OnAttacked(HitInfo* info) {
 		return OnAttacked_(this, info);
 	}
+	static inline void(*DoHitNotify_)(BaseCombatEntity*, HitInfo*) = nullptr;
+	void DoHitNotify(HitInfo* info) {
+		return DoHitNotify_(this, info);
+	}
 };
 class ConsoleSystem {
 public:
@@ -2222,7 +2226,7 @@ public:
 				logs.erase(logs.begin() + i);
 				continue;
 			}
-			draw_text(Vector2(200, yPos), entry.message);
+			draw_text(Vector2(20, yPos), entry.message);
 			yPos += 15.0f;
 		}
 	}
@@ -2273,11 +2277,14 @@ public:
 	}
 };
 void LogSystem::draw_text(Vector2 pos, std::wstring str) {
-	Renderer::text(pos, { 177, 177, 177 }, 14.f, false, true, str.c_str());
+	//Renderer::text(pos, { 120, 120, 199 }, 14.f, false, true, str.c_str());
+	Renderer::text(pos, { 42, 112, 209 }, 14.f, false, true, str.c_str());
 }
 void LogSystem::draw_line(Vector2 pos, Vector2 pos2) {
 	Renderer::line(pos, pos2, { 156, 14, 45 }, 1.f, true);
 }
+
+std::map<uint64_t, BaseNetworkable*> projectile_targets = std::map<uint64_t, BaseNetworkable*>();
 
 class Projectile : public Component {
 public:
@@ -2361,18 +2368,16 @@ void TestFlying() {
 	bool inAir = false;
 	float radius = LocalPlayer::Entity()->GetHeight();
 	float height = LocalPlayer::Entity()->GetRadius();
-	Vector3 vector = (cLastTickPos + LocalPlayer::Entity()->transform()->position()) * 0.5f;
+	Vector3 vector = (cLastTickPos + LocalPlayer::Entity()->eyes()->transform()->position()) * 0.5f;
 	Vector3 vector2 = vector + Vector3(0.f, radius - 2.f, 0.f);
 	Vector3 vector3 = vector + Vector3(0.f, height - radius, 0.f);
 	float radius2 = radius - 0.05f;
 	bool a = GamePhysics::CheckCapsule(vector2, vector3, radius2, 1503731969, GamePhysics::QueryTriggerInteraction::Ignore);
 	inAir = !a;
-	//printf("flyhackPauseTime: %f\n", flyhackPauseTime);
-	//printf("lastSentTick()->position(): (%ff, %ff, %ff)\n", LocalPlayer::Entity()->lastSentTick()->position().x, LocalPlayer::Entity()->lastSentTick()->position().y, LocalPlayer::Entity()->lastSentTick()->position().z);
-	//printf("cLastTickPos: (%ff, %ff, %ff)\n", cLastTickPos.x, cLastTickPos.y, cLastTickPos.z);
+	
 	if (inAir) {
 		bool flag = false;
-		Vector3 vector4 = LocalPlayer::Entity()->transform()->position() - cLastTickPos; //idk about this lasttickpos stuff
+		Vector3 vector4 = LocalPlayer::Entity()->eyes()->transform()->position() - cLastTickPos; //idk about this lasttickpos stuff
 		float num3 = std::abs(vector4.y);
 		float num4 = vector4.magnitude2d();
 		if (vector4.y >= 0.f) {
@@ -2383,8 +2388,7 @@ void TestFlying() {
 			flyhackDistanceHorizontal += num4;
 			flag = true;
 		}
-		//printf("$ flyhackDistanceVertical: %ff\n", flyhackDistanceVertical);
-		//printf("$ flyhackDistanceHorizontal: %ff\n", flyhackDistanceHorizontal);
+
 		if (flag) {
 			float num5 = MAX((flyhackPauseTime > 0.f) ? 10 : 1.5, 0.f);
 			float num6 = LocalPlayer::Entity()->GetJumpHeight() + num5;
@@ -2422,23 +2426,20 @@ void CheckFlyhack() {
 	}
 }
 
-/*
+
 bool isInAir = false;
 //bool isOnPlayer = false;
-float flyhackDistanceVertical = 0.f;
-float flyhackDistanceHorizontal = 0.f;
-float flyhackPauseTime = 0.f;
 float desyncTimeRaw = 0.f;
 float desyncTimeClamped = 0.f;
 float tickDeltaTime = 0.f;
 //int tickHistoryCapacity;
 
 TickInterpolator tickInterpolator;
-
+/*
 class antihack
 {
 public:
-	static List<Collider*> buffer;
+	//static List<Collider*> buffer;
 	const float flyhack_penalty = 100.f;
 	const float flyhack_forgiveness_vertical = 1.5f;
 	const float flyhack_forgiveness_vertical_inertia = 10.f;
@@ -2460,31 +2461,84 @@ public:
 		return r > c ? r : c;
 	}
 
-	static bool ValidateMove(BasePlayer* ply, TickInterpolator ticks, float deltaTime) //validates movement? returns false on stop movement
+	static bool ValidateMove(float deltaTime) //validates movement? returns false on stop movement
 	{
-		float violation_t1 = 0.f;
-		float violation_t2 = 0.f;
-		bool result = true;
-		bool flag = deltaTime > 1.f;
-
-		if (IsFlying(ply, ticks, deltaTime))
+		check_flyhack();
+		
+		if (IsFlying(deltaTime))
 		{
 			if (flag) return false;
-			violation_t1 += (100.f * ticks.len);
-			violation_t2 = (100.f * ticks.len);
+			violation_t1 += (100.f * tickInterpolator.len);
+			violation_t2 = (100.f * tickInterpolator.len);
 			if (violation_t2 > 99.9f)
-				ply->movement()->TargetMovement() = Vector3(0.f, 0.f, 0.f);
+				LocalPlayer::Entity()->movement()->TargetMovement() = Vector3(0.f, 0.f, 0.f);
 		}
-		printf("violation_t1: %.2f\n", violation_t1);
-		printf("violation_t2: %.2f\n", violation_t2);
+		
 		return true;
 	}
-	static bool TestFlying(BasePlayer* ply, Vector3 oldPos, Vector3 newPos, bool verifyGrounded)
+
+	static bool TestFlying()
+	{
+		BasePlayer* loco = LocalPlayer::Entity();
+
+		if (!loco) return false;
+		flyhackPauseTime = MAX(0.f, flyhackPauseTime - Time::deltaTime());
+		bool isInAir = false;
+		float radius = loco->GetRadius();
+		float height = loco->GetHeight();
+		Vector3 vector = (cLastTickPos + LocalPlayer::Entity()->eyes()->transform()->position()) * 0.5f; //loco->lastSentTick()->position() * 0.5f;
+		Vector3 vector2 = vector + Vector3(0.f, radius - 2.f, 0.f);
+		Vector3 vector3 = vector + Vector3(0.f, height - radius, 0.f);
+		float radius2 = radius - 0.05f;
+		bool a = GamePhysics::CheckCapsule(vector2, vector3, radius2, 1503731969, GamePhysics::QueryTriggerInteraction::Ignore);
+		isInAir = !a;
+
+		if (isInAir)
+		{
+			bool flag = false;
+			Vector3 vector4 = loco->eyes()->transform()->position() - cLastTickPos;//loco->lastSentTick()->position();
+			float num3 = std::abs(vector4.y);
+			float num4 = vector4.magnitude2d();
+			if (vector4.y >= 0.f)
+			{
+				flyhackDistanceVertical += vector4.y;
+				flag = true;
+			}
+			if (num3 < num4)
+			{
+				flyhackDistanceHorizontal += vector4.y;
+				flag = true;
+			}
+
+			if (flag)
+			{
+				float num5 = MAX((flyhackPauseTime > 0.f) ? 10 : 1.5, 0.f);
+				float num6 = LocalPlayer::Entity()->GetJumpHeight() + num5;
+				if (flyhackDistanceVertical > num6) {
+					//flyhacking
+				}
+				float num7 = MAX((flyhackPauseTime > 0.f) ? 10 : 1.5, 0.f);
+				float num8 = 5.f + num7;
+				if (flyhackDistanceHorizontal > num8) {
+					//flyhacking
+				}
+			}
+		}
+		else
+		{
+			flyhackDistanceVertical = 0.f;
+			flyhackDistanceHorizontal = 0.f;
+		}
+		printf("flyhackDistanceVertical: %ff\n", flyhackDistanceVertical);
+		printf("flyhackDistanceHorizontal: %ff\n", flyhackDistanceHorizontal);
+	}
+	/*
+	static bool TestFlyingK(BasePlayer* ply, Vector3 oldPos, Vector3 newPos, bool verifyGrounded)
 	{
 		isInAir = !ply->OnLadder() && !ply->IsSwimming() && !ply->IsOnGround();
 		//ply->isOnPlayer = false;
 		bool flag = false;
-		/*
+
 		if (verifyGrounded)
 		{
 			float flyhack_extrusion = 2.f;
@@ -2551,12 +2605,36 @@ public:
 		}
 		return false;
 	}
-	static bool IsFlying(BasePlayer* ply, TickInterpolator ticks, float deltaTime)
+
+	static bool check_flyhack()
 	{
+		TestFlying();
+		float num5 = MAX((flyhackPauseTime > 0.f) ? 10 : 1.5, 0.f);
+		float num6 = LocalPlayer::Entity()->GetJumpHeight() + num5;
+		settings::max_flyhack = num6;
+		if (flyhackDistanceVertical <= num6) {
+			settings::flyhack = flyhackDistanceVertical;
+			return true;
+		}
+
+		float num7 = MAX((flyhackPauseTime > 0.f) ? 10 : 1.5, 0.f);
+		float num8 = 5.f + num7;
+		settings::max_hor_flyhack = num8;
+		if (flyhackDistanceHorizontal <= num8) {
+			settings::hor_flyhack = flyhackDistanceHorizontal;
+			return true;
+		}
+		return false;
+	}
+	/*
+	static bool IsFlying(float deltaTime)
+	{
+		BasePlayer* ply = LocalPlayer::Entity();
 		bool result = false;
 		flyhackPauseTime = max(0.f, flyhackPauseTime - deltaTime);
-		ticks.Reset();
-		if (!ticks.HasNext())
+		tickInterpolator.Reset();
+		//tickInterpolator.Reset(ply->eyes()->transform()->position());
+		if (!tickInterpolator.HasNext())
 		{
 			result = false;
 		}
@@ -2564,15 +2642,15 @@ public:
 		{
 			bool flag = false;
 			Matrix matrix4x = ply->transform()->get_localToWorldMatrix();
-			Vector3 oldPos = matrix4x.MultiplyPoint3x4(ticks.startPoint);
-			Vector3 vector = matrix4x.MultiplyPoint3x4(ticks.endPoint);
 			float num = 0.1f;
 			int num2 = 15;
-			num = max(ticks.len / (float)num2, num);
-			while (ticks.MoveNext(num))
+			num = max(tickInterpolator.len / (float)num2, num);
+			while (tickInterpolator.MoveNext(num))
 			{
-				vector = matrix4x.MultiplyPoint3x4(ticks.currentPoint);
-				if (TestFlying(ply, oldPos, vector, true))
+				vector = matrix4x.MultiplyPoint3x4(tickInterpolator.currentPoint);
+				//if (TestFlying(oldPos, vector, true))
+				//if (TestFlying(cLastTickPos, oldPos, true))
+				if (TestFlying())
 				{
 					return true;
 				}
@@ -2581,6 +2659,8 @@ public:
 		} //lesser protections
 		return false;
 	}
+	*/
+/*
 	static bool TestNoClipping(BasePlayer* ply, Vector3 oldPos, Vector3 newPos, bool sphereCast, float deltaTime = 0.f)
 	{
 		const float noclip_margin = 0.09f;
@@ -2634,6 +2714,7 @@ public:
 		}
 		return false;
 	}
+	
 };
 */
 namespace ConVar {
@@ -3067,6 +3148,8 @@ void initialize_cheat( ) {
 	ASSIGN_HOOK("Assembly-CSharp::Projectile::Launch(): Void", Projectile::Launch_);
 
 	ASSIGN_HOOK("Assembly-CSharp::EffectLibrary::CreateEffect(String,Effect): GameObject", EffectLibrary::CreateEffect_);
+
+	ASSIGN_HOOK("Assembly-CSharp::BaseCombatEntity::DoHitNotify(HitInfo): Void", BaseCombatEntity::DoHitNotify_);
 
 	settings::il_init_methods = find(xorstr_("GameAssembly.dll"), "48 83 EC 48 48 8B 05 ? ? ? ? 48 63 90 ? ? ? ?");
 	settings::serverrpc_projectileshoot = find_rel(xorstr_("GameAssembly.dll"), xorstr_("4C 8B 0D ? ? ? ? 48 8B 75 28"));

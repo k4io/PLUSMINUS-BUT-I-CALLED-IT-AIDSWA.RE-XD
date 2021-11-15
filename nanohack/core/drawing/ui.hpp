@@ -239,11 +239,12 @@ namespace aidsware::ui
 		wrapper::checkbox(xorstr_("psilent"), Vector2(0, 0), Tabs::Combat, true);
 		wrapper::currentY += 5.0f;
 		wrapper::checkbox(xorstr_("peek assist"), Vector2(0, 0), Tabs::Combat, true, false);
-		wrapper::currentY += 5.0f;
+		wrapper::currentY += 10.0f;
 		//wrapper::checkbox(xorstr_("silent melee"), Vector2(0, 0), Tabs::Combat);
+		wrapper::slider(xorstr_("lerp"), Vector2(0, 0), 0.75f, 0.01f, 1.0f, Tabs::Combat);
+		wrapper::currentY -= 5.f;	
 		wrapper::checkbox(xorstr_("autoshoot"), Vector2(0, 0), Tabs::Combat);
 		wrapper::checkbox(xorstr_("pierce"), Vector2(0, 0), Tabs::Combat);
-		//wrapper::checkbox(xorstr_("test"), Vector2(0, 0), Tabs::Combat);
 		wrapper::checkbox(xorstr_("rapid fire"), Vector2(0, 0), Tabs::Combat);
 		wrapper::checkbox(xorstr_("hitbox attraction"), Vector2(0, 0), Tabs::Combat);
 		wrapper::checkbox(xorstr_("fat bullet"), Vector2(0, 0), Tabs::Combat);
@@ -254,6 +255,7 @@ namespace aidsware::ui
 		wrapper::currentY += 10.f;
 		wrapper::slider(xorstr_("counter"), Vector2(0, 0), 5.0f, 0.0f, 9.0f, Tabs::Combat);
 		wrapper::slider(xorstr_("bullets"), Vector2(0, 0), 1.0f, 0.0f, 5.0f, Tabs::Combat);
+		wrapper::currentY -= 5.f;
 		wrapper::checkbox(xorstr_("with peek assist"), Vector2(0, 0), Tabs::Combat);
 		wrapper::currentX += 20.f;
 		wrapper::reset_height();
@@ -318,8 +320,9 @@ namespace aidsware::ui
 		wrapper::checkbox(xorstr_("storage"), Vector2(170, 0), Tabs::Visual);
 		wrapper::checkbox(xorstr_("vehicles"), Vector2(170, 0), Tabs::Visual);
 		wrapper::checkbox(xorstr_("flyhack indicator"), Vector2(170, 0), Tabs::Visual);
-		wrapper::checkbox(xorstr_("raid esp"), Vector2(170, 0), Tabs::Visual);
+		//wrapper::checkbox(xorstr_("raid esp"), Vector2(170, 0), Tabs::Visual);
 		wrapper::checkbox(xorstr_("chams"), Vector2(170, 0), Tabs::Visual);
+		wrapper::checkbox(xorstr_("logs"), Vector2(170, 0), Tabs::Visual);
 		wrapper::checkbox(xorstr_("debug"), Vector2(170, 0), Tabs::Visual);
 		wrapper::currentY += 30.f;
 		wrapper::slider(xorstr_("esp dist"), Vector2(170, 0), 100.0f, 0.0f, 400.0f, Tabs::Visual);
@@ -343,7 +346,29 @@ namespace aidsware::ui
 		wrapper::checkbox(xorstr_("no collisions"), Vector2(0, 0), Tabs::Misc);
 		wrapper::checkbox(xorstr_("fake lag"), Vector2(0, 0), Tabs::Misc);
 		wrapper::checkbox(xorstr_("spiderman"), Vector2(0, 0), Tabs::Misc);
-		wrapper::checkbox(xorstr_("spinbot"), Vector2(0, 0), Tabs::Misc);
+
+		//wrapper::checkbox(xorstr_("spinbot"), Vector2(0, 0), Tabs::Misc);
+		wrapper::combobox(xorstr_("anti-aim"),
+			{
+				xorstr_("none"),
+				xorstr_("backwards"),
+				xorstr_("backwards (down)"),
+				xorstr_("backwards (up)"),
+				xorstr_("left"),
+				xorstr_("left (down)"),
+				xorstr_("left (up)"),
+				xorstr_("right"),
+				xorstr_("left (down)"),
+				xorstr_("left (up)"),
+				xorstr_("jitter"),
+				xorstr_("jitter (down)"),
+				xorstr_("jitter (up)"),
+				xorstr_("spin"),
+				xorstr_("spin (down)"),
+				xorstr_("spin (up)"),
+				xorstr_("random")
+			}, Vector2(0, 0), Tabs::Misc);
+
 		wrapper::checkbox(xorstr_("infinite jump"), Vector2(0, 0), Tabs::Misc);
 		wrapper::checkbox(xorstr_("can hold items"), Vector2(0, 0), Tabs::Misc);
 		wrapper::checkbox(xorstr_("omnisprint"), Vector2(0, 0), Tabs::Misc);
@@ -354,6 +379,7 @@ namespace aidsware::ui
 		wrapper::combobox(xorstr_("light"), { xorstr_("default"), xorstr_("dark"), xorstr_("light") }, Vector2(170, 0), Tabs::Misc);
 		wrapper::keybind(xorstr_("timescale key"), Vector2(170, 0), Tabs::Misc);
 		wrapper::keybind(xorstr_("desync on key"), Vector2(170, 0), Tabs::Misc);
+		wrapper::checkbox(xorstr_("long neck"), Vector2(170, 0), Tabs::Misc);
 		wrapper::combobox(xorstr_("crosshair"), { xorstr_("none"), xorstr_("plusminus"), xorstr_("evilcheats"), xorstr_("circle"), xorstr_("swastika") }, Vector2(170, 0), Tabs::Misc);
 
 		wrapper::textbox(xorstr_("config name"), Vector2(170, 0), Tabs::Misc, xorstr_("default"));
@@ -373,7 +399,6 @@ namespace aidsware::ui
 					vars::Container->LoadFromFile(settings::data_dir + xorstr_("\\") + configs[i] + xorstr_(".cfg"));*/
 		}, Vector2(170, 0), Tabs::Misc);
 
-
 		wrapper::button(xorstr_("Panic"), [&]() {
 			settings::panic = true;
 		}, Vector2(170, 0), Tabs::Misc);
@@ -385,7 +410,11 @@ namespace aidsware::ui
 		wrapper::slider(xorstr_("threshold"), Vector2(170, 0), 100.0f, 0.0f, 400.0f, Tabs::Misc);
 		wrapper::checkbox(xorstr_("walk to marker"), Vector2(170, 0), Tabs::Misc);
 		wrapper::checkbox(xorstr_("custom box"), Vector2(170, 0), Tabs::Misc);
-		wrapper::textbox(xorstr_("custom box image"), Vector2(170, 0), Tabs::Misc, xorstr_("none"));
+		wrapper::textbox(xorstr_("custom box path"), Vector2(170, 0), Tabs::Misc, xorstr_("box name"));
+		wrapper::checkbox(xorstr_("custom hitsound"), Vector2(170, 0), Tabs::Misc);
+		wrapper::textbox(xorstr_("hitsound path"), Vector2(170, 0), Tabs::Misc, xorstr_("hitsound"));
+		wrapper::checkbox(xorstr_("weapon spam"), Vector2(170, 0), Tabs::Misc);
+		//wrapper::checkbox(xorstr_("test"), Vector2(170, 0), Tabs::Combat);
 		wrapper::reset_height();
 		wrapper::reset_width();
 

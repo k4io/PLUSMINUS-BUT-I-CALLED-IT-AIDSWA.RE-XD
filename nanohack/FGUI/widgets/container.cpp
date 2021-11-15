@@ -165,7 +165,7 @@ namespace FGUI
         FGUI::DIMENSION dmTitleTextSize = FGUI::RENDER.GetTextSize(m_anyFont, m_strTitle);
 
         // if the container doesn't have a parent widget, it will behave like a normal window
-        if (!GetParentWidget( ))     {
+        if (!GetParentWidget( )) {
             // container body
             //FGUI::RENDER.Gradient(arWidgetRegion.m_iLeft, arWidgetRegion.m_iTop, arWidgetRegion.m_iRight, arWidgetRegion.m_iBottom, { 37, 71, 138 }, { 255, 255, 255 }, false);
             //FGUI::RENDER.Rectangle(arWidgetRegion.m_iLeft, arWidgetRegion.m_iTop, arWidgetRegion.m_iRight, arWidgetRegion.m_iBottom, { 37, 71, 138 });

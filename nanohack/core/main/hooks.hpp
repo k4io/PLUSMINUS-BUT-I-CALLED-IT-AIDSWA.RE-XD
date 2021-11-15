@@ -121,7 +121,6 @@ Vector3 GetModifiedAimConeDirection_hk(float aimCone, Vector3 inputVec, bool any
 		//inputVec = (aimutils::get_prediction( ) - LocalPlayer::Entity( )->eyes( )->position( )).normalized( );
 	}
 
-
 	return AimConeUtil::GetModifiedAimConeDirection(aimCone, inputVec, anywhereInside);
 }
 double CalcBulletDrop(double height, double DepthPlayerTarget, float velocity, float gravity) {
@@ -131,21 +130,138 @@ double CalcBulletDrop(double height, double DepthPlayerTarget, float velocity, f
 	double TotalVerticalDrop = (0.5f * gravity * Time * Time);
 	return TotalVerticalDrop * 10;
 }
+
 #define powFFFFFFFFFFFFFFFFFFFFFF(n) (n)*(n)
-void APrediction(Vector3 local, Vector3& target, Vector3 targetvel, float bulletspeed, float gravity, float drag, Vector3 initialVel = { 0, 0, 0 }) {
+#define maxSimulateSeconds 5
+#define stepRate 0.01666666666
+
+void APrediction(Vector3 local, Vector3& target, float bulletspeed, float gravity, float drag) {
 	float Dist = local.distance(target);
 
-	TraceResult f = traceProjectile(local,
-		initialVel,
-		drag,
-		Vector3(0, -9.1 * gravity, 0),
-		target);
+	/*
+	//put bullet drop here
 
+	//float m_flBulletSpeed = (bulletvelocity * projectileVelocityScale);
+
+	float m_flBulletSpeed = (projectileVelocity * projectileVelocityScale);
+
+	float bullet_time = Dist / m_flBulletSpeed;
+
+	const float m_flTimeStep = 0.005f;
+	float m_flYTravelled{}, m_flYSpeed{}, m_flBulletTime{}, m_flDivider{};
+
+	float m_flDistanceTo = Dist;//Calc3D_Dist(From, aimpoint);//from.distance(aimpoint);
+	//float m_flDistanceTo = fVrom.distance(aimpoint);
+
+	for (float distance_to_travel = 0.f; distance_to_travel < m_flDistanceTo;)
+	{
+		float speed_modifier = 1.0f - m_flTimeStep * drag;
+		m_flBulletSpeed *= speed_modifier;
+
+		if (m_flBulletSpeed <= 0.f || m_flBulletSpeed >= 10000.f || m_flYTravelled >= 10000.f || m_flYTravelled < 0.f)
+			break;
+
+		if (m_flBulletTime > 8.f)
+			break;
+
+		m_flYSpeed += (9.81f * gravity) * m_flTimeStep;
+		m_flYSpeed *= speed_modifier;
+
+		distance_to_travel += m_flBulletSpeed * m_flTimeStep;
+		m_flYTravelled += m_flYSpeed * m_flTimeStep;
+		m_flBulletTime += m_flTimeStep;
+	}
+
+	double height = target.y - local.y;
+	Vector3 dir = target - local;
+	float DepthPlayerTarget = Vector3::my_sqrt(powFFFFFFFFFFFFFFFFFFFFFF(dir.x) + powFFFFFFFFFFFFFFFFFFFFFF(dir.z));
+	float drop = CalcBulletDrop(height, DepthPlayerTarget, m_flBulletSpeed, gravity);
+*/
+	Vector3 targetvel = target_ply->playerModel()->newVelocity();
+
+	auto base_projectile = LocalPlayer::Entity()->GetHeldEntity<BaseProjectile>();
+	if (base_projectile == nullptr)
+		return;
+
+	static Type* type = Type::GetType(xorstr_("ItemModProjectile, Assembly-CSharp"));
+	if (type == nullptr)
+		return;
+
+	auto mag = base_projectile->primaryMagazine();
+	if (mag == nullptr)
+		return;
+
+	auto ammo = mag->ammoType();
+	if (ammo == nullptr)
+		return;
+
+	auto itemModProjectile = ammo->GetComponent<ItemModProjectile>(type); // 0x3189118 for getting Projectile* ref
+	if (itemModProjectile == nullptr)
+		return;
+
+	float bullet_speed = (itemModProjectile->GetRandomVelocity() * (aidsware::ui::get_bool(xorstr_("fast bullets")) ? 1.48f : 1.f)) * base_projectile->projectileVelocityScale();
+
+	if (base_projectile->class_name_hash() == STATIC_CRC32("CompoundBowWeapon"))
+		bullet_speed = (itemModProjectile->GetRandomVelocity() * (aidsware::ui::get_bool(xorstr_("fast bullets")) ? 1.48f : 1.f)) * reinterpret_cast<CompoundBowWeapon*>(base_projectile)->GetProjectileVelocityScale();
+
+	if (bullet_speed == 0.f)
+		return;
+	Projectile* projectile = itemModProjectile->projectileObject()->Get()->GetComponent<Projectile>(Type::Projectile());
+
+	if (projectile == nullptr)
+		return;
+
+
+	float m_flBulletSpeed = (itemModProjectile->projectileVelocity() * (base_projectile->projectileVelocityScale() * (aidsware::ui::get_bool(xorstr_("fast bullets")) ? 1.48f : 1.0f)));
+	float distance = target.distance(LocalPlayer::Entity()->eyes()->position());
+	float bullet_time = distance / m_flBulletSpeed;
+	const float m_flTimeStep = 0.005f;
+	float m_flYTravelled{}, m_flYSpeed{}, m_flBulletTime{}, m_flDivider{};
+
+	//float m_flDistanceTo = fVrom.distance(aimpoint);
+
+	for (float distance_to_travel = 0.f; distance_to_travel < distance;)
+	{
+		//float speed_modifier = (aidsware::ui::get_bool(xorstr_("fast bullets")) ? 1.48f : 1.0f) - m_flTimeStep * projectile->drag();
+		float speed_modifier = 1.0f - m_flTimeStep * projectile->drag();
+		m_flBulletSpeed *= speed_modifier;
+
+		if (m_flBulletSpeed <= 0.f || m_flBulletSpeed >= 50000.f || m_flYTravelled >= 50000.f || m_flYTravelled < 0.f)
+			break;
+
+		if (m_flBulletTime > 60.f)
+			break;
+
+		m_flYSpeed += (9.81f * projectile->gravityModifier()) * m_flTimeStep;
+		m_flYSpeed *= speed_modifier;
+
+		distance_to_travel += m_flBulletSpeed * m_flTimeStep;
+		m_flYTravelled += m_flYSpeed * m_flTimeStep;
+		m_flBulletTime += m_flTimeStep;
+	}
+
+	Vector3 velocity = targetvel * 0.75f;
+	if (velocity.y > 0.f)
+		velocity.y /= 3.25f;
+
+	Vector3 p_target = target;
+
+	target.y += m_flYTravelled;
+	target += velocity * m_flBulletTime;
+
+	target = Vector3::Lerp(p_target, target, aidsware::ui::get_float(xorstr_("lerp")));
+
+	TraceResult f = traceProjectile(local,
+		target,
+		drag,
+		Vector3(0, -9.81 * gravity, 0),
+		target);
 	LogSystem::AddTraceResult(f);
 
+	/*
 	//printf("initialVel: (%ff, %ff, %ff)\n", initialVel.x, initialVel.y, initialVel.z);
 
-	bulletspeed *= 1.f - 0.015625f * drag;
+	bulletspeed *= 1.f - stepRate * drag;
 	//float BulletTime = Dist / bulletspeed;
 	float BulletTime = f.hitTime;
 
@@ -154,11 +270,8 @@ void APrediction(Vector3 local, Vector3& target, Vector3 targetvel, float bullet
 	Vector3 PredictVel = vel * BulletTime;
 	//Vector3 PredictVel = f.outVelocity;
 	target += PredictVel;
-	double height = target.y - local.y;
-	Vector3 dir = target - local;
-	float DepthPlayerTarget = Vector3::my_sqrt(powFFFFFFFFFFFFFFFFFFFFFF(dir.x) + powFFFFFFFFFFFFFFFFFFFFFF(dir.z));
-	float drop = CalcBulletDrop(height, DepthPlayerTarget, bulletspeed, gravity);
 	target.y += drop;
+	*/
 }
 
 void serverrpc_projectileshoot_hk(int64_t rcx, int64_t rdx, int64_t r9, int64_t ProjectileShoot, int64_t arg5)
@@ -212,16 +325,33 @@ void serverrpc_projectileshoot_hk(int64_t rcx, int64_t rdx, int64_t r9, int64_t 
 		Vector3 bonepos = target;
 		Vector3 vel = target_ply->playerModel()->newVelocity();
 
+
 		for (size_t i = 0; i < sz; i++)
 		{
 			auto projectile = *(uintptr_t*)(shoot_list + 0x20 + i * 0x8); // 
 
+			if (target_ply)
+			{
+				int id = *reinterpret_cast<int*>(projectile + 0x14);
+				if (!map_contains_key(projectile_targets, id))
+					projectile_targets.insert(std::make_pair(id, target_ply));
+				else
+					projectile_targets[id] = target_ply;
+			}
+
 			rpc_position = *reinterpret_cast<Vector3*>(projectile + 0x18); //
 			auto original_vel = *reinterpret_cast<Vector3*>(projectile + 0x24); //
+			//auto itemmod = *reinterpret_cast<uintptr_t*>(projectile + 0xE8); //
+			//auto itemmodvel = *reinterpret_cast<float*>(itemmod + 0x34); //
+			//auto scale = *reinterpret_cast<float*>(projectile + 0x284); //
 
+			//auto itemmod = safe_read(projectile + 0xE8, uintptr_t);
+			//auto itemmodvel = safe_read(itemmod + 0x34, float);
+			//(itemModProjectile->projectileVelocity() * base_projectile->projectileVelocityScale());
 
-			if (target_ply/* && !target.teammate*/) {
-				APrediction(v, bonepos, vel, original_vel.Length(), stats.gravity_modifier, stats.drag, safe_read(projectile + 0x18, Vector3));
+			if (target_ply/* && !target.teammate*/) { //Vector3 local, Vector3& target, float bulletspeed, float gravity, float drag
+				//APrediction(v, bonepos, vel, original_vel.Length(), stats.gravity_modifier, stats.drag, itemmodvel, scale);
+				APrediction(v, bonepos, original_vel.Length(), stats.gravity_modifier, stats.drag);
 				aim_angle = /*get_aim_angle(rpc_position, target.pos, target.velocity, false, stats)*/bonepos - rpc_position;
 
 				aimbot_velocity = (aim_angle).normalized() * original_vel.Length();
@@ -376,6 +506,7 @@ bool CanAttack_hk(BasePlayer* self) {
 }
 
 void UpdateVelocity_hk(PlayerWalkMovement* self) {
+
 	if (aidsware::ui::get_bool(xorstr_("walk to marker")))
 	{
 		float speed = (self->swimming() || self->Ducking() > 0.5) ? 1.7f : 5.5f;
@@ -389,30 +520,45 @@ void UpdateVelocity_hk(PlayerWalkMovement* self) {
 		}
 	}
 
-	if (!self->flying( )) {
-		Vector3 vel = self->TargetMovement( );
-		if (aidsware::ui::get_bool(xorstr_("omnisprint"))) {
-			float max_speed = (self->swimming( ) || self->Ducking( ) > 0.5) ? 1.7f : 5.5f;
-			if (vel.length( ) > 0.f) {
-				Vector3 target_vel = Vector3(vel.x / vel.length( ) * max_speed, vel.y, vel.z / vel.length( ) * max_speed);
-				self->TargetMovement( ) = target_vel;
-			}
-		}
+	Vector3 vel = self->TargetMovement();
 
-		if (aidsware::ui::get_bool(xorstr_("flyhack stop")))
-		{
-			float threshold = aidsware::ui::get_float(xorstr_("threshold"));
-			if (settings::hor_flyhack > threshold || settings::flyhack > threshold)
-				self->TargetMovement() = Vector3::Zero(); //maybe lerp towards last position?
-		}
-		if (aidsware::ui::get_bool(xorstr_("peek assist")) && (get_key(aidsware::ui::get_keybind(xorstr_("peek assist key"))) || settings::tr::manipulate_visible)) {
-			float max_speed = (self->swimming( ) || self->Ducking( ) > 0.5) ? 1.7f : 5.5f;
-			if (vel.length( ) > 0.f) {
-				//elf->TargetMovement( ) = Vector3::Zero( );
-			}
+	if (aidsware::ui::get_bool(xorstr_("peek assist")) && (get_key(aidsware::ui::get_keybind(xorstr_("peek assist key"))) || settings::tr::manipulate_visible)) {
+		float max_speed = (self->swimming() || self->Ducking() > 0.5) ? 1.7f : 5.5f;
+		if (vel.length() > 0.f) {
+			//self->TargetMovement( ) = Vector3::Zero( );
 		}
 	}
 
+	if (aidsware::ui::get_bool(xorstr_("flyhack stop")))
+	{
+		Vector3 fvel = vel;
+		float threshold = aidsware::ui::get_float(xorstr_("threshold"));
+		if (settings::hor_flyhack * 100.f >= threshold)
+		{
+			fvel.x = 0.0f;
+			fvel.z = 0.0f;
+		}
+		if (settings::flyhack * 100.f >= threshold)
+		{
+			fvel.y = 0.0f;
+		}
+		self->TargetMovement() = fvel;
+	}
+
+	if (!self->flying()) {
+		float threshold = aidsware::ui::get_float(xorstr_("threshold"));
+		if (settings::hor_flyhack * 100.f < threshold
+			&& settings::flyhack * 100.f < threshold)
+		{
+			if (aidsware::ui::get_bool(xorstr_("omnisprint"))) {
+				float max_speed = (self->swimming() || self->Ducking() > 0.5) ? 1.7f : 5.5f;
+				if (vel.length() > 0.f) {
+					Vector3 target_vel = Vector3(vel.x / vel.length() * max_speed, vel.y, vel.z / vel.length() * max_speed);
+					self->TargetMovement() = target_vel;
+				}
+			}
+		}
+	}
 	return self->UpdateVelocity( );
 }
 
@@ -427,6 +573,13 @@ Vector3 EyePositionForPlayer_hk(BaseMountable* mount, BasePlayer* player, Quater
 }
 
 void HandleJumping_hk(PlayerWalkMovement* a1, ModelState* state, bool wantsJump, bool jumpInDirection = false) {
+	if (aidsware::ui::get_bool(xorstr_("flyhack stop")))
+	{
+		float threshold = aidsware::ui::get_float(xorstr_("threshold"));
+		if (settings::hor_flyhack * 100.f >= threshold
+			|| settings::flyhack * 100.f >= threshold)
+			return;
+	}
 	if (aidsware::ui::get_bool(xorstr_("infinite jump"))) {
 		if (!wantsJump)
 			return;
@@ -572,44 +725,23 @@ void ClientInput_hk(BasePlayer* plly, uintptr_t state) {
 		if (get_key(aidsware::ui::get_keybind(xorstr_("desync on key"))))
 			LocalPlayer::Entity()->clientTickInterval() = 0.99f;
 
-		if (aidsware::ui::get_bool(xorstr_("raid esp")))
-		{
-			//LogSystem::RenderExplosions();
-		}
-
 		if (held)
 		{	
 			auto wep_class_name = held->class_name();
 
 			if (aidsware::ui::get_bool(xorstr_("long hand")) && *(int*)(wep_class_name + 4) == 'eleM') {
-				//auto melee = reinterpret_cast<BaseMelee*>(held);//plly->GetHeldEntity<BaseMelee>();
-
-				float mm_max_eye = ((0.1f + ((desyncTime + 2.f / 60.f + 0.125f) * 1.5f) * LocalPlayer::Entity()->MaxVelocity())) + 5.f;
-				//melee->maxDistance() = 5.f + mm_max_eye;
-				safe_write(held + 0x290 /*maxDistance*/, mm_max_eye, float);
+				safe_write(held + 0x290 /*maxDistance*/, 5.f, float);
 			}
 		}
+
 		//todo:
 		/*	
-			remake flyhack indicator with testflying from +- old and my antihack class from new
 
-			CUSTOM PLAYERBOX IMAGE?
-
-			walk to marker
 			instant jackhammer refill
 			stack crafting tcs
 			weapon spam
 			legit recoil
-			hitsound
 		*/
-
-		/*
-		if (settings::desync && get_key(settings::desync_key)) {
-			float desyncTime = (Time::realtimeSinceStartup( ) - plly->lastSentTickTime( )) - 0.03125 * 3;
-			float max_eye_value = (0.1f + ((desyncTime + 2.f / 60.f + 0.125f) * 1.5f) * plly->MaxVelocity( )) - 0.05f;
-
-			plly->eyes( )->viewOffset( ) = Vector3(0, max_eye_value, 0);
-		}*/
 
 		if (aidsware::ui::get_bool(xorstr_("flyhack indicator"))
 			|| aidsware::ui::get_bool(xorstr_("flyhack stop")))
@@ -683,6 +815,17 @@ void ClientInput_hk(BasePlayer* plly, uintptr_t state) {
 				settings::tr::manipulate_visible = false;
 			}
 
+		if (aidsware::ui::get_bool(xorstr_("long neck")) && get_key(aidsware::ui::get_keybind(xorstr_("desync on key")))) {
+			float desyncTime = (Time::realtimeSinceStartup() - plly->lastSentTickTime()) - 0.03125 * 3;
+			float max_eye_value = (0.1f + ((desyncTime + 2.f / 60.f + 0.125f) * 1.5f) * plly->MaxVelocity()) - 0.05f;
+
+			plly->eyes()->viewOffset() = Vector3(0, max_eye_value, 0);
+		}
+		else if (aidsware::ui::get_bool(xorstr_("long neck")))
+		{
+			plly->eyes()->viewOffset() = Vector3(0, 1.495f, 0);
+		}
+
 		Physics::IgnoreLayerCollision(4, 12, !aidsware::ui::get_bool(xorstr_("no collisions")));
 		Physics::IgnoreLayerCollision(30, 12, aidsware::ui::get_bool(xorstr_("no collisions")));
 		Physics::IgnoreLayerCollision(11, 12, aidsware::ui::get_bool(xorstr_("no collisions")));
@@ -694,6 +837,9 @@ void ClientInput_hk(BasePlayer* plly, uintptr_t state) {
 
 		if (aidsware::ui::get_bool(xorstr_("fake admin")))
 			plly->playerFlags( ) |= PlayerFlags::IsAdmin;
+
+		if (aidsware::ui::get_bool(xorstr_("test")))
+			LocalPlayer::Entity()->add_modelstate_flag(ModelState::Flags::Mounted);
 
 		if (aidsware::ui::get_bool(xorstr_("can hold items")))
 			if (plly->mounted( ))
@@ -855,7 +1001,24 @@ bool DoHit_hk(Projectile* prj, HitTest* test, Vector3 point, Vector3 normal) {
 			}
 		}
 	}
-	return prj->DoHit(test, point, normal);
+	//check didhit?
+	bool r = prj->DoHit(test, point, normal);
+
+	BaseNetworkable* h = nullptr;
+	if (!map_contains_key(projectile_targets, prj->projectileID()))
+		return prj;
+	else
+		h = projectile_targets[prj->projectileID()];
+
+	if (test->HitEntity() != h)
+	{
+		std::wstring name(reinterpret_cast<BasePlayer*>(h)->_displayName());
+		wchar_t buffer[255];
+		swprintf(buffer, 255, L"missed [%s] due to prediction", name.c_str());
+		LogSystem::Log(buffer, 5.f);
+	}
+	projectile_targets.erase(prj->projectileID());
+	return r;
 }
 
 void SetEffectScale_hk(Projectile* self, float eScale) {
@@ -910,24 +1073,25 @@ void set_flying_hk(ModelState* modelState, bool state) {
 	modelState->set_flying(false);
 }
 /*
-void FinalizeTick(float deltaTime, BasePlayer* ply)
+void FinalizeTick(float deltaTime)
 {
-	ply->tickDeltaTime += deltaTime;
-	printf("ply->tickDeltaTime: %.3f\n", ply->tickDeltaTime);
-	bool flag = ply->tickInterpolator.startPoint != ply->tickInterpolator.endPoint;
+	tickDeltaTime += deltaTime;
+	bool flag = tickInterpolator.startPoint != tickInterpolator.endPoint;
 	if (flag)
 	{
-		if (antihack::ValidateMove(ply, ply->tickInterpolator, ply->tickDeltaTime))
+		if (antihack::ValidateMove(tickDeltaTime)
+			&& aidsware::ui::get_bool(xorstr_("flyhack stop")) || aidsware::ui::get_bool(xorstr_("flyhack indicator")))
 		{
-			printf("GOOD\n");
+			//printf("GOOD\n");
 		}
 		else
 		{
-			printf("BAD\n");
+			//printf("BAD\n");
 		}
 	}
-}
-
+	tickInterpolator.Reset(LocalPlayer::Entity()->eyes()->transform()->position());
+}*/
+/*
 void ServerUpdate(float deltaTime, BasePlayer* ply)
 {
 	ply->desyncTimeRaw = MAX(ply->lastSentTickTime() - deltaTime, 0.f);
@@ -938,15 +1102,152 @@ void ServerUpdate(float deltaTime, BasePlayer* ply)
 	return;
 }
 */
+
+int jitter = 1;
+int jitter_speed = 10;
+int spin_speed = 70;
+int spin = 0;
+
 void sendclienttick_hk(BasePlayer* self)
 {
-	if (aidsware::ui::get_bool(xorstr_("spinbot")))
+	printf("jitter: %i\n", jitter);
+	int sb = aidsware::ui::get_combobox(xorstr_("anti-aim"));
+	auto input = safe_read(self + 0x4E0, uintptr_t);
+	auto state = safe_read(input + 0x20, uintptr_t);
+	auto current = safe_read(state + 0x10, uintptr_t);
+	if (!current)
+		return self->SendClientTick();
+	Vector3 real_angles = safe_read(current + 0x18, Vector3);
+	Vector3 spin_angles = Vector3::Zero();
+	switch (sb)
 	{
-		self->input()->state()->current()->aimAngles() = Vector3((rand() % 999 + -999), (rand() % 999 + -999), (rand() % 999 + -999));
+	case 0: //x = yaw (up/down), y = pitch (spin), z = roll?????;
+		break;
+	case 1: //backwards
+		spin_angles.y = real_angles.y - 180.f;
+		break;
+	case 2: //backwards (down)
+		spin_angles.x = 0.f;
+		spin_angles.z = 0.f;
+		spin_angles.y = real_angles.y - 180.f;
+		break;
+	case 3: //backwards (up)
+		spin_angles.x = 999.f;
+		spin_angles.z = 999.f;
+		spin_angles.y = real_angles.y - 180.f;
+		break;
+	case 4: //left
+		spin_angles.y = real_angles.y - 90.f;
+		break;
+	case 5: //left (down)
+		spin_angles.x = 0.f;
+		spin_angles.z = 0.f;
+		spin_angles.y = real_angles.y - 90.f;
+		break;
+	case 6: //left (up)
+		spin_angles.x = 999.f;
+		spin_angles.z = 999.f;
+		spin_angles.y = real_angles.y - 90.f;
+		break;
+	case 7: //right
+		spin_angles.y = real_angles.y + 90.f;
+		break;
+	case 8: //right (down)
+		spin_angles.x = 0.f;
+		spin_angles.z = 0.f;
+		spin_angles.y = real_angles.y + 90.f;
+		break;
+	case 9: //right (up)
+		spin_angles.x = 999.f;
+		spin_angles.z = 999.f;
+		spin_angles.y = real_angles.y + 90.f;
+		break;
+	case 10: //jitter
+		if (jitter <= jitter_speed * 1)
+		{
+			spin_angles.y = real_angles.y + 45.f;
+		}
+		else if(jitter <= jitter_speed * 2)
+		{
+			spin_angles.y = real_angles.y - 45.f;
+		}
+		else if (jitter <= jitter_speed * 3)
+		{
+			spin_angles.y = real_angles.y - 180.f;
+			jitter = 1;
+		}
+		jitter = jitter + 1;
+		spin_angles.y = real_angles.y;
+		break;
+	case 11: //jitter (down)
+		if (jitter <= jitter_speed * 1)
+		{
+			spin_angles.y = real_angles.y + 45.f;
+		}
+		else if (jitter <= jitter_speed * 2)
+		{
+			spin_angles.y = real_angles.y - 45.f;
+		}
+		else if (jitter <= jitter_speed * 3)
+		{
+			spin_angles.y = real_angles.y - 180.f;
+			jitter = 1;
+		}
+		jitter = jitter + 1;
+		spin_angles.x = 0.f;
+		spin_angles.z = 0.f;
+		spin_angles.y = real_angles.y;
+		break;
+	case 12: //jitter (up)
+		if (jitter <= jitter_speed * 1)
+		{
+			spin_angles.y = real_angles.y + 45.f;
+		}
+		else if(jitter <= jitter_speed * 2)
+		{
+			spin_angles.y = real_angles.y - 45.f;
+		}
+		else if (jitter <= jitter_speed * 3)
+		{
+			spin_angles.y = real_angles.y - 180.f;
+			jitter = 1;
+		}
+		jitter = jitter + 1;
+		spin_angles.x = 999.f;
+		spin_angles.z = 999.f;
+		spin_angles.y = real_angles.y;
+		break;
+	case 13: //spin
+		spin_angles.y = real_angles.y + (spin_speed * spin++);
+		if (spin > (360 / spin_speed))
+			spin = 1;
+		break;
+	case 14: //spin (down)
+		spin_angles.x = 0.f;
+		spin_angles.z = 0.f;
+		spin_angles.y = real_angles.y + (spin_speed * spin++);
+		if (spin > (360 / spin_speed))
+			spin = 1;
+		break;
+	case 15: //spin (up)
+		spin_angles.x = 999.f;
+		spin_angles.y = real_angles.y + (spin_speed * spin++);
+		spin_angles.z = 999.f;
+		if (spin > (360 / spin_speed))
+			spin = 1;
+		break;
+	case 16: //random
+		spin_angles = Vector3((rand() % 999 + -999), (rand() % 999 + -999), (rand() % 999 + -999));
+		break;
 	}
-	cLastTickPos = self->transform()->position(); //try headpos then try footpos?
+	if(spin_angles != Vector3::Zero())
+		safe_write(current + 0x18, spin_angles, Vector3);
 
-	return self->SendClientTick();
+	self->SendClientTick();
+
+
+	cLastTickPos = self->transform()->position();
+	return;
 }
 
 Vector3 playereyes_getpos_hk(PlayerEyes* self)
@@ -959,6 +1260,45 @@ Vector3 playereyes_getpos_hk(PlayerEyes* self)
 void Launch_hk(Projectile* p)
 {
 	return p->Launch();
+}
+
+void DoHitNotify_hk(BaseCombatEntity* e, HitInfo* info)
+{
+	if (e->IsPlayer())
+	{//StringFormat::format(xorstr_("%s Raid"), type.c_str());
+		std::wstring name(reinterpret_cast<BasePlayer*>(e)->_displayName());
+		std::wstring hitbone = StringPool::Get(info->HitBone())->buffer; 
+		float damage = info->damageTypes()->Total();
+		wchar_t buffer[255];
+		swprintf(buffer, 255, L"[%s] -%2.f (%s) (%.2fm)", name.c_str(), damage, hitbone.c_str(), info->ProjectileDistance());
+		//LogSystem::Log(StringFormat::format(wxorstr_(L"[%s] -%2.f (%s)"), reinterpret_cast<BasePlayer*>(e)->_displayName(), StringPool::Get(info->HitBone())->buffer, info->damageTypes()->Total()), 5.f);
+		LogSystem::Log(buffer, 5.f);
+
+		if (aidsware::ui::get_bool(xorstr_("custom hitsound")))
+		{
+			std::string text = aidsware::ui::get_text(xorstr_("hitsound path"));
+			text = settings::data_dir + xorstr_("\\sounds\\") + text;
+			if (text.empty())
+				return e->DoHitNotify(info);
+			if (settings::current_hitsound != text)
+			{
+				if(!entities::exists(text))
+					return e->DoHitNotify(info);
+				settings::current_hitsound = text;
+			}
+			PlaySoundA(text.c_str(), NULL, SND_ASYNC);
+			return;
+		}
+	}
+	return e->DoHitNotify(info);
+}
+
+Projectile* CreateProjectile_hk(BaseProjectile* self, String* prefabPath, Vector3 pos, Vector3 forward, Vector3 velocity)
+{
+	Projectile* p = self->CreateProjectile(prefabPath, pos, forward, velocity);
+	if (!target_ply) return p;
+
+	return p;
 }
 
 void do_hooks( ) {
@@ -997,6 +1337,10 @@ void do_hooks( ) {
 	hookengine::hook(Projectile::Launch_, Launch_hk);
 
 	hookengine::hook(BasePlayer::SendClientTick_, sendclienttick_hk);
+
+	hookengine::hook(BaseCombatEntity::DoHitNotify_, DoHitNotify_hk);
+
+	hookengine::hook(BaseProjectile::CreateProjectile_, CreateProjectile_hk);
 
 
 	VM_DOLPHIN_BLACK_END
@@ -1038,7 +1382,9 @@ void undo_hooks( ) {
 
 	hookengine::unhook(Projectile::Launch_, Launch_hk);
 
-	hookengine::unhook(EffectLibrary::CreateEffect_, CreateEffect_hk);
+	hookengine::unhook(BaseCombatEntity::DoHitNotify_, DoHitNotify_hk);
+
+	hookengine::unhook(BaseProjectile::CreateProjectile_, CreateProjectile_hk);
 
 	VM_DOLPHIN_BLACK_END
 }
