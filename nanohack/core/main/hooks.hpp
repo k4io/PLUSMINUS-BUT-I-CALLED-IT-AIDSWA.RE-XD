@@ -734,6 +734,30 @@ void ClientInput_hk(BasePlayer* plly, uintptr_t state) {
 			}
 		}
 
+		if (aidsware::ui::get_bool(xorstr_("stack tcs")))
+		{
+			auto inv = LocalPlayer::Entity()->inventory();
+			auto container = inv->containerMain();
+			auto itemlist = container->itemList();
+			auto sz = itemlist->size();
+			for (size_t i = 0; i < sz; i++)
+			{
+				auto member = itemlist->get(i);
+				auto d = *member;
+
+				if (d->info()->class_name_hash() == STATIC_CRC32("Wood"))
+				{
+					auto stack_sz = d->amount();
+					if (amount == 1000)
+					{
+						//start crafting tc???
+
+						
+					}
+				}
+			}
+		}
+
 		//todo:
 		/*	
 
