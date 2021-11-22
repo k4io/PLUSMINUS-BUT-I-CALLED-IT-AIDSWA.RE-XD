@@ -159,7 +159,7 @@
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <Optimization>Disabled</Optimization>
       <WholeProgramOptimization>true</WholeProgramOptimization>
-      <AdditionalIncludeDirectories>C:\Themida\ThemidaSDK\Include\C\</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Themida\ThemidaSDK\Include\C\;C:\Users\kai\Documents\VMProtectX32\Include\C</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -169,7 +169,7 @@
       <EnableUAC>false</EnableUAC>
       <AdditionalDependencies>detours/detours.lib;ws2_32.lib;Wldap32.lib;SecureEngineSDK64.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateMapFile>true</GenerateMapFile>
-      <AdditionalLibraryDirectories>C:\Themida\ThemidaSDK\Lib\COFF\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>C:\Themida\ThemidaSDK\Lib\COFF\;C:\Users\kai\Documents\VMProtectX32\Lib\Windows\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>

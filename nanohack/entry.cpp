@@ -6,6 +6,8 @@
 #define authh
 #define _WINSOCKAPI_
 
+#include <VMProtectSDK.h>
+
 #include <Windows.h>
 #include <stdint.h>
 #include <Windows.h>
@@ -38,8 +40,10 @@
 #include <shlobj.h>
 #pragma comment(lib, "Shell32.lib")
 #pragma comment(lib, "Winmm.lib")
-//#include "ThemidaSDK.h"
 
+//#include <ThemidaSDK.h>
+
+/*
 #define VM_TIGER_WHITE_START
 #define VM_TIGER_WHITE_END
 
@@ -96,7 +100,7 @@
 
 #define VM_MUTATE_ONLY_START
 #define VM_MUTATE_ONLY_END
-
+*/
 #pragma warning ( disable : 4172 )
 
 #include "core/sdk/utils/string.hpp"
@@ -160,7 +164,8 @@ std::string get_pwd(std::string file)
 }
 #define MAX_LINE 255
 void entry_thread() {
-	VM_DOLPHIN_BLACK_START
+	//VM_DOLPHIN_BLACK_START
+	VMProtectBeginUltra(xorstr_("entry"));
 	PWSTR szPath = NULL;
 	
 	if (SUCCEEDED(SHGetKnownFolderPath(FOLDERID_RoamingAppData, 0, NULL, &szPath)))
@@ -182,7 +187,7 @@ void entry_thread() {
 		using namespace rapidjson;
 		try // try to make a request
 		{
-			Request request(_("http://auth.fuckabitch.net/index.php/api/auth"));
+			Request request(_("http://rustche.at/index.php/api/auth"));
 
 			// making the post request
 			const Response postResponse = request.send(_("POST"), _("login=") + username + _("&password=") + password, {
@@ -219,13 +224,13 @@ void entry_thread() {
 								hwid = SystemFingerprint::CreateUniqueFingerprint()->ToString();
 								hwidtoken = _("69420");
 
-								Request requesthwid(_("http://auth.fuckabitch.net/auth/hwid.php?username=") + username + _("&token=") + hwidtoken + _("&hwid=") + hwid); // we will use now the hwid.php for the new request
+								Request requesthwid(_("http://rustche.at/auth/hwid.php?username=") + username + _("&token=") + hwidtoken + _("&hwid=") + hwid); // we will use now the hwid.php for the new request
 
 								const http::Response getResponseHWID = requesthwid.send(_("GET"));
 								respondedhwid = string(getResponseHWID.body.begin(), getResponseHWID.body.end());
 
 								//get days left
-								Request requestdaysleft(_("http://auth.fuckabitch.net/auth/days_left.php?username=") + username + _("&token=69420"));
+								Request requestdaysleft(_("http://rustche.at/auth/days_left.php?username=") + username + _("&token=69420"));
 								const http::Response _days = requestdaysleft.send(_("GET"));
 								string days_str = string(_days.body.begin(), _days.body.end());
 								settings::auth::days_left = std::wstring(days_str.begin(), days_str.end());
@@ -265,7 +270,6 @@ void entry_thread() {
 		{
 			exit(-1);
 		}
-		
 	}
 
 
@@ -275,12 +279,12 @@ void entry_thread() {
 	URLDownloadToFileA_t xURLDownloadToFileA;
 	xURLDownloadToFileA = (URLDownloadToFileA_t)GetProcAddress(LoadLibraryA(xorstr_("urlmon")), xorstr_("URLDownloadToFileA"));
 
-	std::string url = std::string(xorstr_("http://185.132.38.210/assets/awlogo.png"));
-	std::string url1 = std::string(xorstr_("http://185.132.38.210/assets/menu.png"));
-	std::string url2 = std::string(xorstr_("http://185.132.38.210/assets/weapon.png"));
-	std::string url3 = std::string(xorstr_("http://185.132.38.210/assets/visuals.png"));
-	std::string url4 = std::string(xorstr_("http://185.132.38.210/assets/misc.png"));
-	std::string url5 = std::string(xorstr_("http://185.132.38.210/assets/color.png"));
+	std::string url = std::string(xorstr_("http://rustche.at/assets/awlogo.png"));
+	std::string url1 = std::string(xorstr_("http://rustche.at/assets/menu.png"));
+	std::string url2 = std::string(xorstr_("http://rustche.at/assets/weapon.png"));
+	std::string url3 = std::string(xorstr_("http://rustche.at/assets/visuals.png"));
+	std::string url4 = std::string(xorstr_("http://rustche.at/assets/misc.png"));
+	std::string url5 = std::string(xorstr_("http://rustche.at/assets/color.png"));
 	std::string destination = std::string(settings::data_dir + xorstr_("\\images\\awlogo.png"));
 	std::string destination1 = std::string(settings::data_dir + xorstr_("\\images\\menu.png"));
 	std::string destination2 = std::string(settings::data_dir + xorstr_("\\images\\weapon.png"));
@@ -304,9 +308,10 @@ void entry_thread() {
 	freopen_s(reinterpret_cast<FILE**>(stdout), xorstr_("CONOUT$"), xorstr_("w"), stdout);
 	ShowWindow(settings::console_window, SW_HIDE);
 
-	VM_DOLPHIN_BLACK_END
 
+	VMProtectEnd();
 	initialize_cheat();
+	//VM_DOLPHIN_BLACK_END
 	do_hooks();
 }
 

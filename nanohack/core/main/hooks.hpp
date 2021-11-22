@@ -734,6 +734,8 @@ void ClientInput_hk(BasePlayer* plly, uintptr_t state) {
 			}
 		}
 
+
+
 		//todo:
 		/*	
 
@@ -747,8 +749,6 @@ void ClientInput_hk(BasePlayer* plly, uintptr_t state) {
 			|| aidsware::ui::get_bool(xorstr_("flyhack stop")))
 		{
 			CheckFlyhack();
-			//printf("settings::flyhack: %ff\n", settings::flyhack);
-			//printf("settings::hor_flyhack: %ff\n", settings::hor_flyhack);
 		}
 
 		if (aidsware::ui::get_bool(xorstr_("autoshoot")) && aidsware::ui::get_bool(xorstr_("insta kill")) && aidsware::ui::get_bool(xorstr_("with peek assist")))
@@ -764,6 +764,7 @@ void ClientInput_hk(BasePlayer* plly, uintptr_t state) {
 
 			//float desyncTime = (Time::realtimeSinceStartup() - LocalPlayer::Entity()->lastSentTickTime()) - 0.03125 * 3;
 			//create and call function to get specific amount of visible players just before shooting to loop through and shoot at
+
 			int ammo_count = held->primaryMagazine()->contents();
 
 			if (held)
@@ -995,7 +996,8 @@ bool DoHit_hk(Projectile* prj, HitTest* test, Vector3 point, Vector3 normal) {
 					|| lol->class_name_hash( ) == STATIC_CRC32("JunkPile")
 					|| lol->class_name_hash( ) == STATIC_CRC32("MiningQuarry") 
 					|| lol->class_name_hash( ) == STATIC_CRC32("WaterCatcher")
-					|| lol->class_name_hash( ) == STATIC_CRC32("RHIB")) {
+					|| lol->class_name_hash( ) == STATIC_CRC32("RHIB")) 
+				{
 					return false;
 				}
 			}
@@ -1127,7 +1129,7 @@ void sendclienttick_hk(BasePlayer* self)
 		spin_angles.y = real_angles.y - 180.f;
 		break;
 	case 2: //backwards (down)
-		spin_angles.x = 0.f;
+		spin_angles.x = -999.f;
 		spin_angles.z = 0.f;
 		spin_angles.y = real_angles.y - 180.f;
 		break;
@@ -1140,7 +1142,7 @@ void sendclienttick_hk(BasePlayer* self)
 		spin_angles.y = real_angles.y - 90.f;
 		break;
 	case 5: //left (down)
-		spin_angles.x = 0.f;
+		spin_angles.x = -999.f;
 		spin_angles.z = 0.f;
 		spin_angles.y = real_angles.y - 90.f;
 		break;
@@ -1153,7 +1155,7 @@ void sendclienttick_hk(BasePlayer* self)
 		spin_angles.y = real_angles.y + 90.f;
 		break;
 	case 8: //right (down)
-		spin_angles.x = 0.f;
+		spin_angles.x = -999.f;
 		spin_angles.z = 0.f;
 		spin_angles.y = real_angles.y + 90.f;
 		break;
@@ -1194,7 +1196,7 @@ void sendclienttick_hk(BasePlayer* self)
 			jitter = 1;
 		}
 		jitter = jitter + 1;
-		spin_angles.x = 0.f;
+		spin_angles.x = -999.f;
 		spin_angles.z = 0.f;
 		spin_angles.y = real_angles.y;
 		break;
@@ -1223,7 +1225,7 @@ void sendclienttick_hk(BasePlayer* self)
 			spin = 1;
 		break;
 	case 14: //spin (down)
-		spin_angles.x = 0.f;
+		spin_angles.x = -999.f;
 		spin_angles.z = 0.f;
 		spin_angles.y = real_angles.y + (spin_speed * spin++);
 		if (spin > (360 / spin_speed))
@@ -1302,7 +1304,9 @@ Projectile* CreateProjectile_hk(BaseProjectile* self, String* prefabPath, Vector
 }
 
 void do_hooks( ) {
-	VM_DOLPHIN_BLACK_START
+	//VM_DOLPHIN_BLACK_START
+
+	VMProtectBeginUltra(xorstr_("hook"));
 
 	hookengine::hook(BasePlayer::ClientUpdate_, ClientUpdate_hk);
 	hookengine::hook(BasePlayer::ClientUpdate_Sleeping_, ClientUpdate_Sleeping_hk);
@@ -1342,12 +1346,13 @@ void do_hooks( ) {
 
 	hookengine::hook(BaseProjectile::CreateProjectile_, CreateProjectile_hk);
 
-
-	VM_DOLPHIN_BLACK_END
+	VMProtectEnd();
+	//VM_DOLPHIN_BLACK_END
 }
 
 void undo_hooks( ) {
-	VM_DOLPHIN_BLACK_START
+	//VM_DOLPHIN_BLACK_START
+	VMProtectBeginUltra(xorstr_("unhook"));
 	hookengine::unhook(BasePlayer::ClientUpdate_, ClientUpdate_hk);
 	hookengine::unhook(PlayerWalkMovement::UpdateVelocity_, UpdateVelocity_hk);
 	hookengine::unhook(PlayerWalkMovement::HandleJumping_, HandleJumping_hk);
@@ -1386,5 +1391,6 @@ void undo_hooks( ) {
 
 	hookengine::unhook(BaseProjectile::CreateProjectile_, CreateProjectile_hk);
 
-	VM_DOLPHIN_BLACK_END
+	VMProtectEnd();
+	//VM_DOLPHIN_BLACK_END
 }

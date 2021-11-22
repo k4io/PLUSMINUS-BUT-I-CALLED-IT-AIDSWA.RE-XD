@@ -207,7 +207,7 @@ namespace aidsware::ui
 	bool a123_ = false;
 	inline void OnSetupDevice()
 	{
-		VM_EAGLE_BLACK_START
+		//VM_EAGLE_BLACK_START
 
 		a123_ = true;
 		init = true;
@@ -508,6 +508,6 @@ namespace aidsware::ui
 		wrapper::color_picker(xorstr_("los checks"), Vector2(205.f, 0), Tabs::Colors);
 		wrapper::label(xorstr_("insta kill"), Vector2(140, 0), Tabs::Colors, false);
 		wrapper::color_picker(xorstr_("insta kill indicator"), Vector2(205.f, 0), Tabs::Colors);
-		VM_EAGLE_BLACK_END
+		//VM_EAGLE_BLACK_END
 	}
 }
