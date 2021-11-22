@@ -30,7 +30,8 @@ namespace Renderer {
 	ID2D1SolidColorBrush* m_pSolidBrush;
 	bool initialized = false;
 
-	ID2D1Bitmap* bitmaps[] = { NULL, NULL, NULL, NULL, NULL, NULL, NULL };
+	ID2D1Bitmap* bitmaps[] = { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
+	ID2D1Bitmap* custom_box_bitmap = NULL;
 
 	ID2D1Bitmap* boxBitmap = nullptr;
 
@@ -57,7 +58,10 @@ namespace Renderer {
 		hr = converter->Initialize(frame, GUID_WICPixelFormat32bppPBGRA, WICBitmapDitherTypeNone, NULL, 0.f, WICBitmapPaletteTypeMedianCut);
 		if FAILED(hr) goto clenaup;
 
-		hr = m_pCanvas->CreateBitmapFromWicBitmap(converter, 0, pBitmap);
+		if(custombox)
+			hr = m_pCanvas->CreateBitmapFromWicBitmap(converter, 0, custom_box_bitmap);
+		else
+			hr = m_pCanvas->CreateBitmapFromWicBitmap(converter, 0, pBitmap);
 		if FAILED(hr) goto clenaup;
 
 	clenaup:
@@ -146,6 +150,13 @@ namespace Renderer {
 			m_pCanvas->Release( );
 			m_pCanvas = nullptr;
 		}
+	}
+
+	void draw_custom_box(float x, float y, float w, float h)
+	{
+		D2D1_SIZE_F size = bitmaps[file]->GetSize();
+		if (!custom_box_bitmap) return;
+		m_pCanvas->DrawBitmap(custom_box_bitmap, D2D1::RectF(x, y, x + w, y + h), 1.f, D2D1_BITMAP_INTERPOLATION_MODE_LINEAR, D2D1::RectF(0, 0, size.width, size.height));
 	}
 	
 	/*

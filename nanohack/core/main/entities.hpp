@@ -202,8 +202,18 @@ namespace entities {
 			&& LocalPlayer::Entity())
 		{
 			float threshold = aidsware::ui::get_float(xorstr_("threshold"));
-			settings::flyhack = (settings::flyhack * 100.f) > threshold ? threshold : settings::flyhack;
-			settings::hor_flyhack = (settings::hor_flyhack * 100.f) > threshold ? threshold : settings::hor_flyhack;
+			//settings::flyhack = (settings::flyhack * 100.f) > threshold ? threshold : settings::flyhack;
+			//settings::hor_flyhack = (settings::hor_flyhack * 100.f) > threshold ? threshold : settings::hor_flyhack;
+
+			if (settings::flyhack * 100.f > threshold)
+			{
+
+			}
+			if (settings::hor_flyhack * 100.f > threshold)
+			{
+
+			}
+
 			Renderer::ProgressBar({ screen_center.x - 300, screen_center.y - 500 }, { screen_center.x + 300, screen_center.y - 500 }, { 51, 88, 181 }, { 38, 38, 60 }, ((settings::flyhack * 100.f) / threshold) < 0.f ? 0.f : ((settings::flyhack * 100.f) >= threshold ? threshold : settings::flyhack), 600);
 			Renderer::ProgressBar({ screen_center.x - 300, screen_center.y - 480 }, { screen_center.x + 300, screen_center.y - 480 }, { 51, 88, 181 }, { 38, 38, 60 }, ((settings::hor_flyhack * 100.f) / threshold) < 0.f ? 0.f : ((settings::hor_flyhack * 100.f) >= threshold ? threshold : settings::hor_flyhack), 600);
 		}
