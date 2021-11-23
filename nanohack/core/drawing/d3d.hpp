@@ -28,14 +28,14 @@ namespace d3d {
 		screen_size = { viewport.Width, viewport.Height };
 		screen_center = { viewport.Width / 2.0f, viewport.Height / 2.0f };
 
-		//if (GetAsyncKeyState(VK_INSERT) & 1)
-		//	settings::menu = !settings::menu;
+		if (GetAsyncKeyState(VK_INSERT) & 1)
+			settings::open = !settings::open;
 
 		if (!settings::panic) {
 			if (Renderer::new_frame(swapChain)) {
 
 				Renderer::rounded_rectangle_filled(10, 10, 430, 20, Color3(23, 25, 31), 3.f);
-				Renderer::rounded_box(9, 9, 432, 22, Color3(44, 44, 46), 3.f);
+				Renderer::rounded_box(9, 9, 432, 22, Color3(1, 26, 51), 3.f);
 
 				Renderer::text(Vector2(225, 22), Color3(219, 219, 219), 14.f, true, true, wxorstr_(L"aidswa.re | %s | time left: %s days"), settings::auth::username.c_str(), settings::auth::days_left.c_str());
 
@@ -50,7 +50,7 @@ namespace d3d {
 					std::wstring w(std::to_wstring(r));
 					//aidsware::ui::wrapper::label(std::to_string(r), Vector2(160.0f, 10.0f), aidsware::ui::Tabs::Combat);
 					Renderer::rectangle_filled({ 10, 50 }, Vector2(110, 20), Color3(23, 25, 31));
-					Renderer::rectangle_filled(Vector2(10, 50), Vector2(110, 3), Color3(44, 44, 46));
+					Renderer::rectangle_filled(Vector2(10, 50), Vector2(110, 3), Color3(1, 26, 51));
 
 					Renderer::text({ 65, 62 }, Color3(222, 222, 222), 12.f, true, true, wxorstr_(L"%.f checks"), r);
 				}

@@ -109,16 +109,19 @@ void ClientUpdate_Sleeping_hk(BasePlayer* player)
 Vector3 GetModifiedAimConeDirection_hk(float aimCone, Vector3 inputVec, bool anywhereInside = true) {
 
 	aimCone *= aidsware::ui::get_float(xorstr_("spread %")) / 100.0f;
-	return AimConeUtil::GetModifiedAimConeDirection(aimCone, inputVec, anywhereInside);
 
-	bool flag = false;
-	if (get_key(aidsware::ui::get_keybind(xorstr_("psilent key"))))
+	if (aidsware::ui::get_bool(xorstr_("patrol-heli"))
+		&& target_heli != nullptr)
 	{
-		flag = true;
-	}
+		bool flag = false;
+		if (get_key(aidsware::ui::get_keybind(xorstr_("psilent key"))))
+		{
+			flag = true;
+		}
 
-	if ((aidsware::ui::get_bool(xorstr_("psilent")) || flag) && target_ply != nullptr && target_ply->isCached( )) {
-		//inputVec = (aimutils::get_prediction( ) - LocalPlayer::Entity( )->eyes( )->position( )).normalized( );
+		if (aidsware::ui::get_bool(xorstr_("psilent")) || flag) {
+			inputVec = (aimutils::get_prediction( ) - LocalPlayer::Entity( )->eyes( )->position( )).normalized( );
+		}
 	}
 
 	return AimConeUtil::GetModifiedAimConeDirection(aimCone, inputVec, anywhereInside);
@@ -274,12 +277,24 @@ void APrediction(Vector3 local, Vector3& target, float bulletspeed, float gravit
 	*/
 }
 
+Vector3 prev_angle = Vector3::Zero();
 void serverrpc_projectileshoot_hk(int64_t rcx, int64_t rdx, int64_t r9, int64_t ProjectileShoot, int64_t arg5)
 {
+	Vector3 v = LocalPlayer::Entity()->input()->recoilAngles();
+
+	Vector3 r = v - prev_angle;
+
+	printf("{ %ff, %ff },\n", r.x, r.y);
+	prev_angle = v;
 	while (1)
 	{
 		if (!ProjectileShoot)
 			break;
+		if (aidsware::ui::get_bool(xorstr_("patrol-heli"))
+			&& target_heli != nullptr)
+		{
+			break;
+		}
 		auto loco = LocalPlayer::Entity();
 		if (!loco) break;
 
@@ -287,14 +302,18 @@ void serverrpc_projectileshoot_hk(int64_t rcx, int64_t rdx, int64_t r9, int64_t 
 		if (!baseprojectile) break;
 		auto wep_class_name = baseprojectile->class_name(); 
 
-		if (!baseprojectile->Empty() && (baseprojectile->class_name_hash() != STATIC_CRC32("BaseProjectile")
+		if (*(int*)(wep_class_name + 4) == 'eleM' || *(int*)(wep_class_name) == 'ddaP')
+			break;
+
+		/*
+		if (baseprojectile->class_name_hash() != STATIC_CRC32("BaseProjectile")
 			&& baseprojectile->class_name_hash() != STATIC_CRC32("BowWeapon")
 			&& baseprojectile->class_name_hash() != STATIC_CRC32("CompoundBowWeapon")
 			&& baseprojectile->class_name_hash() != STATIC_CRC32("BaseLauncher")
-			&& baseprojectile->class_name_hash() != STATIC_CRC32("CrossbowWeapon"))) {
+			&& baseprojectile->class_name_hash() != STATIC_CRC32("CrossbowWeapon")) {
 			break;
 		}
-
+		*/
 		//uintptr_t projectile_list = safe_read(safe_read(baseprojectile + 0x358, uintptr_t) + 0x10, uintptr_t);
 		uintptr_t projectile_list = *reinterpret_cast<uintptr_t*>(
 			*reinterpret_cast<uintptr_t*>((uintptr_t)baseprojectile + 0x358) + 0x10); //createdProjectiles;
@@ -605,6 +624,8 @@ void OnLand_hk(BasePlayer* ply, float vel) {
 }
 
 bool IsDown_hk(InputState* self, BUTTON btn) {
+	if (settings::open)
+		return false;
 	if (aidsware::ui::get_bool(xorstr_("autoshoot")) || (aidsware::ui::get_bool(xorstr_("peek assist")) && (get_key(aidsware::ui::get_keybind(xorstr_("peek assist key"))) || settings::tr::manipulate_visible))) {
 		if (btn == BUTTON::FIRE_SECONDARY)
 		{
@@ -680,6 +701,122 @@ GameObject* CreateEffect_hk(pUncStr strPrefab, Effect* effect)
 	//return original_createeffect(strPrefab, effect);
 }
 
+void AIMBOTPrediction(Vector3 local, Vector3& target, Vector3 targetvel, float bulletspeed, float gravity) {
+	float Dist = target.distance(local);
+	float BulletTime = Dist / bulletspeed;
+	Vector3 vel = Vector3(targetvel.x, 0, targetvel.z) * 0.75f;
+	Vector3 PredictVel = vel * BulletTime;
+	target += PredictVel;
+	double height = target.y - local.y;
+	Vector3 dir = target - local;
+	float DepthPlayerTarget = Vector3::my_sqrt((dir.x * dir.x) + (dir.z * dir.z));
+	float drop = CalcBulletDrop(height, DepthPlayerTarget, bulletspeed, gravity);
+	target.y += drop;
+}
+Vector3 get_aim_point(float speed, float gravity) {
+	Vector3 ret;
+	auto mpv = target_ply->find_mpv_bone();
+	if (mpv != nullptr)
+		ret = mpv->position;
+	else
+		ret = target_ply->bones()->head->position;
+	AIMBOTPrediction(LocalPlayer::Entity()->eyes()->get_position(), ret, target_ply->playerModel()->newVelocity(), speed, gravity);
+	return ret;
+}
+
+Vector2 CalcAngle(const Vector3& Src, const Vector3& Dst) {
+	Vector3 dir = Src - Dst;
+	return Vector2{ RAD2DEG(std::asin(dir.y / dir.Length())), RAD2DEG(-std::atan2(dir.x, -dir.z)) };
+}
+
+void Normalize(float& Yaw, float& Pitch) {
+	if (Pitch < -89) Pitch = -89;
+	else if (Pitch > 89) Pitch = 89;
+	if (Yaw < -360) Yaw += 360;
+	else if (Yaw > 360) Yaw -= 360;
+}
+
+void StepConstant(Vector2& angles) {
+	bool smooth = true;
+	Vector3 v = LocalPlayer::Entity()->input()->bodyAngles();
+	Vector2 va = { v.x, v.y };
+	Vector2 angles_step = angles - va;
+	Normalize(angles_step.x, angles_step.y);
+
+	if (smooth) {
+		float factor_pitch = (aidsware::ui::get_float(xorstr_("smoothing")));
+		if (angles_step.x < 0.f) {
+			if (factor_pitch > std::abs(angles_step.x)) {
+				factor_pitch = std::abs(angles_step.x);
+			}
+			angles.x = va.x - factor_pitch;
+		}
+		else {
+			if (factor_pitch > angles_step.x) {
+				factor_pitch = angles_step.x;
+			}
+			angles.x = va.x + factor_pitch;
+		}
+	}
+	if (smooth) {
+		float factor_yaw = (aidsware::ui::get_float(xorstr_("smoothing")));
+		if (angles_step.y < 0.f) {
+			if (factor_yaw > std::abs(angles_step.y)) {
+				factor_yaw = std::abs(angles_step.y);
+			}
+			angles.y = va.y - factor_yaw;
+		}
+		else {
+			if (factor_yaw > angles_step.y) {
+				factor_yaw = angles_step.y;
+			}
+			angles.y = va.y + factor_yaw;
+		}
+	}
+}
+
+void DoAimbot()
+{
+	BasePlayer* lp = LocalPlayer::Entity();
+	if (!lp) return;
+	auto held = lp->GetHeldEntity<BaseProjectile>();
+	if (!held) return;
+	if (!target_ply) return;
+
+	Vector3 local = lp->eyes()->get_position();
+	Vector3 target;
+	auto mpv = target_ply->find_mpv_bone();
+	if (mpv != nullptr)
+		target = mpv->position;
+	else
+		target = target_ply->bones()->head->position;
+
+	if (aidsware::ui::get_bool(xorstr_("bodyaim")))
+		target = target_ply->bones()->spine1->position;
+	
+	auto info = safe_read(held + 0x20, DWORD64);
+	auto stats = get_stats(safe_read(info + 0x18, int), held);
+
+	auto mag = held->primaryMagazine();
+	auto ammo = mag->ammoType();
+	static Type* type = Type::GetType(xorstr_("ItemModProjectile, Assembly-CSharp"));
+	auto itemModProjectile = ammo->GetComponent<ItemModProjectile>(type); // 0x3189118 for getting Projectile* ref
+	float m_flBulletSpeed = (itemModProjectile->projectileVelocity() * (held->projectileVelocityScale() * (aidsware::ui::get_bool(xorstr_("fast bullets")) ? 1.48f : 1.0f)));
+
+	AIMBOTPrediction(local, target, lp->playerModel()->newVelocity(), m_flBulletSpeed, stats.gravity_modifier);
+
+	//first bodyangles then headangles then recoilangles
+	Vector3 v = lp->input()->bodyAngles();
+	Vector2 va = { v.x, v.y };
+	Vector2 offset = CalcAngle(local, target) - va;
+	Normalize(offset.x, offset.y);
+	Vector2 angleToAim = va + offset;
+	StepConstant(angleToAim);
+	Normalize(angleToAim.x, angleToAim.y);
+	Vector3 a = { angleToAim.x, angleToAim.y, 0.0f };
+	lp->input()->bodyAngles() = a;
+}
+
 bool has_intialized_methods = false;
 void ClientInput_hk(BasePlayer* plly, uintptr_t state) {
 	if (!plly)
@@ -732,8 +869,14 @@ void ClientInput_hk(BasePlayer* plly, uintptr_t state) {
 			if (aidsware::ui::get_bool(xorstr_("long hand")) && *(int*)(wep_class_name + 4) == 'eleM') {
 				safe_write(held + 0x290 /*maxDistance*/, 5.f, float);
 			}
-		}
 
+			if (target_ply
+				&& aidsware::ui::get_bool(xorstr_("aimbot"))
+				&& get_key(aidsware::ui::get_keybind(xorstr_("aimbot key"))))
+			{
+				DoAimbot();
+			}
+		}
 		//todo:
 		/*	
 
@@ -874,9 +1017,9 @@ void ClientInput_hk(BasePlayer* plly, uintptr_t state) {
 }
 
 void DoMovement_hk(Projectile* pr, float deltaTime) {
-	if (pr->isAuthoritative( ))
+	if (pr->isAuthoritative())
 		if (aidsware::ui::get_bool(xorstr_("hitbox attraction")) || aidsware::ui::get_bool(xorstr_("fat bullet")))
-			pr->thickness( ) = 1.f;
+			pr->thickness() = aidsware::ui::get_float(xorstr_("bullet size"));//1.f;
 		else
 			pr->thickness( ) = 0.1f;
 
@@ -1110,7 +1253,6 @@ int spin = 0;
 
 void sendclienttick_hk(BasePlayer* self)
 {
-	printf("jitter: %i\n", jitter);
 	int sb = aidsware::ui::get_combobox(xorstr_("anti-aim"));
 	auto input = safe_read(self + 0x4E0, uintptr_t);
 	auto state = safe_read(input + 0x20, uintptr_t);

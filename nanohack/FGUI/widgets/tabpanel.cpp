@@ -107,7 +107,7 @@ namespace FGUI
               if (m_ullSelectedEntry == i)
               {
                   //FGUI::RENDER.Rectangle(arWidgetRegion.m_iLeft, arWidgetRegion.m_iTop, arWidgetRegion.m_iRight, arWidgetRegion.m_iBottom, { 45, 83, 122 });
-                  //FGUI::RENDER.Gradient(arWidgetRegion.m_iLeft, arWidgetRegion.m_iTop + arWidgetRegion.m_iBottom, arWidgetRegion.m_iRight, 2, { 105, 127, 255 }, { 44, 44, 46 }, false);
+                  //FGUI::RENDER.Gradient(arWidgetRegion.m_iLeft, arWidgetRegion.m_iTop + arWidgetRegion.m_iBottom, arWidgetRegion.m_iRight, 2, { 105, 127, 255 }, { 1, 26, 51 }, false);
                   //DrawRoundedRectangle();
                   //FGUI::RENDER.Rectangle(arWidgetRegion.m_iLeft, (arWidgetRegion.m_iTop - 5), arWidgetRegion.m_iRight, (arWidgetRegion.m_iBottom + 5), { 45, 83, 122 });
                   FGUI::RENDER.RoundedRectangleFilled(arWidgetRegion.m_iLeft, arWidgetRegion.m_iTop, arWidgetRegion.m_iRight, arWidgetRegion.m_iBottom, { 45, 83, 122 }, 5.f);

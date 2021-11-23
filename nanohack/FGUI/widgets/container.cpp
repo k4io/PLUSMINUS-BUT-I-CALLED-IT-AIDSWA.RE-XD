@@ -171,10 +171,10 @@ namespace FGUI
             //FGUI::RENDER.Rectangle(arWidgetRegion.m_iLeft, arWidgetRegion.m_iTop, arWidgetRegion.m_iRight, arWidgetRegion.m_iBottom, { 37, 71, 138 });
             //FGUI::RENDER.Rectangle(arWidgetRegion.m_iLeft + 1, arWidgetRegion.m_iTop + 31, arWidgetRegion.m_iRight - 2, (arWidgetRegion.m_iBottom - 30) - 2, { /*36, 36, 36*/45, 83, 122 });
 
-            FGUI::RENDER.RoundedRectangle(arWidgetRegion.m_iLeft - 1, arWidgetRegion.m_iTop - 1, arWidgetRegion.m_iRight + 2, arWidgetRegion.m_iBottom + 2, { 44, 44, 46 }, 15.f);
+            FGUI::RENDER.RoundedRectangle(arWidgetRegion.m_iLeft - 1, arWidgetRegion.m_iTop - 1, arWidgetRegion.m_iRight + 2, arWidgetRegion.m_iBottom + 2, { 1, 26, 51 }, 23.f);
             //FGUI::RENDER.RoundedRectangleFilled(arWidgetRegion.m_iLeft, arWidgetRegion.m_iTop, arWidgetRegion.m_iRight, arWidgetRegion.m_iBottom, { 23, 25, 31, 255 }, 15.f);
-            FGUI::RENDER.Image(arWidgetRegion.m_iLeft - 29, arWidgetRegion.m_iTop - 36, 594, 495, 5);
-            FGUI::RENDER.RoundedRectangle(arWidgetRegion.m_iLeft - 1, arWidgetRegion.m_iTop - 1, 100, arWidgetRegion.m_iBottom + 2, { 44, 44, 46 }, 15.f);
+            FGUI::RENDER.Image(arWidgetRegion.m_iLeft, arWidgetRegion.m_iTop, 530, 550, 5);
+            FGUI::RENDER.RoundedRectangle(arWidgetRegion.m_iLeft - 1, arWidgetRegion.m_iTop - 1, 100, arWidgetRegion.m_iBottom + 2, { 1, 26, 51 }, 20.f);
 
             
             //FGUI::RENDER.RoundedRectangle(arWidgetRegion.m_iLeft - 1, arWidgetRegion.m_iTop - 1, arWidgetRegion.m_iRight + 2, arWidgetRegion.m_iBottom + 2, { /*37, 71, 138*//*45, 83, 122*/27, 44, 61 }, 15.f);

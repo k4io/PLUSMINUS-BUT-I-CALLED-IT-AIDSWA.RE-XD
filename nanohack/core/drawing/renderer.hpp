@@ -35,7 +35,7 @@ namespace Renderer {
 
 	ID2D1Bitmap* boxBitmap = nullptr;
 
-	HRESULT LoadBitmapFromFile(const wchar_t* filename, ID2D1Bitmap** pBitmap)
+	HRESULT LoadBitmapFromFile(const wchar_t* filename, ID2D1Bitmap** pBitmap, bool custombox = false)
 	{
 		HRESULT hr = S_FALSE;
 		IWICImagingFactory* wic_factory = NULL;
@@ -59,7 +59,7 @@ namespace Renderer {
 		if FAILED(hr) goto clenaup;
 
 		if(custombox)
-			hr = m_pCanvas->CreateBitmapFromWicBitmap(converter, 0, custom_box_bitmap);
+			hr = m_pCanvas->CreateBitmapFromWicBitmap(converter, 0, &boxBitmap);
 		else
 			hr = m_pCanvas->CreateBitmapFromWicBitmap(converter, 0, pBitmap);
 		if FAILED(hr) goto clenaup;
@@ -151,13 +151,6 @@ namespace Renderer {
 			m_pCanvas = nullptr;
 		}
 	}
-
-	void draw_custom_box(float x, float y, float w, float h)
-	{
-		D2D1_SIZE_F size = bitmaps[file]->GetSize();
-		if (!custom_box_bitmap) return;
-		m_pCanvas->DrawBitmap(custom_box_bitmap, D2D1::RectF(x, y, x + w, y + h), 1.f, D2D1_BITMAP_INTERPOLATION_MODE_LINEAR, D2D1::RectF(0, 0, size.width, size.height));
-	}
 	
 	/*
 	void draw_custom_box(float x, float y, float w, float h)
@@ -178,8 +171,8 @@ namespace Renderer {
 		std::wstring data_dir(settings::data_dir.begin(), settings::data_dir.end());
 
 		//logo image is always first in index
-		//std::wstring logo_dir = data_dir + wxorstr_(L"\\images\\") + image_path;
-		if (!SUCCEEDED(LoadBitmapFromFile(image_path.c_str(), &boxBitmap)))
+		std::wstring logo_dir = data_dir + wxorstr_(L"\\images\\") + image_path;
+		if (!SUCCEEDED(LoadBitmapFromFile(image_path.c_str(), &boxBitmap, true)))
 			return;
 	}
 

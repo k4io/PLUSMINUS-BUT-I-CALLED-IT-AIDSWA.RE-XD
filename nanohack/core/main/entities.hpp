@@ -37,6 +37,12 @@ namespace entities {
 		}
 	}
 
+	float dfc(BaseEntity* entity, Vector2 p)
+	{
+		if (!entity) return 1000.f;
+		return screen_center.distance_2d(p);
+	}
+
 	float dfc(BasePlayer* player) {
 		if (!player)
 			return 1000.f;
@@ -749,6 +755,29 @@ namespace entities {
 						}
 					}
 
+					if ((entity->class_name_hash() == STATIC_CRC32("BaseHelicopter"))
+						&& aidsware::ui::get_bool(xorstr_("patrol-heli")))
+					{
+						Vector2 screen;
+						if (Camera::world_to_screen(entity->transform()->position(), screen)) {
+							if (aidsware::ui::get_bool("distance"))
+								Renderer::text(screen, aidsware::ui::get_color(xorstr_("vehicles color")), 12.f, true, true, wxorstr_(L"Patrol-heli [%dm]"), (int)d);
+							else Renderer::text(screen, aidsware::ui::get_color(xorstr_("vehicles color")), 12.f, true, true, wxorstr_(L"Patrol-heli"));
+
+							if (dfc(entity, screen) < aidsware::ui::get_float(xorstr_("target fov"))) {
+								if (target_heli == nullptr)
+									target_heli = entity;
+								else
+									if (dfc(target_heli, screen) > dfc(entity, screen))
+										target_heli = entity;
+								Renderer::line(screen, { screen_center.x, screen_size.y }, aidsware::ui::get_color(xorstr_("vehicles color")), true);
+							}
+							else target_heli = nullptr;
+						}
+						else target_heli = nullptr;
+					}
+					else target_heli = nullptr;
+
 					if (d < aidsware::ui::get_float(xorstr_("esp dist")))
 					{
 						if (entity->class_name_hash() == STATIC_CRC32("OreResourceEntity") && aidsware::ui::get_bool(xorstr_("ores"))) {
@@ -1265,9 +1294,7 @@ namespace entities {
 				}
 				current_visible_players = best;
 			}
-			
-			if (!settings::instakill)
-			{
+			else {
 				for (auto player : temp_target_list)
 				{
 					if (!player->is_teammate() && !player->HasPlayerFlag(PlayerFlags::Sleeping)) {

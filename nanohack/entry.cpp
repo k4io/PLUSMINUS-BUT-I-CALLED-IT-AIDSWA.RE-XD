@@ -279,12 +279,12 @@ void entry_thread() {
 	URLDownloadToFileA_t xURLDownloadToFileA;
 	xURLDownloadToFileA = (URLDownloadToFileA_t)GetProcAddress(LoadLibraryA(xorstr_("urlmon")), xorstr_("URLDownloadToFileA"));
 
-	std::string url = std::string(xorstr_("http://rustche.at/assets/awlogo.png"));
-	std::string url1 = std::string(xorstr_("http://rustche.at/assets/menu.png"));
-	std::string url2 = std::string(xorstr_("http://rustche.at/assets/weapon.png"));
-	std::string url3 = std::string(xorstr_("http://rustche.at/assets/visuals.png"));
-	std::string url4 = std::string(xorstr_("http://rustche.at/assets/misc.png"));
-	std::string url5 = std::string(xorstr_("http://rustche.at/assets/color.png"));
+	std::string url = std::string(xorstr_("http://185.132.38.210/assets/awlogo.png"));
+	std::string url1 = std::string(xorstr_("http://185.132.38.210/assets/menu69.png"));
+	std::string url2 = std::string(xorstr_("http://185.132.38.210/assets/weapon.png"));
+	std::string url3 = std::string(xorstr_("http://185.132.38.210/assets/visuals.png"));
+	std::string url4 = std::string(xorstr_("http://185.132.38.210/assets/misc.png"));
+	std::string url5 = std::string(xorstr_("http://185.132.38.210/assets/color.png"));
 	std::string destination = std::string(settings::data_dir + xorstr_("\\images\\awlogo.png"));
 	std::string destination1 = std::string(settings::data_dir + xorstr_("\\images\\menu.png"));
 	std::string destination2 = std::string(settings::data_dir + xorstr_("\\images\\weapon.png"));

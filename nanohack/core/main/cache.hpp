@@ -46,9 +46,9 @@ namespace bonecache {
 		return ret;
 	};
 	void cachePlayer(BasePlayer* player) {
-		auto model = player->model( );
+		auto model = player->model();
 		if (model) {
-			auto cache = new BoneCache( );
+			auto cache = new BoneCache();
 
 			cache->head = model->resolve(STATIC_CRC32("head"));
 			cache->neck = model->resolve(STATIC_CRC32("neck"));
@@ -70,9 +70,9 @@ namespace bonecache {
 			cache->r_toe = model->resolve(STATIC_CRC32("r_toe"));
 			cache->l_toe = model->resolve(STATIC_CRC32("l_toe"));
 
-			if (player->userID( ) != LocalPlayer::Entity( )->userID( )) {
+			if (player->userID() != LocalPlayer::Entity()->userID()) {
 				box_bounds bo = get_bounds(player, 2.f);
-				if (!bo.empty( ))
+				if (!bo.empty())
 					cache->bounds = bo;
 
 				Vector2 footPos;
@@ -80,24 +80,24 @@ namespace bonecache {
 					cache->dfc = footPos;
 
 				Vector2 forwardd;
-				if (Camera::world_to_screen(cache->head->position + (player->eyes( )->BodyForward( ) * 2), forwardd)) {
+				if (Camera::world_to_screen(cache->head->position + (player->eyes()->BodyForward() * 2), forwardd)) {
 					cache->forward = forwardd;
 				}
 
-				auto mpv = player->find_mpv_bone( );
+				auto mpv = player->find_mpv_bone();
 				Vector3 target;
 				if (mpv != nullptr)
 					target = mpv->position;
 				else
-					target = player->bones( )->head->position;
-				
-				cache->eye_rot = player->eyes( )->rotation( );
+					target = player->bones()->head->position;
+
+				cache->eye_rot = player->eyes()->rotation();
 			}
 
-			if (!map_contains_key(cachedBones, player->userID( )))
-				cachedBones.insert(std::make_pair(player->userID( ), cache));
+			if (!map_contains_key(cachedBones, player->userID()))
+				cachedBones.insert(std::make_pair(player->userID(), cache));
 			else
-				cachedBones[ player->userID( ) ] = cache;
+				cachedBones[player->userID()] = cache;
 		}
 	}
 }

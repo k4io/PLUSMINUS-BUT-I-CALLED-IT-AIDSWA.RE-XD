@@ -82,7 +82,7 @@ namespace FGUI
     //FGUI::RENDER.Rectangle(arWidgetRegion.m_iLeft, arWidgetRegion.m_iTop, (arWidgetRegion.m_iRight - 2), (arWidgetRegion.m_iBottom - 2), { 53, 78, 115 });
     //DrawRoundedRectangle(arWidgetRegion.m_iLeft, arWidgetRegion.m_iTop, (arWidgetRegion.m_iRight - 4), (arWidgetRegion.m_iBottom - 4), { 34, 60, 115 }, 5.f);
 
-    FGUI::RENDER.RoundedRectangleFilled(arWidgetRegion.m_iLeft, arWidgetRegion.m_iTop, 20, 20, { 42, 42, 69 }, 2.f);
+    FGUI::RENDER.RoundedRectangleFilled(arWidgetRegion.m_iLeft, arWidgetRegion.m_iTop, 20, 20, { 1, 26, 51 }, 2.f);
 
     //FGUI::RENDER.Circle(arWidgetRegion.m_iLeft + 5, arWidgetRegion.m_iTop + 5, { 34, 60, 115 }, 1.f, 10.f);
     if (m_bIsChecked)

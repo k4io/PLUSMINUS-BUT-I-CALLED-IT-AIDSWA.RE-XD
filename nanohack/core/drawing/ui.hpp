@@ -227,7 +227,7 @@ namespace aidsware::ui
 
 		vars::Container = std::make_shared<FGUI::CContainer>();
 		vars::Tabs = std::make_shared<FGUI::CTabPanel>();
-		wrapper::create_window(xorstr_("aidswa.re"), Vector2(200, 200), Vector2(530, 450), VK_INSERT);
+		wrapper::create_window(xorstr_("aidswa.re"), Vector2(200, 200), Vector2(530, 550), VK_INSERT);
 		wrapper::currentY += 20.0f;
 		wrapper::tabs({xorstr_("Combat"), xorstr_("Visuals"), xorstr_("Misc"), xorstr_("Colors") });
 
@@ -238,16 +238,22 @@ namespace aidsware::ui
 		wrapper::currentY -= 5.0f;
 		wrapper::checkbox(xorstr_("psilent"), Vector2(0, 0), Tabs::Combat, true);
 		wrapper::currentY += 5.0f;
+		wrapper::checkbox(xorstr_("aimbot"), Vector2(0, 0), Tabs::Combat, true, false);
+		wrapper::checkbox(xorstr_("bodyaim"), Vector2(0, 0), Tabs::Combat);
+		wrapper::currentY += 10.0f;
+		//wrapper::checkbox(xorstr_("silent melee"), Vector2(0, 0), Tabs::Combat);
+		wrapper::slider(xorstr_("smoothing"), Vector2(0, 0), 0.75f, 0.01f, 1.0f, Tabs::Combat);
+		wrapper::currentY -= 5.f;
 		wrapper::checkbox(xorstr_("peek assist"), Vector2(0, 0), Tabs::Combat, true, false);
 		wrapper::currentY += 10.0f;
 		//wrapper::checkbox(xorstr_("silent melee"), Vector2(0, 0), Tabs::Combat);
-		wrapper::slider(xorstr_("lerp"), Vector2(0, 0), 0.75f, 0.01f, 1.0f, Tabs::Combat);
+		wrapper::slider(xorstr_("prediction"), Vector2(0, 0), 0.75f, 0.01f, 1.0f, Tabs::Combat);
 		wrapper::currentY -= 5.f;	
-		wrapper::checkbox(xorstr_("autoshoot"), Vector2(0, 0), Tabs::Combat);
-		wrapper::checkbox(xorstr_("pierce"), Vector2(0, 0), Tabs::Combat);
-		wrapper::checkbox(xorstr_("rapid fire"), Vector2(0, 0), Tabs::Combat);
 		wrapper::checkbox(xorstr_("hitbox attraction"), Vector2(0, 0), Tabs::Combat);
 		wrapper::checkbox(xorstr_("fat bullet"), Vector2(0, 0), Tabs::Combat);
+		wrapper::currentY += 10.0f;
+		wrapper::slider(xorstr_("bullet size"), Vector2(0, 0), 1.0f, 0.1f, 1.0f);
+		wrapper::currentY -= 5.f;
 		wrapper::checkbox(xorstr_("fast bullets"), Vector2(0, 0), Tabs::Combat);
 
 		wrapper::checkbox(xorstr_("insta kill"), Vector2(0, 0), Tabs::Combat);
@@ -269,6 +275,9 @@ namespace aidsware::ui
 		wrapper::slider(xorstr_("spread %"), Vector2(180.0f, 0), 100.0f, 0.0f, 100.0f, Tabs::Combat);
 
 		wrapper::currentY -= 10.0f;
+		wrapper::checkbox(xorstr_("autoshoot"), Vector2(180.0f, 0), Tabs::Combat);
+		wrapper::checkbox(xorstr_("pierce"), Vector2(180.0f, 0), Tabs::Combat);
+		wrapper::checkbox(xorstr_("rapid fire"), Vector2(180.0f, 0), Tabs::Combat);
 		wrapper::checkbox(xorstr_("insta eoka"), Vector2(180.0f, 0), Tabs::Combat);
 		wrapper::checkbox(xorstr_("automatic"), Vector2(180.0f, 0), Tabs::Combat);
 		wrapper::checkbox(xorstr_("no sway"), Vector2(180.0f, 0), Tabs::Combat);
@@ -319,12 +328,13 @@ namespace aidsware::ui
 		wrapper::checkbox(xorstr_("tool cupboards"), Vector2(170, 0), Tabs::Visual);
 		wrapper::checkbox(xorstr_("storage"), Vector2(170, 0), Tabs::Visual);
 		wrapper::checkbox(xorstr_("vehicles"), Vector2(170, 0), Tabs::Visual);
+		wrapper::checkbox(xorstr_("patrol-heli"), Vector2(170, 0), Tabs::Visual);
 		wrapper::checkbox(xorstr_("flyhack indicator"), Vector2(170, 0), Tabs::Visual);
 		//wrapper::checkbox(xorstr_("raid esp"), Vector2(170, 0), Tabs::Visual);
 		wrapper::checkbox(xorstr_("chams"), Vector2(170, 0), Tabs::Visual);
 		wrapper::checkbox(xorstr_("logs"), Vector2(170, 0), Tabs::Visual);
 		wrapper::checkbox(xorstr_("debug"), Vector2(170, 0), Tabs::Visual);
-		wrapper::currentY += 30.f;
+		wrapper::currentY += 20.f;
 		wrapper::slider(xorstr_("esp dist"), Vector2(170, 0), 100.0f, 0.0f, 400.0f, Tabs::Visual);
 		wrapper::checkbox(xorstr_("draw targeting fov"), Vector2(170, 0.0f), Tabs::Visual);
 		wrapper::checkbox(xorstr_("show peek assist checks"), Vector2(170, 0), Tabs::Visual);
@@ -358,8 +368,8 @@ namespace aidsware::ui
 				xorstr_("left (down)"),
 				xorstr_("left (up)"),
 				xorstr_("right"),
-				xorstr_("left (down)"),
-				xorstr_("left (up)"),
+				xorstr_("right (down)"),
+				xorstr_("right (up)"),
 				xorstr_("jitter"),
 				xorstr_("jitter (down)"),
 				xorstr_("jitter (up)"),

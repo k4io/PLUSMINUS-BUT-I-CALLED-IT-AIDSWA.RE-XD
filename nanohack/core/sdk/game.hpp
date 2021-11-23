@@ -1664,6 +1664,9 @@ public:
 class PlayerInput {
 public:
 	FIELD("Assembly-CSharp::PlayerInput::state", state, InputState*);
+	FIELD("Assembly-CSharp::PlayerInput::recoilAngles", recoilAngles, Vector3);
+	FIELD("Assembly-CSharp::PlayerInput::bodyAngles", bodyAngles, Vector3);
+	FIELD("Assembly-CSharp::PlayerInput::headAngles", headAngles, Vector3);
 };
 
 class PlayerTick
@@ -1685,6 +1688,7 @@ float flyhackPauseTime;
 Vector3 cLastTickPos{};
 class BasePlayer;
 
+BaseEntity* target_heli = nullptr;
 BasePlayer* target_ply = nullptr;
 class BasePlayer : public BaseCombatEntity {
 public:

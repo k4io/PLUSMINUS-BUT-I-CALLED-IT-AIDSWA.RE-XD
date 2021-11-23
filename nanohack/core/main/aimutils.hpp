@@ -52,14 +52,27 @@ namespace aimutils {
 	float max(float a, float b) { return a > b ? a : b; }
 
 	Vector3 get_prediction() {
-		auto mpv = target_ply->find_mpv_bone();
 		Vector3 target;
-		if (mpv != nullptr)
-			target = mpv->position;
+		Vector3 targetvel;
+		if (aidsware::ui::get_bool(xorstr_("patrol-heli"))
+			&& target_heli != nullptr)
+		{
+			target = target_heli->transform()->position();
+			target.y += 1.f;
+			targetvel = target;
+			float s = safe_read(safe_read(target_heli + 0x398, uintptr_t) + 0x3C, float);
+			targetvel *= s;
+		}
 		else
-			target = target_ply->bones()->head->position;
+		{
+			auto mpv = target_ply->find_mpv_bone();
+			if (mpv != nullptr)
+				target = mpv->position;
+			else
+				target = target_ply->bones()->head->position;
+			targetvel = target_ply->playerModel()->newVelocity();
+		}
 
-		Vector3 targetvel = target_ply->playerModel()->newVelocity();
 
 		auto base_projectile = LocalPlayer::Entity()->GetHeldEntity<BaseProjectile>();
 		if (base_projectile == nullptr)

@@ -76,8 +76,8 @@ namespace FGUI
         }
         else
         {
-            //FGUI::RENDER.Rectangle(arWidgetRegion.m_iLeft, arWidgetRegion.m_iTop, arWidgetRegion.m_iRight, arWidgetRegion.m_iBottom, { /*48, 156, 82*/ 44, 44, 46 });
-            FGUI::RENDER.RoundedRectangleFilled(arWidgetRegion.m_iLeft, arWidgetRegion.m_iTop, arWidgetRegion.m_iRight, arWidgetRegion.m_iBottom, { /*48, 156, 82*/ 44, 44, 46 }, 10.f);
+            //FGUI::RENDER.Rectangle(arWidgetRegion.m_iLeft, arWidgetRegion.m_iTop, arWidgetRegion.m_iRight, arWidgetRegion.m_iBottom, { /*48, 156, 82*/ 1, 26, 51 });
+            FGUI::RENDER.RoundedRectangleFilled(arWidgetRegion.m_iLeft, arWidgetRegion.m_iTop, arWidgetRegion.m_iRight, arWidgetRegion.m_iBottom, { /*48, 156, 82*/ 1, 26, 51 }, 10.f);
         }
 
         // button label
