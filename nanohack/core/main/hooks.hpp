@@ -734,8 +734,6 @@ void ClientInput_hk(BasePlayer* plly, uintptr_t state) {
 			}
 		}
 
-
-
 		//todo:
 		/*	
 
