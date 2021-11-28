@@ -113,7 +113,7 @@ public:
 	{
 		using namespace winreg;
 
-		//VM_EAGLE_BLACK_START
+		////VM_EAGLE_BLACK_START
 			SystemFingerprint* Fingerprint = new SystemFingerprint;
 		Fingerprint->InitializeFingerprint();
 
@@ -203,7 +203,7 @@ public:
 		}
 
 		/* complete! */
-		//VM_EAGLE_BLACK_END
+		////VM_EAGLE_BLACK_END
 			return Fingerprint;
 	}
 

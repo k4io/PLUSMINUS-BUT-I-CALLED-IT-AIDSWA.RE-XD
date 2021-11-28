@@ -140,46 +140,6 @@ double CalcBulletDrop(double height, double DepthPlayerTarget, float velocity, f
 
 void APrediction(Vector3 local, Vector3& target, float bulletspeed, float gravity, float drag) {
 	float Dist = local.distance(target);
-
-	/*
-	//put bullet drop here
-
-	//float m_flBulletSpeed = (bulletvelocity * projectileVelocityScale);
-
-	float m_flBulletSpeed = (projectileVelocity * projectileVelocityScale);
-
-	float bullet_time = Dist / m_flBulletSpeed;
-
-	const float m_flTimeStep = 0.005f;
-	float m_flYTravelled{}, m_flYSpeed{}, m_flBulletTime{}, m_flDivider{};
-
-	float m_flDistanceTo = Dist;//Calc3D_Dist(From, aimpoint);//from.distance(aimpoint);
-	//float m_flDistanceTo = fVrom.distance(aimpoint);
-
-	for (float distance_to_travel = 0.f; distance_to_travel < m_flDistanceTo;)
-	{
-		float speed_modifier = 1.0f - m_flTimeStep * drag;
-		m_flBulletSpeed *= speed_modifier;
-
-		if (m_flBulletSpeed <= 0.f || m_flBulletSpeed >= 10000.f || m_flYTravelled >= 10000.f || m_flYTravelled < 0.f)
-			break;
-
-		if (m_flBulletTime > 8.f)
-			break;
-
-		m_flYSpeed += (9.81f * gravity) * m_flTimeStep;
-		m_flYSpeed *= speed_modifier;
-
-		distance_to_travel += m_flBulletSpeed * m_flTimeStep;
-		m_flYTravelled += m_flYSpeed * m_flTimeStep;
-		m_flBulletTime += m_flTimeStep;
-	}
-
-	double height = target.y - local.y;
-	Vector3 dir = target - local;
-	float DepthPlayerTarget = Vector3::my_sqrt(powFFFFFFFFFFFFFFFFFFFFFF(dir.x) + powFFFFFFFFFFFFFFFFFFFFFF(dir.z));
-	float drop = CalcBulletDrop(height, DepthPlayerTarget, m_flBulletSpeed, gravity);
-*/
 	Vector3 targetvel = target_ply->playerModel()->newVelocity();
 
 	auto base_projectile = LocalPlayer::Entity()->GetHeldEntity<BaseProjectile>();
@@ -218,7 +178,8 @@ void APrediction(Vector3 local, Vector3& target, float bulletspeed, float gravit
 	float m_flBulletSpeed = (itemModProjectile->projectileVelocity() * (base_projectile->projectileVelocityScale() * (aidsware::ui::get_bool(xorstr_("fast bullets")) ? 1.48f : 1.0f)));
 	float distance = target.distance(LocalPlayer::Entity()->eyes()->position());
 	float bullet_time = distance / m_flBulletSpeed;
-	const float m_flTimeStep = 0.005f;
+	//const float m_flTimeStep = 0.005f;
+	const float m_flTimeStep = 0.001f;
 	float m_flYTravelled{}, m_flYSpeed{}, m_flBulletTime{}, m_flDivider{};
 
 	//float m_flDistanceTo = fVrom.distance(aimpoint);
@@ -229,10 +190,10 @@ void APrediction(Vector3 local, Vector3& target, float bulletspeed, float gravit
 		float speed_modifier = 1.0f - m_flTimeStep * projectile->drag();
 		m_flBulletSpeed *= speed_modifier;
 
-		if (m_flBulletSpeed <= 0.f || m_flBulletSpeed >= 50000.f || m_flYTravelled >= 50000.f || m_flYTravelled < 0.f)
+		if (m_flBulletSpeed <= 0.f || m_flBulletSpeed >= 10000.f || m_flYTravelled >= 10000.f || m_flYTravelled < 0.f)
 			break;
 
-		if (m_flBulletTime > 60.f)
+		if (m_flBulletTime > 10.f)
 			break;
 
 		m_flYSpeed += (9.81f * projectile->gravityModifier()) * m_flTimeStep;
@@ -247,34 +208,8 @@ void APrediction(Vector3 local, Vector3& target, float bulletspeed, float gravit
 	if (velocity.y > 0.f)
 		velocity.y /= 3.25f;
 
-	Vector3 p_target = target;
-
 	target.y += m_flYTravelled;
 	target += velocity * m_flBulletTime;
-
-	target = Vector3::Lerp(p_target, target, aidsware::ui::get_float(xorstr_("lerp")));
-
-	TraceResult f = traceProjectile(local,
-		target,
-		drag,
-		Vector3(0, -9.81 * gravity, 0),
-		target);
-	LogSystem::AddTraceResult(f);
-
-	/*
-	//printf("initialVel: (%ff, %ff, %ff)\n", initialVel.x, initialVel.y, initialVel.z);
-
-	bulletspeed *= 1.f - stepRate * drag;
-	//float BulletTime = Dist / bulletspeed;
-	float BulletTime = f.hitTime;
-
-	Vector3 vel = Vector3(targetvel.x, 0, targetvel.z) * 0.75f;
-	//Vector3 vel = Vector3(f.outVelocity.x, 0, f.outVelocity.z) * 0.75f;
-	Vector3 PredictVel = vel * BulletTime;
-	//Vector3 PredictVel = f.outVelocity;
-	target += PredictVel;
-	target.y += drop;
-	*/
 }
 
 Vector3 prev_angle = Vector3::Zero();
@@ -548,36 +483,31 @@ void UpdateVelocity_hk(PlayerWalkMovement* self) {
 		}
 	}
 
-	if (aidsware::ui::get_bool(xorstr_("flyhack stop")))
-	{
-		Vector3 fvel = vel;
-		float threshold = aidsware::ui::get_float(xorstr_("threshold"));
-		if (settings::hor_flyhack * 100.f >= threshold)
-		{
-			fvel.x = 0.0f;
-			fvel.z = 0.0f;
-		}
-		if (settings::flyhack * 100.f >= threshold)
-		{
-			fvel.y = 0.0f;
-		}
-		self->TargetMovement() = fvel;
-	}
-
 	if (!self->flying()) {
-		float threshold = aidsware::ui::get_float(xorstr_("threshold"));
-		if (settings::hor_flyhack * 100.f < threshold
-			&& settings::flyhack * 100.f < threshold)
-		{
-			if (aidsware::ui::get_bool(xorstr_("omnisprint"))) {
-				float max_speed = (self->swimming() || self->Ducking() > 0.5) ? 1.7f : 5.5f;
-				if (vel.length() > 0.f) {
-					Vector3 target_vel = Vector3(vel.x / vel.length() * max_speed, vel.y, vel.z / vel.length() * max_speed);
-					self->TargetMovement() = target_vel;
-				}
+		if (aidsware::ui::get_bool(xorstr_("omnisprint"))) {
+			float max_speed = (self->swimming() || self->Ducking() > 0.5) ? 1.7f : 5.5f;
+			if (vel.length() > 0.f) {
+				Vector3 target_vel = Vector3(vel.x / vel.length() * max_speed, vel.y, vel.z / vel.length() * max_speed);
+				self->TargetMovement() = target_vel;
+				vel = target_vel;
 			}
 		}
 	}
+
+	if (aidsware::ui::get_bool(xorstr_("flyhack stop")))
+	{
+		float threshold = aidsware::ui::get_float(xorstr_("threshold"));
+		if (settings::hor_flyhack * 100.f >= threshold)
+		{
+			vel.x = 0.0f;
+			vel.z = 0.0f;
+		}
+		if (settings::flyhack * 100.f >= threshold)
+		{
+			vel.y = 0.0f;
+		}
+	}
+	self->TargetMovement() = vel;
 	return self->UpdateVelocity( );
 }
 
@@ -624,8 +554,6 @@ void OnLand_hk(BasePlayer* ply, float vel) {
 }
 
 bool IsDown_hk(InputState* self, BUTTON btn) {
-	if (settings::open)
-		return false;
 	if (aidsware::ui::get_bool(xorstr_("autoshoot")) || (aidsware::ui::get_bool(xorstr_("peek assist")) && (get_key(aidsware::ui::get_keybind(xorstr_("peek assist key"))) || settings::tr::manipulate_visible))) {
 		if (btn == BUTTON::FIRE_SECONDARY)
 		{
@@ -713,6 +641,7 @@ void AIMBOTPrediction(Vector3 local, Vector3& target, Vector3 targetvel, float b
 	float drop = CalcBulletDrop(height, DepthPlayerTarget, bulletspeed, gravity);
 	target.y += drop;
 }
+
 Vector3 get_aim_point(float speed, float gravity) {
 	Vector3 ret;
 	auto mpv = target_ply->find_mpv_bone();
@@ -957,13 +886,13 @@ void ClientInput_hk(BasePlayer* plly, uintptr_t state) {
 				settings::tr::manipulate_visible = false;
 			}
 
-		if (aidsware::ui::get_bool(xorstr_("long neck")) && get_key(aidsware::ui::get_keybind(xorstr_("desync on key")))) {
+		if ((aidsware::ui::get_bool(xorstr_("long neck")) || get_key(aidsware::ui::get_keybind(xorstr_("long neck key")))) && get_key(aidsware::ui::get_keybind(xorstr_("desync on key")))) {
 			float desyncTime = (Time::realtimeSinceStartup() - plly->lastSentTickTime()) - 0.03125 * 3;
 			float max_eye_value = (0.1f + ((desyncTime + 2.f / 60.f + 0.125f) * 1.5f) * plly->MaxVelocity()) - 0.05f;
 
 			plly->eyes()->viewOffset() = Vector3(0, max_eye_value, 0);
 		}
-		else if (aidsware::ui::get_bool(xorstr_("long neck")))
+		else if (aidsware::ui::get_bool(xorstr_("long neck")) || get_key(aidsware::ui::get_keybind(xorstr_("long neck key"))))
 		{
 			plly->eyes()->viewOffset() = Vector3(0, 1.495f, 0);
 		}
@@ -1446,7 +1375,7 @@ Projectile* CreateProjectile_hk(BaseProjectile* self, String* prefabPath, Vector
 void do_hooks( ) {
 	//VM_DOLPHIN_BLACK_START
 
-	VMProtectBeginUltra(xorstr_("hook"));
+	//VMProtectBeginUltra(xorstr_("hook"));
 
 	hookengine::hook(BasePlayer::ClientUpdate_, ClientUpdate_hk);
 	hookengine::hook(BasePlayer::ClientUpdate_Sleeping_, ClientUpdate_Sleeping_hk);
@@ -1486,13 +1415,13 @@ void do_hooks( ) {
 
 	hookengine::hook(BaseProjectile::CreateProjectile_, CreateProjectile_hk);
 
-	VMProtectEnd();
+	//VMProtectEnd();
 	//VM_DOLPHIN_BLACK_END
 }
 
 void undo_hooks( ) {
 	//VM_DOLPHIN_BLACK_START
-	VMProtectBeginUltra(xorstr_("unhook"));
+	//VMProtectBeginUltra(xorstr_("unhook"));
 	hookengine::unhook(BasePlayer::ClientUpdate_, ClientUpdate_hk);
 	hookengine::unhook(PlayerWalkMovement::UpdateVelocity_, UpdateVelocity_hk);
 	hookengine::unhook(PlayerWalkMovement::HandleJumping_, HandleJumping_hk);
@@ -1531,6 +1460,6 @@ void undo_hooks( ) {
 
 	hookengine::unhook(BaseProjectile::CreateProjectile_, CreateProjectile_hk);
 
-	VMProtectEnd();
+	//VMProtectEnd();
 	//VM_DOLPHIN_BLACK_END
 }

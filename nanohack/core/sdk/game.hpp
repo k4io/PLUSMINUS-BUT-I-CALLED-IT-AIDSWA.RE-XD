@@ -45,6 +45,86 @@ void safe_memcpy_wrapper(ULONG64 Dst, ULONG64 Src, ULONG Sz)
 #define in_range(x,a,b) (x>=a&&x<=b) 
 #define get_bits(x) (in_range((x&(~0x20)),'A','F')?((x&(~0x20))-'A'+0xa):(in_range(x,'0','9')?x-'0':0))
 #define get_byte(x) (get_bits(x[0])<<4|get_bits(x[1]))
+/*
+namespace managed_system
+{
+	class string
+	{
+	public:
+		char zpad[0x10]{ };
+		int size{ };
+		wchar_t buffer[128 + 1];
+	public:
+		string(const wchar_t* st)
+		{
+			size = min(utl::crt::string::wcslen(st), 128);
+			for (int idx = 0; idx < size; idx++)
+			{
+				buffer[idx] = st[idx];
+			}
+			buffer[size] = 0;
+		}
+	};
+
+	template<typename type>
+	class list
+	{
+	public:
+		type get(std::uint32_t idx)
+		{
+			const auto internal_list = reinterpret_cast<std::uintptr_t>(this + 0x20);
+			return *reinterpret_cast<type*>(internal_list + idx * sizeof(type));
+		}
+
+		type value(std::uint32_t idx)
+		{
+			const auto list = *reinterpret_cast<std::uintptr_t*>(this + 0x10);
+			const auto internal_list = list + 0x20;
+			return *reinterpret_cast<type*>(internal_list + idx * sizeof(type));
+		}
+
+		auto size() -> const std::uint32_t { return *reinterpret_cast<std::uint32_t*>(this + 0x18); }
+	};
+
+	class list_dictionary
+	{
+	public:
+		template <typename type>
+		auto value() -> type
+		{
+			auto list = *reinterpret_cast<std::uintptr_t*>(this + 0x10);
+			if (!list)
+				return {};
+
+			auto value = *reinterpret_cast<type*>(list + 0x28);
+			if (!value)
+				return {};
+
+			return value;
+		}
+
+		auto size() -> int
+		{
+			auto val = value< std::uintptr_t >();
+			if (!val)
+				return {};
+
+			auto size = *reinterpret_cast<int*>(val + 0x10);
+			if (!size)
+				return {};
+
+			return size;
+		}
+
+		template <typename type>
+		auto buffer() -> type
+		{
+			auto val = value< std::uintptr_t >();
+			return *reinterpret_cast<std::uintptr_t*>(val + 0x18);
+		}
+	};
+}
+*/
 uintptr_t find(uintptr_t range_start, uintptr_t range_end, const char* pattern) {
 	const char* pattern_bytes = pattern;
 
@@ -2544,6 +2624,45 @@ class DDraw {
 public:
 	STATIC_FUNCTION("Assembly-CSharp::UnityEngine::DDraw::Line(Vector3,Vector3,Color,Single,Boolean,Boolean): Void", Line, void(Vector3, Vector3, Color, float, bool, bool));
 	STATIC_FUNCTION("Assembly-CSharp::UnityEngine::DDraw::Sphere(Vector3,Single,Color,Single,Boolean): Void", Sphere, void(Vector3, float, Color, float, bool));
+
+	static inline void(*OnGui_)(DDraw*) = nullptr;
+	void OnGui() {
+		return OnGui_(this);
+	}
+};
+
+class clr_t {
+public:
+	float r, g, b, a;
+	clr_t(float _r, float _g, float _b, float _a) : r(_r / 255), g(_g / 255), b(_b / 255), a(_a / 255) {}
+	clr_t(float _r, float _g, float _b) : r(_r / 255), g(_g / 255), b(_b / 255), a(1) {}
+
+	static clr_t from_hsb(float hue, float saturation, float brightness) {
+		float h = hue == 1.0f ? 0 : hue * 6.0f;
+		float f = h - (int)h;
+		float p = brightness * (1.0f - saturation);
+		float q = brightness * (1.0f - saturation * f);
+		float t = brightness * (1.0f - (saturation * (1.0f - f)));
+
+		if (h < 1) {
+			return clr_t((brightness * 255), (t * 255), (p * 255));
+		}
+		else if (h < 2) {
+			return clr_t((q * 255), (brightness * 255), (p * 255));
+		}
+		else if (h < 3) {
+			return clr_t((p * 255), (brightness * 255), (t * 255));
+		}
+		else if (h < 4) {
+			return clr_t((p * 255), (q * 255), (brightness * 255));
+		}
+		else if (h < 5) {
+			return clr_t((t * 255), (p * 255), (brightness * 255));
+		}
+		else {
+			return clr_t((brightness * 255), (p * 255), (q * 255));
+		}
+	}
 };
 
 class AssetBundle {
@@ -2553,15 +2672,16 @@ public:
 		static auto off = METHOD("UnityEngine.AssetBundleModule::UnityEngine::AssetBundle::GetAllAssetNames(): String[]");
 		return reinterpret_cast<Array<String*>*(*)(AssetBundle*)>(off)(this);
 	}
-	template<typename T = Object>
-	T* LoadAsset(char* name, Type* type) {
+	//template<typename T = Object>
+	Object* LoadAsset(char* name, Type* type) {
+		//static auto ptr = METHOD("Assembly-CSharp::GameManifest::GUIDToObject(String): Object");
 		if (!this) return {};
-		static auto off = METHOD("UnityEngine.AssetBundleModule::UnityEngine::AssetBundle::LoadAsset(String,Type): Object");
-		return reinterpret_cast<T * (*)(AssetBundle*, String*, Type*)>(off)(this, String::New(name), type);
+		static auto off = METHOD("UnityEngine.AssetBundleModule::UnityEngine::AssetBundle::LoadAsset_Internal(String,Type): Object");
+		return reinterpret_cast<Object * (*)(AssetBundle*, String*, Type*)>(off)(this, String::New(name), type);
 	}
 	static AssetBundle* LoadFromFile(char* path) {
-		static auto off = METHOD("UnityEngine.AssetBundleModule::UnityEngine::AssetBundle::LoadFromFile(String): AssetBundle");
-		return reinterpret_cast<AssetBundle * (*)(String*)>(off)(String::New(path));
+		static auto off = METHOD("UnityEngine.AssetBundleModule::UnityEngine::AssetBundle::LoadFromFile_Internal(String,UInt32,UInt64): AssetBundle");
+		return reinterpret_cast<AssetBundle * (*)(String*, uint32_t, uint64_t)>(off)(String::New(path), 0, 0);
 	}
 };
 std::array<int, 20> valid_bones = {
@@ -2826,12 +2946,23 @@ public:
 	}
 };
 
+AssetBundle* aw_assets;
+uintptr_t chams;
+
 void initialize_cheat( ) {
-	//VM_DOLPHIN_BLACK_START
-	VMProtectBeginUltra(xorstr_("init"));
+	////VM_DOLPHIN_BLACK_START
+	////VMProtectBeginUltra(xorstr_("init"));
 	init_classes( );
 	init_fields( );
 	init_methods( );
+
+	std::string s = settings::data_dir + "\\aidsware.assets";
+	//SAPPHIRE_ICALL(load_from_file_fn, "UnityEngine.AssetBundle::LoadFromFile_Internal(System.String,System.UInt32,System.UInt64)", std::uintptr_t(*)(String*, std::uint32_t, std::uint64_t));
+
+	//if (!aw_assets) // todo; use UnityWebRequestAssetBundle.GetAssetBundle to stream bundle from the github repo.
+	//	aw_assets = load_from_file_fn(String::New("C:\\aidsware.assets"), 0, 0);
+	aw_assets = AssetBundle::LoadFromFile(const_cast<char*>(s.c_str()));
+	//printf("aw_assets: 0x%p\n", aw_assets);
 
 	//ASSIGN_HOOK("Assembly-CSharp::EffectLibrary::CreateEffect(string, Effect): GameObject", EffectLibrary::CreateEffect_);
 
@@ -2875,11 +3006,13 @@ void initialize_cheat( ) {
 
 	ASSIGN_HOOK("Assembly-CSharp::BaseCombatEntity::DoHitNotify(HitInfo): Void", BaseCombatEntity::DoHitNotify_);
 
+	//il2cpp::hook(DDraw::OnGui_, xorstr_("OnGUI"), xorstr_("DDraw"), xorstr_("UnityEngine"));
+
 	settings::il_init_methods = find(xorstr_("GameAssembly.dll"), "48 83 EC 48 48 8B 05 ? ? ? ? 48 63 90 ? ? ? ?");
 	settings::serverrpc_projectileshoot = find_rel(xorstr_("GameAssembly.dll"), xorstr_("4C 8B 0D ? ? ? ? 48 8B 75 28"));
 
 	settings::cheat_init = true;
 
-	VMProtectEnd();
-	//VM_DOLPHIN_BLACK_END
+	////VMProtectEnd();
+	////VM_DOLPHIN_BLACK_END
 }

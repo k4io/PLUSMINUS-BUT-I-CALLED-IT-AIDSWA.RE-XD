@@ -4,8 +4,6 @@ bool menu_init = false;
 
 void undo_hooks( );
 
-
-
 namespace d3d {
 	HRESULT present_hook(IDXGISwapChain* swapChain, UINT syncInterval, UINT flags) {
 		static Vector2 text_size = Vector2(0, 0);

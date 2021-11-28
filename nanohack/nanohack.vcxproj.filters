@@ -153,5 +153,16 @@
     <ClInclude Include="core\sdk\il2cpp\dissector.hpp" />
     <ClInclude Include="core\sdk\il2cpp\wrapper.hpp" />
     <ClInclude Include="core\sdk\lazy_importer.hpp" />
+    <ClInclude Include="..\..\..\..\..\Downloads\sapphire-main (1)\sapphire-main\sapphire\il2cpp_lib.hpp" />
+    <ClInclude Include="..\..\..\..\..\Downloads\sapphire-main (1)\sapphire-main\sapphire\pattern.hpp" />
+    <ClInclude Include="..\..\..\..\..\Downloads\sapphire-main (1)\sapphire-main\sapphire\sapphire_crt.hpp" />
+    <ClInclude Include="..\..\..\..\..\Downloads\sapphire-main (1)\sapphire-main\sapphire\sapphire_hook.hpp" />
+    <ClInclude Include="..\..\..\..\..\Downloads\sapphire-main (1)\sapphire-main\sapphire\sapphire_importer.hpp" />
+    <ClInclude Include="core\sdk\il2cpp\il2cpp_lib.hpp" />
+    <ClInclude Include="core\sdk\il2cpp\pattern.hpp" />
+    <ClInclude Include="core\sdk\il2cpp\sapphire_crt.hpp" />
+    <ClInclude Include="core\sdk\il2cpp\sapphire_hook.hpp" />
+    <ClInclude Include="core\sdk\il2cpp\sapphire_importer.hpp" />
+    <ClInclude Include="core\drawing\font.h" />
   </ItemGroup>
 </Project>

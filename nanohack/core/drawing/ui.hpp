@@ -207,7 +207,7 @@ namespace aidsware::ui
 	bool a123_ = false;
 	inline void OnSetupDevice()
 	{
-		//VM_EAGLE_BLACK_START
+		////VM_EAGLE_BLACK_START
 
 		a123_ = true;
 		init = true;
@@ -236,6 +236,7 @@ namespace aidsware::ui
 		wrapper::reset_width();
 		wrapper::reset_height();
 		wrapper::currentY -= 5.0f;
+		wrapper::slider(xorstr_("shaders"), Vector2(0, 0), 1.0f, 1.0f, 40.0f);
 		wrapper::checkbox(xorstr_("psilent"), Vector2(0, 0), Tabs::Combat, true);
 		wrapper::currentY += 5.0f;
 		wrapper::checkbox(xorstr_("aimbot"), Vector2(0, 0), Tabs::Combat, true, false);
@@ -247,7 +248,6 @@ namespace aidsware::ui
 		wrapper::checkbox(xorstr_("peek assist"), Vector2(0, 0), Tabs::Combat, true, false);
 		wrapper::currentY += 10.0f;
 		//wrapper::checkbox(xorstr_("silent melee"), Vector2(0, 0), Tabs::Combat);
-		wrapper::slider(xorstr_("prediction"), Vector2(0, 0), 0.75f, 0.01f, 1.0f, Tabs::Combat);
 		wrapper::currentY -= 5.f;	
 		wrapper::checkbox(xorstr_("hitbox attraction"), Vector2(0, 0), Tabs::Combat);
 		wrapper::checkbox(xorstr_("fat bullet"), Vector2(0, 0), Tabs::Combat);
@@ -352,7 +352,7 @@ namespace aidsware::ui
 		wrapper::checkbox(xorstr_("fake admin"), Vector2(0, 0), Tabs::Misc);
 		wrapper::checkbox(xorstr_("fast loot"), Vector2(0, 0), Tabs::Misc);
 		wrapper::checkbox(xorstr_("long hand"), Vector2(0, 0), Tabs::Misc);
-		wrapper::checkbox(xorstr_("farm assist"), Vector2(0, 0), Tabs::Misc);
+		//wrapper::checkbox(xorstr_("farm assist"), Vector2(0, 0), Tabs::Misc);
 		wrapper::checkbox(xorstr_("no collisions"), Vector2(0, 0), Tabs::Misc);
 		wrapper::checkbox(xorstr_("fake lag"), Vector2(0, 0), Tabs::Misc);
 		wrapper::checkbox(xorstr_("spiderman"), Vector2(0, 0), Tabs::Misc);
@@ -389,7 +389,7 @@ namespace aidsware::ui
 		wrapper::combobox(xorstr_("light"), { xorstr_("default"), xorstr_("dark"), xorstr_("light") }, Vector2(170, 0), Tabs::Misc);
 		wrapper::keybind(xorstr_("timescale key"), Vector2(170, 0), Tabs::Misc);
 		wrapper::keybind(xorstr_("desync on key"), Vector2(170, 0), Tabs::Misc);
-		wrapper::checkbox(xorstr_("long neck"), Vector2(170, 0), Tabs::Misc);
+		wrapper::checkbox(xorstr_("long neck"), Vector2(170, 0), Tabs::Misc, true, false);
 		wrapper::combobox(xorstr_("crosshair"), { xorstr_("none"), xorstr_("plusminus"), xorstr_("evilcheats"), xorstr_("circle"), xorstr_("swastika") }, Vector2(170, 0), Tabs::Misc);
 
 		wrapper::textbox(xorstr_("config name"), Vector2(170, 0), Tabs::Misc, xorstr_("default"));
@@ -518,6 +518,6 @@ namespace aidsware::ui
 		wrapper::color_picker(xorstr_("los checks"), Vector2(205.f, 0), Tabs::Colors);
 		wrapper::label(xorstr_("insta kill"), Vector2(140, 0), Tabs::Colors, false);
 		wrapper::color_picker(xorstr_("insta kill indicator"), Vector2(205.f, 0), Tabs::Colors);
-		//VM_EAGLE_BLACK_END
+		////VM_EAGLE_BLACK_END
 	}
 }

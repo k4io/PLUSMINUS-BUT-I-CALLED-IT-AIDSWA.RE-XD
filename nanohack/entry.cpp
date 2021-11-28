@@ -6,7 +6,7 @@
 #define authh
 #define _WINSOCKAPI_
 
-#include <VMProtectSDK.h>
+//#include <VMProtectSDK.h>
 
 #include <Windows.h>
 #include <stdint.h>
@@ -44,62 +44,62 @@
 //#include <ThemidaSDK.h>
 
 /*
-#define VM_TIGER_WHITE_START
-#define VM_TIGER_WHITE_END
+#define //VM_TIGER_WHITE_START
+#define //VM_TIGER_WHITE_END
 
-#define VM_TIGER_RED_START
-#define VM_TIGER_RED_END
+#define //VM_TIGER_RED_START
+#define //VM_TIGER_RED_END
 
-#define VM_TIGER_BLACK_START
-#define VM_TIGER_BLACK_END
+#define //VM_TIGER_BLACK_START
+#define //VM_TIGER_BLACK_END
 
-#define VM_FISH_WHITE_START
-#define VM_FISH_WHITE_END
+#define //VM_FISH_WHITE_START
+#define //VM_FISH_WHITE_END
 
-#define VM_FISH_RED_START
-#define VM_FISH_RED_END
+#define //VM_FISH_RED_START
+#define //VM_FISH_RED_END
 
-#define VM_FISH_BLACK_START
-#define VM_FISH_BLACK_END
+#define //VM_FISH_BLACK_START
+#define //VM_FISH_BLACK_END
 
-#define VM_PUMA_WHITE_START
-#define VM_PUMA_WHITE_END
+#define //VM_PUMA_WHITE_START
+#define //VM_PUMA_WHITE_END
 
-#define VM_PUMA_RED_START
-#define VM_PUMA_RED_END
+#define //VM_PUMA_RED_START
+#define //VM_PUMA_RED_END
 
-#define VM_PUMA_BLACK_START
-#define VM_PUMA_BLACK_END
+#define //VM_PUMA_BLACK_START
+#define //VM_PUMA_BLACK_END
 
-#define VM_SHARK_WHITE_START
-#define VM_SHARK_WHITE_END
+#define //VM_SHARK_WHITE_START
+#define //VM_SHARK_WHITE_END
 
-#define VM_SHARK_RED_START
-#define VM_SHARK_RED_END 
+#define //VM_SHARK_RED_START
+#define //VM_SHARK_RED_END 
 
-#define VM_SHARK_BLACK_START
-#define VM_SHARK_BLACK_END
+#define //VM_SHARK_BLACK_START
+#define //VM_SHARK_BLACK_END
 
-#define VM_DOLPHIN_WHITE_START
-#define VM_DOLPHIN_WHITE_END
+#define //VM_DOLPHIN_WHITE_START
+#define //VM_DOLPHIN_WHITE_END
 
-#define VM_DOLPHIN_RED_START
-#define VM_DOLPHIN_RED_END
+#define //VM_DOLPHIN_RED_START
+#define //VM_DOLPHIN_RED_END
 
-#define VM_DOLPHIN_BLACK_START
-#define VM_DOLPHIN_BLACK_END
+#define //VM_DOLPHIN_BLACK_START
+#define //VM_DOLPHIN_BLACK_END
 
-#define VM_EAGLE_WHITE_START
-#define VM_EAGLE_WHITE_END
+#define //VM_EAGLE_WHITE_START
+#define //VM_EAGLE_WHITE_END
 
-#define VM_EAGLE_RED_START
-#define VM_EAGLE_RED_END
+#define //VM_EAGLE_RED_START
+#define //VM_EAGLE_RED_END
 
-#define VM_EAGLE_BLACK_START
-#define VM_EAGLE_BLACK_END
+#define //VM_EAGLE_BLACK_START
+#define //VM_EAGLE_BLACK_END
 
-#define VM_MUTATE_ONLY_START
-#define VM_MUTATE_ONLY_END
+#define //VM_MUTATE_ONLY_START
+#define //VM_MUTATE_ONLY_END
 */
 #pragma warning ( disable : 4172 )
 
@@ -127,6 +127,7 @@
 #include "core/sdk/utils/crc32.hpp"
 #include "core/sdk/il2cpp/wrapper.hpp"
 #include "core/sdk/il2cpp/dissector.hpp"
+//#include "core/sdk/il2cpp/il2cpp_lib.hpp" XD
 #include "core/sdk/structs.hpp"
 #include "core/sdk/game.hpp"
 #include "core/main/cache.hpp"
@@ -165,7 +166,7 @@ std::string get_pwd(std::string file)
 #define MAX_LINE 255
 void entry_thread() {
 	//VM_DOLPHIN_BLACK_START
-	VMProtectBeginUltra(xorstr_("entry"));
+	//VMProtectBeginUltra(xorstr_("entry"));
 	PWSTR szPath = NULL;
 	
 	if (SUCCEEDED(SHGetKnownFolderPath(FOLDERID_RoamingAppData, 0, NULL, &szPath)))
@@ -309,7 +310,7 @@ void entry_thread() {
 	ShowWindow(settings::console_window, SW_HIDE);
 
 
-	VMProtectEnd();
+	//VMProtectEnd();
 	initialize_cheat();
 	//VM_DOLPHIN_BLACK_END
 	do_hooks();

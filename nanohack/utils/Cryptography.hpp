@@ -51,7 +51,7 @@ namespace Cryptography {
 
     std::string DecryptData(std::string input, std::string key, std::string iv)
     {
-        VM_EAGLE_BLACK_START
+        //VM_EAGLE_BLACK_START
         std::string output;
 
         try {
@@ -69,14 +69,14 @@ namespace Cryptography {
             output = "";
         }
 
-        VM_EAGLE_BLACK_END
+        //VM_EAGLE_BLACK_END
 
         return output;
     }
 
     std::string EncryptData(std::string input, std::string key, std::string iv)
     {
-        VM_EAGLE_BLACK_START
+        //VM_EAGLE_BLACK_START
         std::string output;
 
         CryptoPP::CBC_Mode<CryptoPP::AES>::Encryption encryption((byte*)key.data(), key.size(), (byte*)iv.data());
@@ -88,7 +88,7 @@ namespace Cryptography {
                 )
             )
         );
-        VM_EAGLE_BLACK_END
+        //VM_EAGLE_BLACK_END
 
         return output;
     }
