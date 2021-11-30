@@ -35,7 +35,7 @@ namespace d3d {
 				Renderer::rounded_rectangle_filled(10, 10, 430, 20, Color3(23, 25, 31), 3.f);
 				Renderer::rounded_box(9, 9, 432, 22, Color3(1, 26, 51), 3.f);
 
-				Renderer::text(Vector2(225, 22), Color3(219, 219, 219), 14.f, true, true, wxorstr_(L"aidswa.re | %s | time left: %s days"), settings::auth::username.c_str(), settings::auth::days_left.c_str());
+				Renderer::text(Vector2(225, 22), Color3(219, 219, 219), 20.f, true, true, wxorstr_(L"aidswa.re | %s | time left: %s days"), settings::auth::username.c_str(), settings::auth::days_left.c_str());
 
 				if (!aidsware::ui::init)
 				{
@@ -50,7 +50,7 @@ namespace d3d {
 					Renderer::rectangle_filled({ 10, 50 }, Vector2(110, 20), Color3(23, 25, 31));
 					Renderer::rectangle_filled(Vector2(10, 50), Vector2(110, 3), Color3(1, 26, 51));
 
-					Renderer::text({ 65, 62 }, Color3(222, 222, 222), 12.f, true, true, wxorstr_(L"%.f checks"), r);
+					Renderer::text({ 65, 62 }, Color3(222, 222, 222), 18.f, true, true, wxorstr_(L"%.f checks"), r);
 				}
 				
 

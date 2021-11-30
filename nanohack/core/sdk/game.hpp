@@ -2348,7 +2348,7 @@ public:
 				Renderer::text(
 					explPos,
 					{ 156, 14, 45 },
-					14.f,
+					18.f,
 					true,
 					true,
 					StringConverter::ToUnicode(StringFormat::format(xorstr_("%s [%.2fm] [%d]"),
@@ -2362,7 +2362,7 @@ public:
 };
 void LogSystem::draw_text(Vector2 pos, std::wstring str) {
 	//Renderer::text(pos, { 120, 120, 199 }, 14.f, false, true, str.c_str());
-	Renderer::text(pos, { 42, 112, 209 }, 14.f, false, true, str.c_str());
+	Renderer::text(pos, { 42, 112, 209 }, 18.f, false, true, str.c_str());
 }
 void LogSystem::draw_line(Vector2 pos, Vector2 pos2) {
 	Renderer::line(pos, pos2, { 156, 14, 45 }, 1.f, true);
@@ -2672,18 +2672,19 @@ public:
 		static auto off = METHOD("UnityEngine.AssetBundleModule::UnityEngine::AssetBundle::GetAllAssetNames(): String[]");
 		return reinterpret_cast<Array<String*>*(*)(AssetBundle*)>(off)(this);
 	}
-	//template<typename T = Object>
-	Object* LoadAsset(char* name, Type* type) {
+	template<typename T = Object>
+	T * LoadAsset(char* name, Type* type) {
 		//static auto ptr = METHOD("Assembly-CSharp::GameManifest::GUIDToObject(String): Object");
 		if (!this) return {};
-		static auto off = METHOD("UnityEngine.AssetBundleModule::UnityEngine::AssetBundle::LoadAsset_Internal(String,Type): Object");
-		return reinterpret_cast<Object * (*)(AssetBundle*, String*, Type*)>(off)(this, String::New(name), type);
+		static auto off = METHOD("UnityEngine.AssetBundleModule::UnityEngine::AssetBundle::LoadAsset(String,Type): Object");
+		return reinterpret_cast<T * (*)(AssetBundle*, String*, Type*)>(off)(this, String::New(name), type);
 	}
 	static AssetBundle* LoadFromFile(char* path) {
 		static auto off = METHOD("UnityEngine.AssetBundleModule::UnityEngine::AssetBundle::LoadFromFile_Internal(String,UInt32,UInt64): AssetBundle");
 		return reinterpret_cast<AssetBundle * (*)(String*, uint32_t, uint64_t)>(off)(String::New(path), 0, 0);
 	}
 };
+
 std::array<int, 20> valid_bones = {
 		1, 2, 3, 5, 6, 14, 15, 17, 18, 21, 23, 24, 25, 26, 27, 48, 55, 56, 57, 76
 };
@@ -2938,30 +2939,31 @@ namespace Network {
 		}
 	};
 }
-class AimConeUtil {
-public:
-	static inline Vector3(*GetModifiedAimConeDirection_)(float, Vector3, bool) = nullptr;
-	static Vector3 GetModifiedAimConeDirection(float aimCone, Vector3 inputVec, bool anywhereInside = true) {
-		return GetModifiedAimConeDirection_(aimCone, inputVec, anywhereInside);
-	}
-};
-
-AssetBundle* aw_assets;
-uintptr_t chams;
-
-void initialize_cheat( ) {
-	////VM_DOLPHIN_BLACK_START
-	////VMProtectBeginUltra(xorstr_("init"));
+class AimConeUtil {																											  
+public:																														  
+	static inline Vector3(*GetModifiedAimConeDirection_)(float, Vector3, bool) = nullptr;									  
+	static Vector3 GetModifiedAimConeDirection(float aimCone, Vector3 inputVec, bool anywhereInside = true) {				  
+		return GetModifiedAimConeDirection_(aimCone, inputVec, anywhereInside);												  
+	}																														  
+};																															  
+																															  
+//AssetBundle* aw_assets;																										  
+//Shader* chams;																												  
+																															  
+void initialize_cheat( ) {																									  
+	////VM_DOLPHIN_BLACK_START																								  
+	////VMProtectBeginUltra(xorstr_("init"));																				  
 	init_classes( );
 	init_fields( );
 	init_methods( );
 
-	std::string s = settings::data_dir + "\\aidsware.assets";
+	//std::string s = settings::data_dir + "\\aidsware.assets";
 	//SAPPHIRE_ICALL(load_from_file_fn, "UnityEngine.AssetBundle::LoadFromFile_Internal(System.String,System.UInt32,System.UInt64)", std::uintptr_t(*)(String*, std::uint32_t, std::uint64_t));
 
 	//if (!aw_assets) // todo; use UnityWebRequestAssetBundle.GetAssetBundle to stream bundle from the github repo.
 	//	aw_assets = load_from_file_fn(String::New("C:\\aidsware.assets"), 0, 0);
-	aw_assets = AssetBundle::LoadFromFile(const_cast<char*>(s.c_str()));
+	//aw_assets = AssetBundle::LoadFromFile(const_cast<char*>(s.c_str()));
+	//aw_assets = AssetBundle::LoadFromFile(const_cast<char*>("C:\\sapphire\\assets.saph"));
 	//printf("aw_assets: 0x%p\n", aw_assets);
 
 	//ASSIGN_HOOK("Assembly-CSharp::EffectLibrary::CreateEffect(string, Effect): GameObject", EffectLibrary::CreateEffect_);
