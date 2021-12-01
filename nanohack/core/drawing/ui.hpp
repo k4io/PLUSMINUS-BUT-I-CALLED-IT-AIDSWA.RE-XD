@@ -290,6 +290,7 @@ namespace aidsware::ui
 		wrapper::slider(xorstr_("duration"), Vector2(180.0f, 10.0f), 0.05f, 0.001f, 60.0f, Tabs::Combat);
 
 		wrapper::currentY += 5.0f;
+		wrapper::checkbox(xorstr_("target heli"), Vector2(170, 0), Tabs::Combat);
 		wrapper::checkbox(xorstr_("always heli weakspot"), Vector2(170, 0), Tabs::Combat);
 		wrapper::checkbox(xorstr_("insta charge compound"), Vector2(170, 0), Tabs::Combat);
 		wrapper::currentY += 10.0f;

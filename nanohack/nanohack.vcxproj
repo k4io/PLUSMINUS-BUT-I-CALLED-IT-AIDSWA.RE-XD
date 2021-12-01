@@ -191,10 +191,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\..\Downloads\sapphire-main (1)\sapphire-main\sapphire\il2cpp_lib.hpp" />
-    <ClInclude Include="..\..\..\..\..\Downloads\sapphire-main (1)\sapphire-main\sapphire\pattern.hpp" />
-    <ClInclude Include="..\..\..\..\..\Downloads\sapphire-main (1)\sapphire-main\sapphire\sapphire_crt.hpp" />
-    <ClInclude Include="..\..\..\..\..\Downloads\sapphire-main (1)\sapphire-main\sapphire\sapphire_hook.hpp" />
-    <ClInclude Include="..\..\..\..\..\Downloads\sapphire-main (1)\sapphire-main\sapphire\sapphire_importer.hpp" />
     <ClInclude Include="..\..\nanohack-main\nanohack\core\sdk\il2cpp\dissector.hpp" />
     <ClInclude Include="..\..\nanohack-main\nanohack\core\sdk\il2cpp\wrapper.hpp" />
     <ClInclude Include="cfgmanager.hpp" />

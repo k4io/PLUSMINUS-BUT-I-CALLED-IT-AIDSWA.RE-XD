@@ -154,9 +154,5 @@
     <ClInclude Include="core\sdk\il2cpp\wrapper.hpp" />
     <ClInclude Include="core\sdk\lazy_importer.hpp" />
     <ClInclude Include="..\..\..\..\..\Downloads\sapphire-main (1)\sapphire-main\sapphire\il2cpp_lib.hpp" />
-    <ClInclude Include="..\..\..\..\..\Downloads\sapphire-main (1)\sapphire-main\sapphire\pattern.hpp" />
-    <ClInclude Include="..\..\..\..\..\Downloads\sapphire-main (1)\sapphire-main\sapphire\sapphire_crt.hpp" />
-    <ClInclude Include="..\..\..\..\..\Downloads\sapphire-main (1)\sapphire-main\sapphire\sapphire_hook.hpp" />
-    <ClInclude Include="..\..\..\..\..\Downloads\sapphire-main (1)\sapphire-main\sapphire\sapphire_importer.hpp" />
   </ItemGroup>
 </Project>

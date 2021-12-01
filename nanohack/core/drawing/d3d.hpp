@@ -28,14 +28,16 @@ namespace d3d {
 
 		if (GetAsyncKeyState(VK_INSERT) & 1)
 			settings::open = !settings::open;
-
 		if (!settings::panic) {
 			if (Renderer::new_frame(swapChain)) {
+				float width = 210; //pos actually not width
+				for (size_t i = 0; i < settings::auth::username.size(); i++)
+					width += 6;
+				
+				Renderer::rounded_rectangle_filled(55, 15, width + 40, 20, Color3(43, 35, 61), 3.f);
+				Renderer::rounded_box(54, 14, width + 39, 19, Color3(1, 26, 51), 3.f);
 
-				Renderer::rounded_rectangle_filled(10, 10, 430, 20, Color3(23, 25, 31), 3.f);
-				Renderer::rounded_box(9, 9, 432, 22, Color3(1, 26, 51), 3.f);
-
-				Renderer::text(Vector2(225, 22), Color3(219, 219, 219), 20.f, true, true, wxorstr_(L"aidswa.re | %s | time left: %s days"), settings::auth::username.c_str(), settings::auth::days_left.c_str());
+				Renderer::text(Vector2(55 + ((width + 40) / 2), 22), Color3(219, 219, 219), 20.f, true, true, wxorstr_(L"aidswa.re | %s | time left: %s days"), settings::auth::username.c_str(), settings::auth::days_left.c_str());
 
 				if (!aidsware::ui::init)
 				{

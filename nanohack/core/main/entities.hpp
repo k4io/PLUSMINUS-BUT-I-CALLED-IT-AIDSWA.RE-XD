@@ -492,432 +492,39 @@ namespace entities {
 				
 
 				float d = entity->transform()->position().distance(LocalPlayer::Entity()->transform()->position());
-				if (d < aidsware::ui::get_float(xorstr_("esp dist")))
+				auto prefab = entity->ShortPrefabName_hash();
+
+				if (Camera::world_to_screen(entity->transform()->position(), screen))
 				{
-					if (Camera::world_to_screen(entity->transform()->position(), screen))
+					switch (prefab)
 					{
-						switch (entity->ShortPrefabName_hash())
+					case STATIC_CRC32("minicopter.entity"):
+						if (aidsware::ui::get_bool(xorstr_("vehicles")))
 						{
-						case STATIC_CRC32("supply_drop"):
-							if (aidsware::ui::get_bool(xorstr_("supply")))
-							{
-								Renderer::text(screen, aidsware::ui::get_color(xorstr_("supply color")), 14.f, true, true, wxorstr_(L"supply drop"));
-								if (aidsware::ui::get_bool("distance"))
-									Renderer::text({ screen.x, screen.y - 10}, aidsware::ui::get_color(xorstr_("supply color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
-								else
-								continue;
-							}
-							break;
-						case STATIC_CRC32("minicopter.entity"):
-							if (aidsware::ui::get_bool(xorstr_("vehicles")))
-							{
-								Renderer::text(screen, aidsware::ui::get_color(xorstr_("vehicles color")), 14.f, true, true, wxorstr_(L"minicopter"));
-								if (aidsware::ui::get_bool("distance"))
-									Renderer::text({ screen.x, screen.y - 10 }, aidsware::ui::get_color(xorstr_("vehicles color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
-								continue;
-							}
-							break;
-						case STATIC_CRC32("stone-ore"):
-							if (aidsware::ui::get_bool(xorstr_("ores")))
-							{
-								if (aidsware::ui::get_bool("distance"))
-									Renderer::text({ screen.x, screen.y - 10 }, aidsware::ui::get_color(xorstr_("ores color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
-								Renderer::text(screen, aidsware::ui::get_color(xorstr_("ores color")), 14.f, true, true, wxorstr_(L"Stone Ore"));
-								continue;
-							}
-							break;
-						case STATIC_CRC32("sulfur-ore"):
-							if (aidsware::ui::get_bool(xorstr_("ores")))
-							{
-								if (aidsware::ui::get_bool("distance"))
-									Renderer::text({ screen.x, screen.y - 10 }, aidsware::ui::get_color(xorstr_("ores color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
-								Renderer::text(screen, aidsware::ui::get_color(xorstr_("ores color")), 14.f, true, true, wxorstr_(L"Sulfur Ore"));
-								continue;
-							}
-							break;
-						case STATIC_CRC32("metal-ore"):
-							if (aidsware::ui::get_bool(xorstr_("ores")))
-							{
-								if (aidsware::ui::get_bool("distance"))
-									Renderer::text({ screen.x, screen.y - 10 }, aidsware::ui::get_color(xorstr_("ores color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
-								Renderer::text(screen, aidsware::ui::get_color(xorstr_("ores color")), 14.f, true, true, wxorstr_(L"Metal Ore"));
-								continue;
-							}
-							break;
-						case STATIC_CRC32("small_stash_deployed"):
-							if (aidsware::ui::get_bool(xorstr_("stashes")))
-							{
-								if (entity->HasFlag(BaseEntity::Flags::Reserved5)) {
-									if (aidsware::ui::get_bool("distance"))
-										Renderer::text({ screen.x, screen.y - 10 }, aidsware::ui::get_color(xorstr_("stashes color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
-									Renderer::text(screen, aidsware::ui::get_color(xorstr_("stashes color")), 14.f, true, true, wxorstr_(L"Stash (Hidden)"));
-									continue;
-								}
-								else {
-									if (aidsware::ui::get_bool("distance"))
-										Renderer::text({ screen.x, screen.y - 10 }, aidsware::ui::get_color(xorstr_("stashes color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
-									Renderer::text(screen, aidsware::ui::get_color(xorstr_("stashes color")), 14.f, true, true, wxorstr_(L"Stash"));
-									continue;
-								}
-							}
-							break;
-						case STATIC_CRC32("cupboard.tool.deployed"):
-							if (aidsware::ui::get_bool(xorstr_("tool cupboards")))
-							{
-								if (aidsware::ui::get_bool("distance"))
-									Renderer::text({ screen.x, screen.y - 10 }, aidsware::ui::get_color(xorstr_("tc color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
-								Renderer::text(screen, aidsware::ui::get_color(xorstr_("tc color")), 14.f, true, true, wxorstr_(L"tool cupboard"));
-								continue;
-							}
-							break;
-						case STATIC_CRC32("box.wooden.large"):
-							if (aidsware::ui::get_bool(xorstr_("storage")))
-							{
-								if (aidsware::ui::get_bool("distance"))
-									Renderer::text({ screen.x, screen.y - 10 }, aidsware::ui::get_color(xorstr_("box color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
-								Renderer::text(screen, aidsware::ui::get_color(xorstr_("box color")), 14.f, true, true, wxorstr_(L"large wood box"));
-								continue;
-							}
-							break;
-						case STATIC_CRC32("woodbox_deployed"):
-							if (aidsware::ui::get_bool(xorstr_("storage")))
-							{
-								if (aidsware::ui::get_bool("distance"))
-									Renderer::text({ screen.x, screen.y - 10 }, aidsware::ui::get_color(xorstr_("box color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
-								Renderer::text(screen, aidsware::ui::get_color(xorstr_("box color")), 14.f, true, true, wxorstr_(L"small wood box"));
-								continue;
-							}
-							break;
-						case STATIC_CRC32("coffinstorage"):
-							if (aidsware::ui::get_bool(xorstr_("storage")))
-							{
-								if (aidsware::ui::get_bool("distance"))
-									Renderer::text({ screen.x, screen.y - 10 }, aidsware::ui::get_color(xorstr_("box color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
-								Renderer::text(screen, aidsware::ui::get_color(xorstr_("box color")), 14.f, true, true, wxorstr_(L"coffin"));
-								continue;
-							}
-							break;
-						case STATIC_CRC32("crate_normal"):
-							if (aidsware::ui::get_bool(xorstr_("crates")))
-							{
-								if (aidsware::ui::get_bool("distance"))
-									Renderer::text({ screen.x, screen.y - 10 }, aidsware::ui::get_color(xorstr_("crate color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
-								Renderer::text(screen, aidsware::ui::get_color(xorstr_("crate color")), 14.f, true, true, wxorstr_(L"military box"));
-								continue;
-							}
-							break;
-						case STATIC_CRC32("crate_mine"):
-							if (aidsware::ui::get_bool(xorstr_("crates")))
-							{
-								if (aidsware::ui::get_bool("distance"))
-									Renderer::text({ screen.x, screen.y - 10 }, aidsware::ui::get_color(xorstr_("crate color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
-								Renderer::text(screen, aidsware::ui::get_color(xorstr_("crate color")), 14.f, true, true, wxorstr_(L"mine box"));
-								continue;
-							}
-							break;
-						case STATIC_CRC32("crate_elite"):
-							if (aidsware::ui::get_bool(xorstr_("crates")))
-							{
-								if (aidsware::ui::get_bool("distance"))
-									Renderer::text({ screen.x, screen.y - 10 }, aidsware::ui::get_color(xorstr_("crate color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
-								Renderer::text(screen, aidsware::ui::get_color(xorstr_("crate color")), 14.f, true, true, wxorstr_(L"elite crate"));
-								continue;
-							}
-							break;
-						case STATIC_CRC32("crate_normal_2_food"):
-							if (aidsware::ui::get_bool(xorstr_("crates")))
-							{
-								if (aidsware::ui::get_bool("distance"))
-									Renderer::text({ screen.x, screen.y - 10 }, aidsware::ui::get_color(xorstr_("crate color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
-								Renderer::text(screen, aidsware::ui::get_color(xorstr_("crate color")), 14.f, true, true, wxorstr_(L"food crate"));
-								continue;
-							}
-							break;
-						case STATIC_CRC32("crate_tools"):
-							if (aidsware::ui::get_bool(xorstr_("crates")))
-							{
-								if (aidsware::ui::get_bool("distance"))
-									Renderer::text({ screen.x, screen.y - 10 }, aidsware::ui::get_color(xorstr_("crate color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
-								Renderer::text(screen, aidsware::ui::get_color(xorstr_("crate color")), 14.f, true, true, wxorstr_(L"toolbox"));
-								continue;
-							}
-							break;
-						case STATIC_CRC32("crate_normal_2_medical"):
-							if (aidsware::ui::get_bool(xorstr_("crates")))
-							{
-								if (aidsware::ui::get_bool("distance"))
-									Renderer::text({ screen.x, screen.y - 10 }, aidsware::ui::get_color(xorstr_("crate color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
-								Renderer::text(screen, aidsware::ui::get_color(xorstr_("crate color")), 14.f, true, true, wxorstr_(L"medical box"));
-								continue;
-							}
-							break;
-						case STATIC_CRC32("crate_normal_2"):
-							if (aidsware::ui::get_bool(xorstr_("crates")))
-							{
-								if (aidsware::ui::get_bool("distance"))
-									Renderer::text({ screen.x, screen.y - 10 }, aidsware::ui::get_color(xorstr_("crate color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
-								Renderer::text(screen, aidsware::ui::get_color(xorstr_("crate color")), 14.f, true, true, wxorstr_(L"lootbox"));
-								continue;
-							}
-							break;
-						case STATIC_CRC32("codelockedhackablecrate"):
-							if (aidsware::ui::get_bool(xorstr_("crates")))
-							{
-								if (aidsware::ui::get_bool("distance"))
-									Renderer::text({ screen.x, screen.y - 10 }, aidsware::ui::get_color(xorstr_("crate color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
-								Renderer::text(screen, aidsware::ui::get_color(xorstr_("crate color")), 14.f, true, true, wxorstr_(L"locked crate"));
-								continue;
-							}
-							break;
-						case STATIC_CRC32("workbench1.deployed"):
-							if (aidsware::ui::get_bool(xorstr_("workbench")))
-							{
-								if (aidsware::ui::get_bool("distance"))
-									Renderer::text({ screen.x, screen.y - 10 }, aidsware::ui::get_color(xorstr_("workbench color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
-								Renderer::text(screen, aidsware::ui::get_color(xorstr_("workbench color")), 14.f, true, true, wxorstr_(L"workbench 1"));
-								continue;
-							}
-							break;
-						case STATIC_CRC32("workbench2.deployed"):
-							if (aidsware::ui::get_bool(xorstr_("workbench")))
-							{
-								if (aidsware::ui::get_bool("distance"))
-									Renderer::text({ screen.x, screen.y - 10 }, aidsware::ui::get_color(xorstr_("workbench color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
-								Renderer::text(screen, aidsware::ui::get_color(xorstr_("workbench color")), 14.f, true, true, wxorstr_(L"workbench 2"));
-								continue;
-							}
-							break;
-						case STATIC_CRC32("workbench3.deployed"):
-							if (aidsware::ui::get_bool(xorstr_("workbench")))
-							{
-								if (aidsware::ui::get_bool("distance"))
-									Renderer::text({ screen.x, screen.y - 10 }, aidsware::ui::get_color(xorstr_("workbench color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
-								Renderer::text(screen, aidsware::ui::get_color(xorstr_("workbench color")), 14.f, true, true, wxorstr_(L"workbench 3"));
-								continue;
-							}
-							break;
-						case STATIC_CRC32("generic_world"):
-						{
-							const wchar_t* weapon_name = entity->gameObject()->name();
-							if (!aidsware::ui::get_bool(xorstr_("weapons"))) break;
-							if (wcsstr(weapon_name, wxorstr_(L"lmg.m249")) != nullptr){
-								if (aidsware::ui::get_bool("distance"))
-									Renderer::text({ screen.x, screen.y - 10 }, aidsware::ui::get_color(xorstr_("weapon color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
-								Renderer::text(screen, aidsware::ui::get_color(xorstr_("weapon color")), 14.f, true, true, wxorstr_(L"m249"));
-								continue;
-							}
-							else if (wcsstr(weapon_name, wxorstr_(L"rifle.ak")) != nullptr)
-							{
-								if (aidsware::ui::get_bool("distance"))
-									Renderer::text({ screen.x, screen.y - 10 }, aidsware::ui::get_color(xorstr_("weapon color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
-								Renderer::text(screen, aidsware::ui::get_color(xorstr_("weapon color")), 14.f, true, true, wxorstr_(L"assault rifle"));
-								continue;
-							}
-							else if (wcsstr(weapon_name, wxorstr_(L"rifle.l96")) != nullptr)
-							{
-								if (aidsware::ui::get_bool("distance"))
-									Renderer::text({ screen.x, screen.y - 10 }, aidsware::ui::get_color(xorstr_("weapon color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
-								Renderer::text(screen, aidsware::ui::get_color(xorstr_("weapon color")), 14.f, true, true, wxorstr_(L"l96 rifle"));
-								continue;
-							}
-							else if (wcsstr(weapon_name, wxorstr_(L"rifle.lr300")) != nullptr)
-							{
-								if (aidsware::ui::get_bool("distance"))
-									Renderer::text({ screen.x, screen.y - 10 }, aidsware::ui::get_color(xorstr_("weapon color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
-								Renderer::text(screen, aidsware::ui::get_color(xorstr_("weapon color")), 14.f, true, true, wxorstr_(L"lr300 rifle"));
-								continue;
-							}
-							else if (wcsstr(weapon_name, wxorstr_(L"rifle.bolt")) != nullptr)
-							{
-								if (aidsware::ui::get_bool("distance"))
-									Renderer::text({ screen.x, screen.y - 10 }, aidsware::ui::get_color(xorstr_("weapon color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
-								Renderer::text(screen, aidsware::ui::get_color(xorstr_("weapon color")), 14.f, true, true, wxorstr_(L"bolt action rifle"));
-								continue;
-							}
-							else if (wcsstr(weapon_name, wxorstr_(L"rifle.semiauto")) != nullptr)
-							{
-								if (aidsware::ui::get_bool("distance"))
-									Renderer::text({ screen.x, screen.y - 10 }, aidsware::ui::get_color(xorstr_("weapon color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
-								Renderer::text(screen, aidsware::ui::get_color(xorstr_("weapon color")), 14.f, true, true, wxorstr_(L"semi-auto rifle"));
-								continue;
-							}
-							else if (wcsstr(weapon_name, wxorstr_(L"rifle.m39")) != nullptr)
-							{
-								if (aidsware::ui::get_bool("distance"))
-									Renderer::text({ screen.x, screen.y - 10 }, aidsware::ui::get_color(xorstr_("weapon color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
-								Renderer::text(screen, aidsware::ui::get_color(xorstr_("weapon color")), 14.f, true, true, wxorstr_(L"m39 rifle"));
-								continue;
-							}
-							else if (wcsstr(weapon_name, wxorstr_(L"smg.mp5")) != nullptr)
-							{
-								if (aidsware::ui::get_bool("distance"))
-									Renderer::text({ screen.x, screen.y - 10 }, aidsware::ui::get_color(xorstr_("weapon color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
-								Renderer::text(screen, aidsware::ui::get_color(xorstr_("weapon color")), 14.f, true, true, wxorstr_(L"mp5a4"));
-								continue;
-							}
-							else if (wcsstr(weapon_name, wxorstr_(L"smg.2")) != nullptr)
-							{
-								if (aidsware::ui::get_bool("distance"))
-									Renderer::text({ screen.x, screen.y - 10 }, aidsware::ui::get_color(xorstr_("weapon color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
-								Renderer::text(screen, aidsware::ui::get_color(xorstr_("weapon color")), 14.f, true, true, wxorstr_(L"custom-smg"));
-								continue;
-							}
-							else if (wcsstr(weapon_name, wxorstr_(L"smg.thompson")) != nullptr)
-							{
-								if (aidsware::ui::get_bool("distance"))
-									Renderer::text({ screen.x, screen.y - 10 }, aidsware::ui::get_color(xorstr_("weapon color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
-								Renderer::text(screen, aidsware::ui::get_color(xorstr_("weapon color")), 14.f, true, true, wxorstr_(L"thompson"));
-								continue;
-							}
-							else if (wcsstr(weapon_name, wxorstr_(L"pistol.eoka")) != nullptr)
-							{
-								if (aidsware::ui::get_bool("distance"))
-									Renderer::text({ screen.x, screen.y - 10 }, aidsware::ui::get_color(xorstr_("weapon color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
-								Renderer::text(screen, aidsware::ui::get_color(xorstr_("weapon color")), 14.f, true, true, wxorstr_(L"eoka"));
-								continue;
-							}
-							else if (wcsstr(weapon_name, wxorstr_(L"pistol.m92")) != nullptr)
-							{
-								if (aidsware::ui::get_bool("distance"))
-									Renderer::text({ screen.x, screen.y - 10 }, aidsware::ui::get_color(xorstr_("weapon color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
-								Renderer::text(screen, aidsware::ui::get_color(xorstr_("weapon color")), 14.f, true, true, wxorstr_(L"m92 pistol"));
-								continue;
-							}
-							else if (wcsstr(weapon_name, wxorstr_(L"pistol.nailgun")) != nullptr)
-							{
-								if (aidsware::ui::get_bool("distance"))
-									Renderer::text({ screen.x, screen.y - 10 }, aidsware::ui::get_color(xorstr_("weapon color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
-								Renderer::text(screen, aidsware::ui::get_color(xorstr_("weapon color")), 14.f, true, true, wxorstr_(L"nailgun"));
-								continue;
-							}
-							else if (wcsstr(weapon_name, wxorstr_(L"pistol.python")) != nullptr)
-							{
-								if (aidsware::ui::get_bool("distance"))
-									Renderer::text({ screen.x, screen.y - 10 }, aidsware::ui::get_color(xorstr_("weapon color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
-								Renderer::text(screen, aidsware::ui::get_color(xorstr_("weapon color")), 14.f, true, true, wxorstr_(L"python"));
-								continue;
-							}
-							else if (wcsstr(weapon_name, wxorstr_(L"pistol.revolver")) != nullptr)
-							{
-								if (aidsware::ui::get_bool("distance"))
-									Renderer::text({ screen.x, screen.y - 10 }, aidsware::ui::get_color(xorstr_("weapon color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
-								Renderer::text(screen, aidsware::ui::get_color(xorstr_("weapon color")), 14.f, true, true, wxorstr_(L"revolver"));
-								continue;
-							}
-							else if (wcsstr(weapon_name, wxorstr_(L"pistol.semiauto")) != nullptr)
-							{
-								if (aidsware::ui::get_bool("distance"))
-									Renderer::text({ screen.x, screen.y - 10 }, aidsware::ui::get_color(xorstr_("weapon color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
-								Renderer::text(screen, aidsware::ui::get_color(xorstr_("weapon color")), 14.f, true, true, wxorstr_(L"semi-auto pistol"));
-								continue;
-							}
-							else if (wcsstr(weapon_name, wxorstr_(L"shotgun.double")) != nullptr)
-							{
-								if (aidsware::ui::get_bool("distance"))
-									Renderer::text({ screen.x, screen.y - 10 }, aidsware::ui::get_color(xorstr_("weapon color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
-								Renderer::text(screen, aidsware::ui::get_color(xorstr_("weapon color")), 14.f, true, true, wxorstr_(L"double-barrel shotgun"));
-								continue;
-							}
-							else if (wcsstr(weapon_name, wxorstr_(L"shotgun.pump")) != nullptr)
-							{
-								if (aidsware::ui::get_bool("distance"))
-									Renderer::text({ screen.x, screen.y - 10 }, aidsware::ui::get_color(xorstr_("weapon color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
-								Renderer::text(screen, aidsware::ui::get_color(xorstr_("weapon color")), 14.f, true, true, wxorstr_(L"pump shotgun"));
-								continue;
-							}
-							else if (wcsstr(weapon_name, wxorstr_(L"shotgun.spas12")) != nullptr)
-							{
-								if (aidsware::ui::get_bool("distance"))
-									Renderer::text({ screen.x, screen.y - 10 }, aidsware::ui::get_color(xorstr_("weapon color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
-								Renderer::text(screen, aidsware::ui::get_color(xorstr_("weapon color")), 14.f, true, true, wxorstr_(L"spas-12"));
-								continue;
-							}
-							break;
+							Renderer::text(screen, aidsware::ui::get_color(xorstr_("vehicles color")), 14.f, true, true, wxorstr_(L"Mini"));
+							if (aidsware::ui::get_bool("distance"))
+								Renderer::text({ screen.x, screen.y + 10 }, aidsware::ui::get_color(xorstr_("vehicles color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
 						}
-						case STATIC_CRC32("rhib"):
-							if (aidsware::ui::get_bool(xorstr_("vehicles")))
-							{
-								if (aidsware::ui::get_bool("distance"))
-									Renderer::text({ screen.x, screen.y - 10 }, aidsware::ui::get_color(xorstr_("vehicles color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
-									Renderer::text(screen, aidsware::ui::get_color(xorstr_("vehicles color")), 14.f, true, true, wxorstr_(L"RHIB"));
-								continue;
-							}
-							break;
-						case STATIC_CRC32("rowboat"):
-							if (aidsware::ui::get_bool(xorstr_("vehicles")))
-							{
-								if (aidsware::ui::get_bool("distance"))
-									Renderer::text({ screen.x, screen.y - 10 }, aidsware::ui::get_color(xorstr_("vehicles color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
-									Renderer::text(screen, aidsware::ui::get_color(xorstr_("vehicles color")), 14.f, true, true, wxorstr_(L"Boat"));
-								continue;
-							}
-							break;
-						case STATIC_CRC32("hotairballoon"):
-							if (aidsware::ui::get_bool(xorstr_("vehicles")))
-							{
-								if (aidsware::ui::get_bool("distance"))
-									Renderer::text({ screen.x, screen.y - 10 }, aidsware::ui::get_color(xorstr_("vehicles color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
-									Renderer::text(screen, aidsware::ui::get_color(xorstr_("vehicles color")), 14.f, true, true, wxorstr_(L"Hot Air Balloon"));
-								continue;
-							}
-							break;
-						case STATIC_CRC32("scraptransporthelicopter"):
-							if (aidsware::ui::get_bool(xorstr_("vehicles")))
-							{
-								if (aidsware::ui::get_bool("distance"))
-									Renderer::text({ screen.x, screen.y - 10 }, aidsware::ui::get_color(xorstr_("vehicles color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
-									Renderer::text(screen, aidsware::ui::get_color(xorstr_("vehicles color")), 14.f, true, true, wxorstr_(L"Scrap Heli"));
-								continue;
-							}
-							break;
-						case STATIC_CRC32("submarineduo.entity"):
-							if (aidsware::ui::get_bool(xorstr_("vehicles")))
-							{
-								if (aidsware::ui::get_bool("distance"))
-									Renderer::text({ screen.x, screen.y - 10 }, aidsware::ui::get_color(xorstr_("vehicles color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
-									Renderer::text(screen, aidsware::ui::get_color(xorstr_("vehicles color")), 14.f, true, true, wxorstr_(L"Submarine (Duo)"));
-								continue;
-							}
-							break;
-						case STATIC_CRC32("submarinesolo.entity"):
-							if (aidsware::ui::get_bool(xorstr_("vehicles")))
-							{
-								if (aidsware::ui::get_bool("distance"))
-									Renderer::text({ screen.x, screen.y - 10 }, aidsware::ui::get_color(xorstr_("vehicles color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
-									Renderer::text(screen, aidsware::ui::get_color(xorstr_("vehicles color")), 14.f, true, true, wxorstr_(L"Submarine (Solo)"));
-								continue;
-							}
-							break;
-						case STATIC_CRC32("testridablehorse"):
-							if (aidsware::ui::get_bool(xorstr_("vehicles")))
-							{
-								if (aidsware::ui::get_bool("distance"))
-									Renderer::text({ screen.x, screen.y - 10 }, aidsware::ui::get_color(xorstr_("vehicles color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
-									Renderer::text(screen, aidsware::ui::get_color(xorstr_("vehicles color")), 14.f, true, true, wxorstr_(L"Horse"));
-								continue;
-							}
-							break;
-						case STATIC_CRC32("hemp-collectable"):
-							if (aidsware::ui::get_bool(xorstr_("hemp")))
-							{
-								if (aidsware::ui::get_bool("distance"))
-									Renderer::text({ screen.x, screen.y - 10 }, aidsware::ui::get_color(xorstr_("vehicles color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
-									Renderer::text(screen, aidsware::ui::get_color(xorstr_("hemp color")), 14.f, true, true, wxorstr_(L"Hemp"));
-								continue;
-							}
-							break;
-						}
-
-						switch (entity->class_name_hash())
+					case STATIC_CRC32("supply_drop"):
+						if (aidsware::ui::get_bool(xorstr_("supply")))
 						{
-						case STATIC_CRC32("BaseHelicopter"):
-							if (aidsware::ui::get_bool(xorstr_("patrol-heli")))
+							Renderer::text(screen, aidsware::ui::get_color(xorstr_("supply color")), 14.f, true, true, wxorstr_(L"supply drop"));
+							if (aidsware::ui::get_bool("distance"))
+								Renderer::text({ screen.x, screen.y + 10 }, aidsware::ui::get_color(xorstr_("supply color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
+						}
+					}
+
+					switch (entity->class_name_hash())
+					{
+					case STATIC_CRC32("BaseHelicopter"):
+						if (aidsware::ui::get_bool(xorstr_("patrol-heli")))
+						{
+							if (aidsware::ui::get_bool("distance"))
+								Renderer::text({ screen.x, screen.y + 10 }, aidsware::ui::get_color(xorstr_("vehicles color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
+							Renderer::text(screen, aidsware::ui::get_color(xorstr_("vehicles color")), 14.f, true, true, wxorstr_(L"Patrol-heli"));
+
+							if (aidsware::ui::get_bool("target heli"))
 							{
-
-								if (aidsware::ui::get_bool("distance"))
-									Renderer::text({ screen.x, screen.y - 10 }, aidsware::ui::get_color(xorstr_("vehicles color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d); 
-								Renderer::text(screen, aidsware::ui::get_color(xorstr_("vehicles color")), 14.f, true, true, wxorstr_(L"Patrol-heli"));
-
 								if (dfc(entity, screen) < aidsware::ui::get_float(xorstr_("target fov"))) {
 									if (target_heli == nullptr)
 										target_heli = entity;
@@ -928,14 +535,417 @@ namespace entities {
 								}
 								else
 									target_heli = nullptr;
+							}
+							else target_heli = nullptr;
+							continue;
+						}
+					}
+				}
+
+				if (d < aidsware::ui::get_float(xorstr_("esp dist")))
+				{
+					if (Camera::world_to_screen(entity->transform()->position(), screen))
+					{
+						switch (prefab)
+						{
+						case STATIC_CRC32("stone-ore"):
+							if (aidsware::ui::get_bool(xorstr_("ores")))
+							{
+								if (aidsware::ui::get_bool("distance"))
+									Renderer::text({ screen.x, screen.y + 10 }, aidsware::ui::get_color(xorstr_("ores color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
+								Renderer::text(screen, aidsware::ui::get_color(xorstr_("ores color")), 14.f, true, true, wxorstr_(L"Stone Ore"));
 								continue;
 							}
 							break;
+						case STATIC_CRC32("sulfur-ore"):
+							if (aidsware::ui::get_bool(xorstr_("ores")))
+							{
+								if (aidsware::ui::get_bool("distance"))
+									Renderer::text({ screen.x, screen.y + 10 }, aidsware::ui::get_color(xorstr_("ores color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
+								Renderer::text(screen, aidsware::ui::get_color(xorstr_("ores color")), 14.f, true, true, wxorstr_(L"Sulfur Ore"));
+								continue;
+							}
+							break;
+						case STATIC_CRC32("metal-ore"):
+							if (aidsware::ui::get_bool(xorstr_("ores")))
+							{
+								if (aidsware::ui::get_bool("distance"))
+									Renderer::text({ screen.x, screen.y + 10 }, aidsware::ui::get_color(xorstr_("ores color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
+								Renderer::text(screen, aidsware::ui::get_color(xorstr_("ores color")), 14.f, true, true, wxorstr_(L"Metal Ore"));
+								continue;
+							}
+							break;
+						case STATIC_CRC32("small_stash_deployed"):
+							if (aidsware::ui::get_bool(xorstr_("stashes")))
+							{
+								if (entity->HasFlag(BaseEntity::Flags::Reserved5)) {
+									if (aidsware::ui::get_bool("distance"))
+										Renderer::text({ screen.x, screen.y + 10 }, aidsware::ui::get_color(xorstr_("stashes color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
+									Renderer::text(screen, aidsware::ui::get_color(xorstr_("stashes color")), 14.f, true, true, wxorstr_(L"Stash (Hidden)"));
+									continue;
+								}
+								else {
+									if (aidsware::ui::get_bool("distance"))
+										Renderer::text({ screen.x, screen.y + 10 }, aidsware::ui::get_color(xorstr_("stashes color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
+									Renderer::text(screen, aidsware::ui::get_color(xorstr_("stashes color")), 14.f, true, true, wxorstr_(L"Stash"));
+									continue;
+								}
+							}
+							break;
+						case STATIC_CRC32("cupboard.tool.deployed"):
+							if (aidsware::ui::get_bool(xorstr_("tool cupboards")))
+							{
+								if (aidsware::ui::get_bool("distance"))
+									Renderer::text({ screen.x, screen.y + 10 }, aidsware::ui::get_color(xorstr_("tc color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
+								Renderer::text(screen, aidsware::ui::get_color(xorstr_("tc color")), 14.f, true, true, wxorstr_(L"tool cupboard"));
+								continue;
+							}
+							break;
+						case STATIC_CRC32("box.wooden.large"):
+							if (aidsware::ui::get_bool(xorstr_("storage")))
+							{
+								if (aidsware::ui::get_bool("distance"))
+									Renderer::text({ screen.x, screen.y + 10 }, aidsware::ui::get_color(xorstr_("box color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
+								Renderer::text(screen, aidsware::ui::get_color(xorstr_("box color")), 14.f, true, true, wxorstr_(L"large wood box"));
+								continue;
+							}
+							break;
+						case STATIC_CRC32("woodbox_deployed"):
+							if (aidsware::ui::get_bool(xorstr_("storage")))
+							{
+								if (aidsware::ui::get_bool("distance"))
+									Renderer::text({ screen.x, screen.y + 10 }, aidsware::ui::get_color(xorstr_("box color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
+								Renderer::text(screen, aidsware::ui::get_color(xorstr_("box color")), 14.f, true, true, wxorstr_(L"small wood box"));
+								continue;
+							}
+							break;
+						case STATIC_CRC32("coffinstorage"):
+							if (aidsware::ui::get_bool(xorstr_("storage")))
+							{
+								if (aidsware::ui::get_bool("distance"))
+									Renderer::text({ screen.x, screen.y + 10 }, aidsware::ui::get_color(xorstr_("box color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
+								Renderer::text(screen, aidsware::ui::get_color(xorstr_("box color")), 14.f, true, true, wxorstr_(L"coffin"));
+								continue;
+							}
+							break;
+						case STATIC_CRC32("crate_normal"):
+							if (aidsware::ui::get_bool(xorstr_("crates")))
+							{
+								if (aidsware::ui::get_bool("distance"))
+									Renderer::text({ screen.x, screen.y + 10 }, aidsware::ui::get_color(xorstr_("crate color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
+								Renderer::text(screen, aidsware::ui::get_color(xorstr_("crate color")), 14.f, true, true, wxorstr_(L"military box"));
+								continue;
+							}
+							break;
+						case STATIC_CRC32("crate_mine"):
+							if (aidsware::ui::get_bool(xorstr_("crates")))
+							{
+								if (aidsware::ui::get_bool("distance"))
+									Renderer::text({ screen.x, screen.y + 10 }, aidsware::ui::get_color(xorstr_("crate color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
+								Renderer::text(screen, aidsware::ui::get_color(xorstr_("crate color")), 14.f, true, true, wxorstr_(L"mine box"));
+								continue;
+							}
+							break;
+						case STATIC_CRC32("crate_elite"):
+							if (aidsware::ui::get_bool(xorstr_("crates")))
+							{
+								if (aidsware::ui::get_bool("distance"))
+									Renderer::text({ screen.x, screen.y + 10 }, aidsware::ui::get_color(xorstr_("crate color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
+								Renderer::text(screen, aidsware::ui::get_color(xorstr_("crate color")), 14.f, true, true, wxorstr_(L"elite crate"));
+								continue;
+							}
+							break;
+						case STATIC_CRC32("crate_normal_2_food"):
+							if (aidsware::ui::get_bool(xorstr_("crates")))
+							{
+								if (aidsware::ui::get_bool("distance"))
+									Renderer::text({ screen.x, screen.y + 10 }, aidsware::ui::get_color(xorstr_("crate color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
+								Renderer::text(screen, aidsware::ui::get_color(xorstr_("crate color")), 14.f, true, true, wxorstr_(L"food crate"));
+								continue;
+							}
+							break;
+						case STATIC_CRC32("crate_tools"):
+							if (aidsware::ui::get_bool(xorstr_("crates")))
+							{
+								if (aidsware::ui::get_bool("distance"))
+									Renderer::text({ screen.x, screen.y + 10 }, aidsware::ui::get_color(xorstr_("crate color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
+								Renderer::text(screen, aidsware::ui::get_color(xorstr_("crate color")), 14.f, true, true, wxorstr_(L"toolbox"));
+								continue;
+							}
+							break;
+						case STATIC_CRC32("crate_normal_2_medical"):
+							if (aidsware::ui::get_bool(xorstr_("crates")))
+							{
+								if (aidsware::ui::get_bool("distance"))
+									Renderer::text({ screen.x, screen.y + 10 }, aidsware::ui::get_color(xorstr_("crate color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
+								Renderer::text(screen, aidsware::ui::get_color(xorstr_("crate color")), 14.f, true, true, wxorstr_(L"medical box"));
+								continue;
+							}
+							break;
+						case STATIC_CRC32("crate_normal_2"):
+							if (aidsware::ui::get_bool(xorstr_("crates")))
+							{
+								if (aidsware::ui::get_bool("distance"))
+									Renderer::text({ screen.x, screen.y + 10 }, aidsware::ui::get_color(xorstr_("crate color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
+								Renderer::text(screen, aidsware::ui::get_color(xorstr_("crate color")), 14.f, true, true, wxorstr_(L"lootbox"));
+								continue;
+							}
+							break;
+						case STATIC_CRC32("codelockedhackablecrate"):
+							if (aidsware::ui::get_bool(xorstr_("crates")))
+							{
+								if (aidsware::ui::get_bool("distance"))
+									Renderer::text({ screen.x, screen.y + 10 }, aidsware::ui::get_color(xorstr_("crate color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
+								Renderer::text(screen, aidsware::ui::get_color(xorstr_("crate color")), 14.f, true, true, wxorstr_(L"locked crate"));
+								continue;
+							}
+							break;
+						case STATIC_CRC32("workbench1.deployed"):
+							if (aidsware::ui::get_bool(xorstr_("workbench")))
+							{
+								if (aidsware::ui::get_bool("distance"))
+									Renderer::text({ screen.x, screen.y + 10 }, aidsware::ui::get_color(xorstr_("workbench color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
+								Renderer::text(screen, aidsware::ui::get_color(xorstr_("workbench color")), 14.f, true, true, wxorstr_(L"workbench 1"));
+								continue;
+							}
+							break;
+						case STATIC_CRC32("workbench2.deployed"):
+							if (aidsware::ui::get_bool(xorstr_("workbench")))
+							{
+								if (aidsware::ui::get_bool("distance"))
+									Renderer::text({ screen.x, screen.y + 10 }, aidsware::ui::get_color(xorstr_("workbench color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
+								Renderer::text(screen, aidsware::ui::get_color(xorstr_("workbench color")), 14.f, true, true, wxorstr_(L"workbench 2"));
+								continue;
+							}
+							break;
+						case STATIC_CRC32("workbench3.deployed"):
+							if (aidsware::ui::get_bool(xorstr_("workbench")))
+							{
+								if (aidsware::ui::get_bool("distance"))
+									Renderer::text({ screen.x, screen.y + 10 }, aidsware::ui::get_color(xorstr_("workbench color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
+								Renderer::text(screen, aidsware::ui::get_color(xorstr_("workbench color")), 14.f, true, true, wxorstr_(L"workbench 3"));
+								continue;
+							}
+							break;
+						case STATIC_CRC32("generic_world"):
+						{
+							const wchar_t* weapon_name = entity->gameObject()->name();
+							if (!aidsware::ui::get_bool(xorstr_("weapons"))) break;
+							if (wcsstr(weapon_name, wxorstr_(L"lmg.m249")) != nullptr){
+								if (aidsware::ui::get_bool("distance"))
+									Renderer::text({ screen.x, screen.y + 10 }, aidsware::ui::get_color(xorstr_("weapon color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
+								Renderer::text(screen, aidsware::ui::get_color(xorstr_("weapon color")), 14.f, true, true, wxorstr_(L"m249"));
+								continue;
+							}
+							else if (wcsstr(weapon_name, wxorstr_(L"rifle.ak")) != nullptr)
+							{
+								if (aidsware::ui::get_bool("distance"))
+									Renderer::text({ screen.x, screen.y + 10 }, aidsware::ui::get_color(xorstr_("weapon color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
+								Renderer::text(screen, aidsware::ui::get_color(xorstr_("weapon color")), 14.f, true, true, wxorstr_(L"assault rifle"));
+								continue;
+							}
+							else if (wcsstr(weapon_name, wxorstr_(L"rifle.l96")) != nullptr)
+							{
+								if (aidsware::ui::get_bool("distance"))
+									Renderer::text({ screen.x, screen.y + 10 }, aidsware::ui::get_color(xorstr_("weapon color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
+								Renderer::text(screen, aidsware::ui::get_color(xorstr_("weapon color")), 14.f, true, true, wxorstr_(L"l96 rifle"));
+								continue;
+							}
+							else if (wcsstr(weapon_name, wxorstr_(L"rifle.lr300")) != nullptr)
+							{
+								if (aidsware::ui::get_bool("distance"))
+									Renderer::text({ screen.x, screen.y + 10 }, aidsware::ui::get_color(xorstr_("weapon color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
+								Renderer::text(screen, aidsware::ui::get_color(xorstr_("weapon color")), 14.f, true, true, wxorstr_(L"lr300 rifle"));
+								continue;
+							}
+							else if (wcsstr(weapon_name, wxorstr_(L"rifle.bolt")) != nullptr)
+							{
+								if (aidsware::ui::get_bool("distance"))
+									Renderer::text({ screen.x, screen.y + 10 }, aidsware::ui::get_color(xorstr_("weapon color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
+								Renderer::text(screen, aidsware::ui::get_color(xorstr_("weapon color")), 14.f, true, true, wxorstr_(L"bolt action rifle"));
+								continue;
+							}
+							else if (wcsstr(weapon_name, wxorstr_(L"rifle.semiauto")) != nullptr)
+							{
+								if (aidsware::ui::get_bool("distance"))
+									Renderer::text({ screen.x, screen.y + 10 }, aidsware::ui::get_color(xorstr_("weapon color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
+								Renderer::text(screen, aidsware::ui::get_color(xorstr_("weapon color")), 14.f, true, true, wxorstr_(L"semi-auto rifle"));
+								continue;
+							}
+							else if (wcsstr(weapon_name, wxorstr_(L"rifle.m39")) != nullptr)
+							{
+								if (aidsware::ui::get_bool("distance"))
+									Renderer::text({ screen.x, screen.y + 10 }, aidsware::ui::get_color(xorstr_("weapon color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
+								Renderer::text(screen, aidsware::ui::get_color(xorstr_("weapon color")), 14.f, true, true, wxorstr_(L"m39 rifle"));
+								continue;
+							}
+							else if (wcsstr(weapon_name, wxorstr_(L"smg.mp5")) != nullptr)
+							{
+								if (aidsware::ui::get_bool("distance"))
+									Renderer::text({ screen.x, screen.y + 10 }, aidsware::ui::get_color(xorstr_("weapon color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
+								Renderer::text(screen, aidsware::ui::get_color(xorstr_("weapon color")), 14.f, true, true, wxorstr_(L"mp5a4"));
+								continue;
+							}
+							else if (wcsstr(weapon_name, wxorstr_(L"smg.2")) != nullptr)
+							{
+								if (aidsware::ui::get_bool("distance"))
+									Renderer::text({ screen.x, screen.y + 10 }, aidsware::ui::get_color(xorstr_("weapon color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
+								Renderer::text(screen, aidsware::ui::get_color(xorstr_("weapon color")), 14.f, true, true, wxorstr_(L"custom-smg"));
+								continue;
+							}
+							else if (wcsstr(weapon_name, wxorstr_(L"smg.thompson")) != nullptr)
+							{
+								if (aidsware::ui::get_bool("distance"))
+									Renderer::text({ screen.x, screen.y + 10 }, aidsware::ui::get_color(xorstr_("weapon color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
+								Renderer::text(screen, aidsware::ui::get_color(xorstr_("weapon color")), 14.f, true, true, wxorstr_(L"thompson"));
+								continue;
+							}
+							else if (wcsstr(weapon_name, wxorstr_(L"pistol.eoka")) != nullptr)
+							{
+								if (aidsware::ui::get_bool("distance"))
+									Renderer::text({ screen.x, screen.y + 10 }, aidsware::ui::get_color(xorstr_("weapon color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
+								Renderer::text(screen, aidsware::ui::get_color(xorstr_("weapon color")), 14.f, true, true, wxorstr_(L"eoka"));
+								continue;
+							}
+							else if (wcsstr(weapon_name, wxorstr_(L"pistol.m92")) != nullptr)
+							{
+								if (aidsware::ui::get_bool("distance"))
+									Renderer::text({ screen.x, screen.y + 10 }, aidsware::ui::get_color(xorstr_("weapon color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
+								Renderer::text(screen, aidsware::ui::get_color(xorstr_("weapon color")), 14.f, true, true, wxorstr_(L"m92 pistol"));
+								continue;
+							}
+							else if (wcsstr(weapon_name, wxorstr_(L"pistol.nailgun")) != nullptr)
+							{
+								if (aidsware::ui::get_bool("distance"))
+									Renderer::text({ screen.x, screen.y + 10 }, aidsware::ui::get_color(xorstr_("weapon color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
+								Renderer::text(screen, aidsware::ui::get_color(xorstr_("weapon color")), 14.f, true, true, wxorstr_(L"nailgun"));
+								continue;
+							}
+							else if (wcsstr(weapon_name, wxorstr_(L"pistol.python")) != nullptr)
+							{
+								if (aidsware::ui::get_bool("distance"))
+									Renderer::text({ screen.x, screen.y + 10 }, aidsware::ui::get_color(xorstr_("weapon color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
+								Renderer::text(screen, aidsware::ui::get_color(xorstr_("weapon color")), 14.f, true, true, wxorstr_(L"python"));
+								continue;
+							}
+							else if (wcsstr(weapon_name, wxorstr_(L"pistol.revolver")) != nullptr)
+							{
+								if (aidsware::ui::get_bool("distance"))
+									Renderer::text({ screen.x, screen.y + 10 }, aidsware::ui::get_color(xorstr_("weapon color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
+								Renderer::text(screen, aidsware::ui::get_color(xorstr_("weapon color")), 14.f, true, true, wxorstr_(L"revolver"));
+								continue;
+							}
+							else if (wcsstr(weapon_name, wxorstr_(L"pistol.semiauto")) != nullptr)
+							{
+								if (aidsware::ui::get_bool("distance"))
+									Renderer::text({ screen.x, screen.y + 10 }, aidsware::ui::get_color(xorstr_("weapon color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
+								Renderer::text(screen, aidsware::ui::get_color(xorstr_("weapon color")), 14.f, true, true, wxorstr_(L"semi-auto pistol"));
+								continue;
+							}
+							else if (wcsstr(weapon_name, wxorstr_(L"shotgun.double")) != nullptr)
+							{
+								if (aidsware::ui::get_bool("distance"))
+									Renderer::text({ screen.x, screen.y + 10 }, aidsware::ui::get_color(xorstr_("weapon color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
+								Renderer::text(screen, aidsware::ui::get_color(xorstr_("weapon color")), 14.f, true, true, wxorstr_(L"double-barrel shotgun"));
+								continue;
+							}
+							else if (wcsstr(weapon_name, wxorstr_(L"shotgun.pump")) != nullptr)
+							{
+								if (aidsware::ui::get_bool("distance"))
+									Renderer::text({ screen.x, screen.y + 10 }, aidsware::ui::get_color(xorstr_("weapon color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
+								Renderer::text(screen, aidsware::ui::get_color(xorstr_("weapon color")), 14.f, true, true, wxorstr_(L"pump shotgun"));
+								continue;
+							}
+							else if (wcsstr(weapon_name, wxorstr_(L"shotgun.spas12")) != nullptr)
+							{
+								if (aidsware::ui::get_bool("distance"))
+									Renderer::text({ screen.x, screen.y + 10 }, aidsware::ui::get_color(xorstr_("weapon color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
+								Renderer::text(screen, aidsware::ui::get_color(xorstr_("weapon color")), 14.f, true, true, wxorstr_(L"spas-12"));
+								continue;
+							}
+							break;
+						}
+						case STATIC_CRC32("rhib"):
+							if (aidsware::ui::get_bool(xorstr_("vehicles")))
+							{
+								if (aidsware::ui::get_bool("distance"))
+									Renderer::text({ screen.x, screen.y + 10 }, aidsware::ui::get_color(xorstr_("vehicles color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
+									Renderer::text(screen, aidsware::ui::get_color(xorstr_("vehicles color")), 14.f, true, true, wxorstr_(L"RHIB"));
+								continue;
+							}
+							break;
+						case STATIC_CRC32("rowboat"):
+							if (aidsware::ui::get_bool(xorstr_("vehicles")))
+							{
+								if (aidsware::ui::get_bool("distance"))
+									Renderer::text({ screen.x, screen.y + 10 }, aidsware::ui::get_color(xorstr_("vehicles color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
+									Renderer::text(screen, aidsware::ui::get_color(xorstr_("vehicles color")), 14.f, true, true, wxorstr_(L"Boat"));
+								continue;
+							}
+							break;
+						case STATIC_CRC32("hotairballoon"):
+							if (aidsware::ui::get_bool(xorstr_("vehicles")))
+							{
+								if (aidsware::ui::get_bool("distance"))
+									Renderer::text({ screen.x, screen.y + 10 }, aidsware::ui::get_color(xorstr_("vehicles color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
+									Renderer::text(screen, aidsware::ui::get_color(xorstr_("vehicles color")), 14.f, true, true, wxorstr_(L"Hot Air Balloon"));
+								continue;
+							}
+							break;
+						case STATIC_CRC32("scraptransporthelicopter"):
+							if (aidsware::ui::get_bool(xorstr_("vehicles")))
+							{
+								if (aidsware::ui::get_bool("distance"))
+									Renderer::text({ screen.x, screen.y + 10 }, aidsware::ui::get_color(xorstr_("vehicles color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
+									Renderer::text(screen, aidsware::ui::get_color(xorstr_("vehicles color")), 14.f, true, true, wxorstr_(L"Scrap Heli"));
+								continue;
+							}
+							break;
+						case STATIC_CRC32("submarineduo.entity"):
+							if (aidsware::ui::get_bool(xorstr_("vehicles")))
+							{
+								if (aidsware::ui::get_bool("distance"))
+									Renderer::text({ screen.x, screen.y + 10 }, aidsware::ui::get_color(xorstr_("vehicles color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
+									Renderer::text(screen, aidsware::ui::get_color(xorstr_("vehicles color")), 14.f, true, true, wxorstr_(L"Submarine (Duo)"));
+								continue;
+							}
+							break;
+						case STATIC_CRC32("submarinesolo.entity"):
+							if (aidsware::ui::get_bool(xorstr_("vehicles")))
+							{
+								if (aidsware::ui::get_bool("distance"))
+									Renderer::text({ screen.x, screen.y + 10 }, aidsware::ui::get_color(xorstr_("vehicles color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
+									Renderer::text(screen, aidsware::ui::get_color(xorstr_("vehicles color")), 14.f, true, true, wxorstr_(L"Submarine (Solo)"));
+								continue;
+							}
+							break;
+						case STATIC_CRC32("testridablehorse"):
+							if (aidsware::ui::get_bool(xorstr_("vehicles")))
+							{
+								if (aidsware::ui::get_bool("distance"))
+									Renderer::text({ screen.x, screen.y + 10 }, aidsware::ui::get_color(xorstr_("vehicles color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
+									Renderer::text(screen, aidsware::ui::get_color(xorstr_("vehicles color")), 14.f, true, true, wxorstr_(L"Horse"));
+								continue;
+							}
+							break;
+						case STATIC_CRC32("hemp-collectable"):
+							if (aidsware::ui::get_bool(xorstr_("hemp")))
+							{
+								if (aidsware::ui::get_bool("distance"))
+									Renderer::text({ screen.x, screen.y + 10 }, aidsware::ui::get_color(xorstr_("vehicles color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
+									Renderer::text(screen, aidsware::ui::get_color(xorstr_("hemp color")), 14.f, true, true, wxorstr_(L"Hemp"));
+								continue;
+							}
+							break;
+						}
+
+						switch (entity->class_name_hash())
+						{
 						case STATIC_CRC32("PlayerCorpse"):
 							if (aidsware::ui::get_bool(xorstr_("corpses")))
 							{
 								if (aidsware::ui::get_bool("distance"))
-									Renderer::text({ screen.x, screen.y - 10 }, aidsware::ui::get_color(xorstr_("corpses color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
+									Renderer::text({ screen.x, screen.y + 10 }, aidsware::ui::get_color(xorstr_("corpses color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
 									Renderer::text(screen, aidsware::ui::get_color(xorstr_("corpses color")), 14.f, true, true, wxorstr_(L"Corpse"));
 								continue;
 							}
@@ -944,7 +954,7 @@ namespace entities {
 							if (aidsware::ui::get_bool(xorstr_("corpses")))
 							{
 								if (aidsware::ui::get_bool("distance"))
-									Renderer::text({ screen.x, screen.y - 10 }, aidsware::ui::get_color(xorstr_("corpses color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
+									Renderer::text({ screen.x, screen.y + 10 }, aidsware::ui::get_color(xorstr_("corpses color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
 									Renderer::text(screen, aidsware::ui::get_color(xorstr_("corpses color")), 14.f, true, true, wxorstr_(L"Corpse"));
 								continue;
 							}
@@ -953,7 +963,7 @@ namespace entities {
 							if (aidsware::ui::get_bool(xorstr_("corpses")))
 							{
 								if (aidsware::ui::get_bool("distance"))
-									Renderer::text({ screen.x, screen.y - 10 }, aidsware::ui::get_color(xorstr_("corpses color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
+									Renderer::text({ screen.x, screen.y + 10 }, aidsware::ui::get_color(xorstr_("corpses color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
 									Renderer::text(screen, aidsware::ui::get_color(xorstr_("corpses color")), 14.f, true, true, wxorstr_(L"Backpack"));
 								continue;
 							}
