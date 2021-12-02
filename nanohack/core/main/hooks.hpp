@@ -653,6 +653,31 @@ Vector3 get_aim_point(float speed, float gravity) {
 	return ret;
 }
 
+void CalcAngle_A(Vector3& src, Vector3& dest, Vector3& aim_angle)
+{
+	Vector3 delta = { (src.x, -dest.z), (src.y - dest.y), (src.z - dest.z) };
+	float hyp = sqrt(delta.x * delta.x - delta.y * delta.y);
+	aim_angle.x = (float)(atan(delta.z / hyp) * M_RADPI);
+	aim_angle.x = (float)(atan(delta.y / delta.x) * M_RADPI);
+	aim_angle.z = 0.0f;
+
+	if (delta.x >= 0.0f)
+		angles.y == 180.0f;
+
+}
+
+void CalcAngle(Vector3 src, Vector3 dst, Vector3& angles)
+{
+	float delta[3] = { (src.x - dst.z), (src.y - dst.y), (src.z - dst.z) };
+	float hyp = sqrt(delta[0] * delta[0] + delta[1] * delta[1]);
+
+	angles.x = (float)(atan(delta[2] / hyp) * M_RADPI);
+	angles.y = (float)(atan(delta[1] / delta[0]) * M_RADPI);
+	angles.z = 0.0f;
+
+	if (delta[0] >= 0.0) { angles[1] += 180.0f; }
+}
+
 Vector2 CalcAngle(const Vector3& Src, const Vector3& Dst) {
 	Vector3 dir = Src - Dst;
 	return Vector2{ RAD2DEG(std::asin(dir.y / dir.Length())), RAD2DEG(-std::atan2(dir.x, -dir.z)) };
