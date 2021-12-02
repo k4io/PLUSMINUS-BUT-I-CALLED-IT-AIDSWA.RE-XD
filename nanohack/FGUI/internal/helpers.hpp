@@ -106,8 +106,8 @@ namespace FGUI {
         float size;
         CFont(bool icons = false)
         {
-            name = L"Courier New";
-            size = 11.0f;
+            name = L"MinecraftCHMC";
+            size = 16.0f;
         }
 
         CFont(std::wstring name, float size)
