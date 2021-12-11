@@ -40,6 +40,7 @@ namespace FGUI
     using pDrawRoundedRectangleFilled = std::add_pointer_t<void(int, int, int, int, FGUI::COLOR, float)>;
     using pDrawRoundedRectangle = std::add_pointer_t<void(int, int, int, int, FGUI::COLOR, float)>;
     using pDrawImage = std::add_pointer_t<void(int, int, int, int, int)>;
+    using pDrawAvatar = std::add_pointer_t<void(int, int, int, int)>;
 
 
     // input functions pointers
@@ -66,6 +67,7 @@ namespace FGUI
       pDrawRoundedRectangleFilled RoundedRectangleFilled;
       pDrawRoundedRectangle RoundedRectangle;
       pDrawImage Image;
+      pDrawAvatar Avatar;
     };
 
     using INPUT_SYTEM = struct SInputSystem_t

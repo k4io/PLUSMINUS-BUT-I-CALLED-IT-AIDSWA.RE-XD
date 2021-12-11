@@ -2520,15 +2520,6 @@ float tickDeltaTime = 0.f;
 
 TickInterpolator tickInterpolator;
 
-namespace ConVar {
-	class Graphics {
-	public:
-		static float& _fov() {
-			static auto clazz = CLASS("Assembly-CSharp::ConVar::Graphics");
-			return *reinterpret_cast<float*>(std::uint64_t(clazz->static_fields) + 0x18);
-		}
-	};
-}
 /*
 these dumbass niggas all know its +- source with better features but people would rather have that than an exit scammer ;/
 */
@@ -2919,16 +2910,113 @@ public:
 		return ret;
 	}
 };
+//Facepunch.Steamworks
+class SteamId
+{
+
+};
+class SteamClient {
+public:
+	static SteamId* steamid() {
+		static auto clazz = CLASS("Facepunch.Steamworks::SteamClient::SteamId");
+		return *reinterpret_cast<SteamId**>(std::uint64_t(clazz->static_fields));
+	}
+	static String* Name() {
+		static auto clazz = CLASS("Facepunch.Steamworks::SteamClient::Name");
+		return *reinterpret_cast<String**>(std::uint64_t(clazz->static_fields));
+	}
+};
 namespace Network {
+	enum class MessageType {
+		auth = 2,
+		requestuserinformation = 17,
+		giveuserinformation = 18
+	};
+	
+	class BaseNetwork {
+
+	};
+	class NetWrite : public BaseNetwork {
+	public:
+		static bool Start() {
+			static auto off = METHOD("Facepunch.Network::Network::NetWrite::Start(): Boolean");
+			return reinterpret_cast<bool (*)()>(off)();
+		}
+		/*Array<String*>* GetAllAssetNames( ) {
+		if (!this) return {};
+		static auto off = METHOD("UnityEngine.AssetBundleModule::UnityEngine::AssetBundle::GetAllAssetNames(): String[]");
+		return reinterpret_cast<Array<String*>*(*)(AssetBundle*)>(off)(this);
+	} 
+	
+		static auto off = METHOD("Assembly-CSharp::StringPool::Get(UInt32): String");
+	*/
+		void PacketID(char val) {
+			if (!this) return;
+			static auto off = METHOD("Facepunch.Network::Network::NetWrite::PacketID(Message.Type): Void");
+			return reinterpret_cast<void(*)(NetWrite*, char)>(off)(this, val);
+		}
+
+		void UInt8(char val) {
+			if (!this) return;
+			static auto off = METHOD("Facepunch.Network::Network::NetWrite::UInt8(UInt8): Void");
+			return reinterpret_cast<void(*)(NetWrite*, char)>(off)(this, val);
+		}
+
+		void UInt16(uint16_t val) {
+			if (!this) return;
+			static auto off = METHOD("Facepunch.Network::Network::NetWrite::UInt16(UInt16): Void");
+			return reinterpret_cast<void(*)(NetWrite*, uint16_t)>(off)(this, val);
+		}
+
+		void UInt32(uint32_t val) {
+			if (!this) return;
+			static auto off = METHOD("Facepunch.Network::Network::NetWrite::UInt32(UInt32): Void");
+			return reinterpret_cast<void(*)(NetWrite*, uint32_t)>(off)(this, val);
+		}
+
+		void UInt64A(uint64_t val) {
+			if (!this) return;
+			static auto off = METHOD("Facepunch.Network::Network::NetWrite::UInt64(UInt64): Void");
+			return reinterpret_cast<void(*)(NetWrite*, uint64_t)>(off)(this, val);
+		}
+
+		void _String(String* val) {
+			if (!this) return;
+			static auto off = METHOD("Facepunch.Network::Network::NetWrite::String(String): Void");
+			return reinterpret_cast<void (*)(NetWrite*, System::String*)>(off)(this, val);
+		}
+
+		static inline void(*UInt64_)(NetWrite*, uint64_t) = nullptr;
+		void UInt64(uint64_t val) {
+			return UInt64_(this, val);
+		}
+	};
+	class Message {
+	public:
+		FIELD("Facepunch.Network::Network::Message::write", write, NetWrite*);
+	};
+	class AuthTicket {
+
+	};
 	class Client {
 	public:
+		AuthTicket* GetAuthTicket( ) {
+			if (!this) return nullptr;
+			static auto off = METHOD("Facepunch.Network::Network::Client::GetAuthTicket(): Auth.Ticket");
+			return reinterpret_cast<AuthTicket * (__fastcall*)(Client*)>(off)(this);
+		}
 		bool IsConnected( ) {
 			if (!this) return false;
 			static auto off = METHOD("Facepunch.Network::Network::Client::IsConnected(): Boolean");
 			return reinterpret_cast<bool(__fastcall*)(Client*)>(off)(this);
 		}
-		String* ConnectedAddress( ) {
+		String* ConnectedAddress() {
 			return *reinterpret_cast<String**>(this + 0x40);
+		}
+
+		static inline void(*OnRequestUserInformation_)(Client*, Message*) = nullptr;
+		void OnRequestUserInformation(Message* packet) {
+			return OnRequestUserInformation_(this, packet);
 		}
 	};
 	class Net {
@@ -2975,9 +3063,9 @@ void initialize_cheat( ) {
 	ASSIGN_HOOK("Assembly-CSharp::PlayerEyes::DoFirstPersonCamera(Camera): Void", PlayerEyes::DoFirstPersonCamera_);
 	ASSIGN_HOOK("Assembly-CSharp::BasePlayer::ClientInput(InputState): Void", BasePlayer::ClientInput_);
 	ASSIGN_HOOK("Assembly-CSharp::Projectile::DoMovement(Single): Void", Projectile::DoMovement_);
-	ASSIGN_HOOK("Assembly-CSharp::ViewmodelSway::Apply(CachedTransform<BaseViewModel>&): Void", ViewmodelSway::Apply_);
-	ASSIGN_HOOK("Assembly-CSharp::ViewmodelBob::Apply(CachedTransform<BaseViewModel>&,Single): Void", ViewmodelBob::Apply_);
-	ASSIGN_HOOK("Assembly-CSharp::ViewmodelLower::Apply(CachedTransform<BaseViewModel>&): Void", ViewmodelLower::Apply_);
+	//ASSIGN_HOOK("Assembly-CSharp::ViewmodelSway::Apply(CachedTransform<BaseViewModel>&): Void", ViewmodelSway::Apply_);
+	//ASSIGN_HOOK("Assembly-CSharp::ViewmodelBob::Apply(CachedTransform<BaseViewModel>&,Single): Void", ViewmodelBob::Apply_);
+	//ASSIGN_HOOK("Assembly-CSharp::ViewmodelLower::Apply(CachedTransform<BaseViewModel>&): Void", ViewmodelLower::Apply_);
 	ASSIGN_HOOK("Assembly-CSharp::Projectile::DoHit(HitTest,Vector3,Vector3): Boolean", Projectile::DoHit_);
 	ASSIGN_HOOK("Assembly-CSharp::Projectile::SetEffectScale(Single): Void", Projectile::SetEffectScale_);
 	ASSIGN_HOOK("Facepunch.Console::ConsoleSystem::Run(Option,String,Object[]): String", ConsoleSystem::Run_);
@@ -3008,6 +3096,8 @@ void initialize_cheat( ) {
 
 	ASSIGN_HOOK("Assembly-CSharp::BaseCombatEntity::DoHitNotify(HitInfo): Void", BaseCombatEntity::DoHitNotify_);
 
+	ASSIGN_HOOK("Assembly-CSharp::Client::OnRequestUserInformation(Message): Void", Network::Client::OnRequestUserInformation_	);
+	ASSIGN_HOOK("Facepunch.Network::Network::NetWrite::UInt64(UInt64): Void", Network::NetWrite::UInt64_);
 	//il2cpp::hook(DDraw::OnGui_, xorstr_("OnGUI"), xorstr_("DDraw"), xorstr_("UnityEngine"));
 
 	settings::il_init_methods = find(xorstr_("GameAssembly.dll"), "48 83 EC 48 48 8B 05 ? ? ? ? 48 63 90 ? ? ? ?");

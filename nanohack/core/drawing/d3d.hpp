@@ -30,10 +30,11 @@ namespace d3d {
 			settings::open = !settings::open;
 		if (!settings::panic) {
 			if (Renderer::new_frame(swapChain)) {
+
 				float width = 210; //pos actually not width
 				for (size_t i = 0; i < settings::auth::username.size(); i++)
 					width += 6;
-				
+
 				Renderer::rounded_rectangle_filled(55, 15, width + 40, 20, Color3(43, 35, 61), 3.f);
 				Renderer::rounded_box(54, 14, width + 39, 19, Color3(1, 26, 51), 3.f);
 

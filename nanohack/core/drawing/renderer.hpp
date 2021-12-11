@@ -138,6 +138,9 @@ namespace Renderer {
 		logo_dir = data_dir + wxorstr_(L"\\images\\menu.png");
 		if (!SUCCEEDED(LoadBitmapFromFile(logo_dir.c_str(), &bitmaps[5])))
 			return false;
+		logo_dir = data_dir + wxorstr_(L"\\images\\avatar.png");
+		if (!SUCCEEDED(LoadBitmapFromFile(logo_dir.c_str(), &bitmaps[6])))
+			return false;
 
 		return true;
 	}
@@ -165,9 +168,36 @@ namespace Renderer {
 		m_pCanvas->DrawBitmap(image, D2D1::RectF(x, y, x + w, y + h), 1.0f, D2D1_BITMAP_INTERPOLATION_MODE_LINEAR, D2D1::RectF(0, 0, size.width, size.height));
 	}
 	*/
+	void draw_avatar(float x, float y, float w, float h)
+	{
+		ID2D1Layer* pLayer = NULL;
+		HRESULT hr = m_pCanvas->CreateLayer(NULL, &pLayer);
+		if (SUCCEEDED(hr))
+		{
+			//m_pCanvas->SetTransform(D2D1::Matrix3x2F::Translation(350, 50));
+
+			ID2D1EllipseGeometry* geo;
+			D2D1_ELLIPSE base{ { x, y }, w, h };
+			m_pInterface->CreateEllipseGeometry(&base, &geo);
+
+			// Push the layer with the geometric mask.
+
+			m_pCanvas->PushLayer(
+				D2D1::LayerParameters(D2D1::InfiniteRect(), geo),
+				pLayer
+			);
+
+			D2D1_RECT_F sz { x - w, y - h, x + w, y + h};
+			m_pCanvas->DrawBitmap(bitmaps[6], &sz);
+			m_pCanvas->DrawEllipse({ { x, y }, w, h }, m_pSolidBrush);
+			m_pCanvas->PopLayer();
+		}
+	}
+
 	void draw_image(float x, float y, float w, float h, int file)
 	{
 		D2D1_SIZE_F size = bitmaps[file]->GetSize();
+
 		m_pCanvas->DrawBitmap(bitmaps[file], D2D1::RectF(x, y, x + w, y + h), 1.0f, D2D1_BITMAP_INTERPOLATION_MODE_LINEAR, D2D1::RectF(0, 0, size.width, size.height));
 	}
 	

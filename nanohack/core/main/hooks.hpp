@@ -1,6 +1,8 @@
 #include <intrin.h>
 #include <vector>
 
+#define ID3_VAL 76561197960265728
+
 #define CALLED_BY(func,off) (reinterpret_cast<std::uint64_t>(_ReturnAddress()) > func && reinterpret_cast<std::uint64_t>(_ReturnAddress()) < func + off)
 
 void ClientUpdate_hk(BasePlayer* plly) {
@@ -138,7 +140,7 @@ double CalcBulletDrop(double height, double DepthPlayerTarget, float velocity, f
 #define maxSimulateSeconds 5
 #define stepRate 0.01666666666
 
-void APrediction(Vector3 local, Vector3& target, float bulletspeed, float gravity, float drag) {
+void APrediction(Vector3 local, Vector3& target, float bulletspeed, float gravity, float drag, float& te) {
 	float Dist = local.distance(target);
 	Vector3 targetvel = target_ply->playerModel()->newVelocity();
 
@@ -162,13 +164,6 @@ void APrediction(Vector3 local, Vector3& target, float bulletspeed, float gravit
 	if (itemModProjectile == nullptr)
 		return;
 
-	float bullet_speed = (itemModProjectile->GetRandomVelocity() * (aidsware::ui::get_bool(xorstr_("fast bullets")) ? 1.48f : 1.f)) * base_projectile->projectileVelocityScale();
-
-	if (base_projectile->class_name_hash() == STATIC_CRC32("CompoundBowWeapon"))
-		bullet_speed = (itemModProjectile->GetRandomVelocity() * (aidsware::ui::get_bool(xorstr_("fast bullets")) ? 1.48f : 1.f)) * reinterpret_cast<CompoundBowWeapon*>(base_projectile)->GetProjectileVelocityScale();
-
-	if (bullet_speed == 0.f)
-		return;
 	Projectile* projectile = itemModProjectile->projectileObject()->Get()->GetComponent<Projectile>(Type::Projectile());
 
 	if (projectile == nullptr)
@@ -210,17 +205,21 @@ void APrediction(Vector3 local, Vector3& target, float bulletspeed, float gravit
 
 	target.y += m_flYTravelled;
 	target += velocity * m_flBulletTime;
+	te = m_flBulletTime;
 }
 
 Vector3 prev_angle = Vector3::Zero();
+float f_travel_time = 0.0f;
 void serverrpc_projectileshoot_hk(int64_t rcx, int64_t rdx, int64_t r9, int64_t ProjectileShoot, int64_t arg5)
 {
 	Vector3 v = LocalPlayer::Entity()->input()->recoilAngles();
 
 	Vector3 r = v - prev_angle;
-
-	printf("{ %ff, %ff },\n", r.x, r.y);
+	//printf("{ %ff, %ff },\n", r.x, r.y);
 	prev_angle = v;
+	Vector3 vp{};
+	Vector3 tp{};
+	f_travel_time = 0.0f;
 	while (1)
 	{
 		if (!ProjectileShoot)
@@ -237,7 +236,7 @@ void serverrpc_projectileshoot_hk(int64_t rcx, int64_t rdx, int64_t r9, int64_t 
 		if (!baseprojectile) break;
 		auto wep_class_name = baseprojectile->class_name(); 
 
-		if (*(int*)(wep_class_name + 4) == 'eleM' || *(int*)(wep_class_name) == 'ddaP')
+		if (( * (int*)(wep_class_name + 4) == 'eleM' || *(int*)(wep_class_name) == 'ddaP') && (*(int*)(wep_class_name + 4) != 'aepS' || *(int*)(wep_class_name) != 'notS'))
 			break;
 
 		/*
@@ -263,6 +262,8 @@ void serverrpc_projectileshoot_hk(int64_t rcx, int64_t rdx, int64_t r9, int64_t 
 		Vector3 aimbot_velocity, aim_angle, rpc_position, target;
 
 		auto info = safe_read(baseprojectile + 0x20, DWORD64);
+
+
 		auto stats = get_stats(safe_read(info + 0x18, int), baseprojectile);
 
 		auto mpv = target_ply->find_mpv_bone();
@@ -278,7 +279,8 @@ void serverrpc_projectileshoot_hk(int64_t rcx, int64_t rdx, int64_t r9, int64_t 
 
 		Vector3 bonepos = target;
 		Vector3 vel = target_ply->playerModel()->newVelocity();
-
+		
+		auto ammo_id = LocalPlayer::Entity()->GetHeldEntity<BaseProjectile>()->primaryMagazine()->ammoType()->itemid();
 
 		for (size_t i = 0; i < sz; i++)
 		{
@@ -294,6 +296,8 @@ void serverrpc_projectileshoot_hk(int64_t rcx, int64_t rdx, int64_t r9, int64_t 
 			}
 
 			rpc_position = *reinterpret_cast<Vector3*>(projectile + 0x18); //
+			vp = rpc_position;
+			tp = bonepos;
 			auto original_vel = *reinterpret_cast<Vector3*>(projectile + 0x24); //
 			//auto itemmod = *reinterpret_cast<uintptr_t*>(projectile + 0xE8); //
 			//auto itemmodvel = *reinterpret_cast<float*>(itemmod + 0x34); //
@@ -305,7 +309,13 @@ void serverrpc_projectileshoot_hk(int64_t rcx, int64_t rdx, int64_t r9, int64_t 
 
 			if (target_ply/* && !target.teammate*/) { //Vector3 local, Vector3& target, float bulletspeed, float gravity, float drag
 				//APrediction(v, bonepos, vel, original_vel.Length(), stats.gravity_modifier, stats.drag, itemmodvel, scale);
-				APrediction(v, bonepos, original_vel.Length(), stats.gravity_modifier, stats.drag);
+
+				if (ammo_id == shotgun || ammo_id == shotgun_slug || ammo_id == shotgun_fire || ammo_id == shotgun_handmade)
+					bonepos = aimutils::get_prediction();// - LocalPlayer::Entity()->eyes()->position();
+				else
+					APrediction(v, bonepos, original_vel.Length(), stats.gravity_modifier, stats.drag, f_travel_time);
+
+
 				aim_angle = /*get_aim_angle(rpc_position, target.pos, target.velocity, false, stats)*/bonepos - rpc_position;
 
 				aimbot_velocity = (aim_angle).normalized() * original_vel.Length();
@@ -442,6 +452,25 @@ Vector3 BodyLeanOffset_hk(PlayerEyes* a1) {
 	}
 
 	return a1->BodyLeanOffset( );
+}
+
+namespace ConVar {
+	class Graphics {
+	public:
+		static float& _fov() {
+			static auto clazz = CLASS("Assembly-CSharp::ConVar::Graphics");
+			return *reinterpret_cast<float*>(std::uint64_t(clazz->static_fields) + 0x18);
+		}
+	};
+	/*
+	class Client {
+	public:
+		static float& camspeed() {
+			static auto clazz = CLASS("Assembly-CSharp::ConVar::Client::camspeed");
+			return *reinterpret_cast<float*>(std::uint64_t(clazz->static_fields) + 0x18);
+		};
+	};
+	*/
 }
 
 void DoFirstPersonCamera_hk(PlayerEyes* a1, Component* cam) {
@@ -653,16 +682,17 @@ Vector3 get_aim_point(float speed, float gravity) {
 	return ret;
 }
 
-Vector2 CalcAngle(const Vector3& Src, const Vector3& Dst) {
+Vector2 CalcAngleNew(const Vector3& Src, const Vector3& Dst) {
 	Vector3 dir = Src - Dst;
-	return Vector2{ RAD2DEG(std::asin(dir.y / dir.Length())), RAD2DEG(-std::atan2(dir.x, -dir.z)) };
+	Vector2 ret = Vector2{ RAD2DEG(std::asin(dir.y / dir.Length())), RAD2DEG(-std::atan2(dir.x, -dir.z)) };
+	return ret;
 }
 
 void Normalize(float& Yaw, float& Pitch) {
-	if (Pitch < -89) Pitch = -89;
-	else if (Pitch > 89) Pitch = 89;
-	if (Yaw < -360) Yaw += 360;
-	else if (Yaw > 360) Yaw -= 360;
+	if (Pitch < -999) Pitch = -999;
+	else if (Pitch > 999) Pitch = 999;
+	if (Yaw < -999) Yaw += 999;
+	else if (Yaw > 999) Yaw -= 999;
 }
 
 void StepConstant(Vector2& angles) {
@@ -728,6 +758,7 @@ void DoAimbot()
 
 	auto mag = held->primaryMagazine();
 	auto ammo = mag->ammoType();
+	auto ammo_id = ammo->itemid();
 	static Type* type = Type::GetType(xorstr_("ItemModProjectile, Assembly-CSharp"));
 	auto itemModProjectile = ammo->GetComponent<ItemModProjectile>(type); // 0x3189118 for getting Projectile* ref
 	float m_flBulletSpeed = (itemModProjectile->projectileVelocity() * (held->projectileVelocityScale() * (aidsware::ui::get_bool(xorstr_("fast bullets")) ? 1.48f : 1.0f)));
@@ -737,15 +768,18 @@ void DoAimbot()
 	//first bodyangles then headangles then recoilangles
 	Vector3 v = lp->input()->bodyAngles();
 	Vector2 va = { v.x, v.y };
-	Vector2 offset = CalcAngle(local, target) - va;
+	Vector2 offset = CalcAngleNew(local, target) - va;
 	Normalize(offset.x, offset.y);
 	Vector2 angleToAim = va + offset;
+	StepConstant(angleToAim);
 	StepConstant(angleToAim);
 	Normalize(angleToAim.x, angleToAim.y);
 	Vector3 a = { angleToAim.x, angleToAim.y, 0.0f };
 	lp->input()->bodyAngles() = a;
+	//lp->input()->headAngles() = a;
 }
 
+bool debugcam = false;
 bool has_intialized_methods = false;
 void ClientInput_hk(BasePlayer* plly, uintptr_t state) {
 	if (!plly)
@@ -792,7 +826,7 @@ void ClientInput_hk(BasePlayer* plly, uintptr_t state) {
 			LocalPlayer::Entity()->clientTickInterval() = 0.99f;
 
 		if (held)
-		{	
+		{
 			auto wep_class_name = held->class_name();
 
 			if (aidsware::ui::get_bool(xorstr_("long hand")) && *(int*)(wep_class_name + 4) == 'eleM') {
@@ -806,6 +840,7 @@ void ClientInput_hk(BasePlayer* plly, uintptr_t state) {
 				DoAimbot();
 			}
 		}
+
 		//todo:
 		/*	
 
@@ -1122,7 +1157,6 @@ void LowerApply_hk(ViewmodelLower* self, uintptr_t vm) {
 	if (!aidsware::ui::get_bool(xorstr_("omnisprint")))
 		self->Apply(vm);
 }
-
 String* ConsoleRun_hk(ConsoleSystem::Option* optiom, String* str, Array<System::Object_*>* args) {
 	if (optiom->IsFromServer( )) {
 		if (str->buffer) {
@@ -1132,6 +1166,10 @@ String* ConsoleRun_hk(ConsoleSystem::Option* optiom, String* str, Array<System::
 				string.find(wxorstr_(L"admintime")) != std::wstring::npos ||
 				string.find(wxorstr_(L"client.camlerp")) != std::wstring::npos ||
 				string.find(wxorstr_(L"client.camspeed")) != std::wstring::npos) {
+
+				if (string.find(wxorstr_(L"debugcamera")) != std::wstring::npos)
+					debugcam = !debugcam;
+				
 
 				str = String::New(xorstr_(""));
 			}
@@ -1372,6 +1410,58 @@ Projectile* CreateProjectile_hk(BaseProjectile* self, String* prefabPath, Vector
 	return p;
 }
 
+bool requested_flag = false;
+void OnRequestUserInformation_hk(Network::Client* self, Network::Message* packet)
+{
+	printf(xorstr_("OnRequestUserInformation_hk called\n"));
+	if (aidsware::ui::get_bool(xorstr_("spoof id")))
+	{
+		requested_flag = true;
+	}
+	return self->OnRequestUserInformation(packet);
+}
+
+void UInt64_hk(Network::NetWrite* self, uint64_t val)
+{
+	printf(xorstr_("Joining with steamid: %lld\n"), val);
+	if (aidsware::ui::get_bool(xorstr_("spoof id")) && requested_flag)
+	{
+		try
+		{
+			requested_flag = false;
+			uint64_t id = std::stoull(aidsware::ui::get_text(xorstr_("steamid")).c_str());
+			printf(xorstr_("Spoofing steamid to %lld\n"), id);
+			return self->UInt64(id);
+		}
+		catch (...)
+		{
+			printf("Error converting steamid\n");
+			return self->UInt64(val);
+		}
+	}
+	return self->UInt64(val);
+}
+ 
+void ProjectileUpdate_hk(Projectile* self)
+{
+	if (aidsware::ui::get_bool(xorstr_("insta kill"))
+		&& settings::tr::desync_time >= f_travel_time)
+	{
+		auto hittest = self->hitTest();
+		hittest->HitEntity() = target_ply;
+		hittest->HitTransform() = target_ply->transform();
+		hittest->HitPoint() = target_ply->transform()->position();
+
+		//bool DoHit_hk(Projectile * prj, HitTest * test, Vector3 point, Vector3 normal)
+		
+		self->DoHit(hittest, target_ply->transform()->position().normalized(), self->currentPosition());
+
+		//self->currentPosition() = target_ply->transform()->position();
+		return;
+	}
+	return self->Update();
+}
+
 void do_hooks( ) {
 	//VM_DOLPHIN_BLACK_START
 
@@ -1415,6 +1505,10 @@ void do_hooks( ) {
 
 	hookengine::hook(BaseProjectile::CreateProjectile_, CreateProjectile_hk);
 
+	hookengine::hook(Network::Client::OnRequestUserInformation_, OnRequestUserInformation_hk);
+
+	hookengine::hook(Network::NetWrite::UInt64_, UInt64_hk);
+
 	//VMProtectEnd();
 	//VM_DOLPHIN_BLACK_END
 }
@@ -1451,14 +1545,14 @@ void undo_hooks( ) {
 	hookengine::unhook(HeldEntity::AddPunch_, AddPunch_hk);
 
 	hookengine::unhook(BasePlayer::SendClientTick_, sendclienttick_hk);
-
 	hookengine::unhook(PlayerEyes::get_position_, playereyes_getpos_hk);
-
 	hookengine::unhook(Projectile::Launch_, Launch_hk);
-
 	hookengine::unhook(BaseCombatEntity::DoHitNotify_, DoHitNotify_hk);
-
 	hookengine::unhook(BaseProjectile::CreateProjectile_, CreateProjectile_hk);
+
+	hookengine::unhook(Network::Client::OnRequestUserInformation_, OnRequestUserInformation_hk);
+
+	hookengine::unhook(Network::NetWrite::UInt64_, UInt64_hk);
 
 	//VMProtectEnd();
 	//VM_DOLPHIN_BLACK_END

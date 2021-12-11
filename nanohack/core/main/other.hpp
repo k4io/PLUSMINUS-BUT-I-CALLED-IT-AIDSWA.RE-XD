@@ -1,7 +1,35 @@
 namespace other {
 	Vector3 m_manipulate = Vector3::Zero( );
 
-	bool ValidateEyePos(Vector3 position) //returns true if invalid
+	bool ValidateEyePos(Vector3 position)
+	{
+		bool flag = false;
+		auto loco = LocalPlayer::Entity();
+		float num = 1.5f;
+		float clientframes = 2.f;
+		float serverframes = 2.f;
+		float num2 = clientframes / 60.f;
+		float deltatime = Time::deltaTime();
+		float smooth_Deltatime = Time::smoothDeltaTime();
+		float fixed_Deltatime = Time::fixedDeltaTime();
+		float num3 = serverframes * MAX(deltatime, MAX(smooth_Deltatime, fixed_Deltatime));
+		float num4 = (1.f + num2 + num3) * num;
+		float num5 = loco->MaxVelocity() + loco->GetParentVelocity().magnitude();
+		float num6 = loco->BoundsPadding() + num4 * num5;
+		float num7 = loco->eyes()->position().distance(position);
+
+		float num8 = std::abs(loco->GetParentVelocity().y);
+		float num9 = loco->BoundsPadding() + num4 + num8 + loco->GetJumpHeight();
+		float num10 = std::abs(loco->eyes()->get_position().y - position.y);
+
+		if (num10 > num9)
+		{
+			flag = true; //EYE_ALTITUDE
+		}
+		return flag;
+	}
+
+	bool ValidateEyePos_Old(Vector3 position) //returns true if invalid
 	{
 		auto loco = LocalPlayer::Entity();
 		bool flag = false;
@@ -39,25 +67,25 @@ namespace other {
 		return flag;
 	}
 
-	void get_sphere_points(float radius, unsigned int rings, unsigned int sectors, std::vector<Vector3>& re)
+	void get_sphere_points(float radius, unsigned int sectors, std::vector<Vector3>& re, float max = 1.6f)
 	{
-		float const R = 1. / (float)(rings - 1);
-		float const S = 1. / (float)(sectors - 1);
-		int r, s;
-
-		for (r = 0; r < rings; r++)
-			for (s = 0; s < sectors; s++)
+		for (float y = -1.6f; y < 1.6f; y += 0.1f) {
+			int points = sectors;
+			float step = (M_PI_2) / points;
+			float x, z, current = 0;
+			for (size_t i = 0; i < points; i++)
 			{
-				float y = sin(-(M_PI / 2) + M_PI * r * R);
-				float x = cos(2 * M_PI * s * S) * sin(M_PI * r * R);
-				float z = sin(2 * M_PI * s * S) * sin(M_PI * r * R);
-
-				x *= radius;
-				y *= radius;
-				z *= radius;
+				x = sin(current) * radius;
+				z = cos(current) * radius;
 
 				re.push_back(Vector3(x, y, z));
+				re.push_back(Vector3(-x, y, z));
+				re.push_back(Vector3(x, y, -z));
+				re.push_back(Vector3(-x, y, -z));
+
+				current += step;
 			}
+		}
 	}
 
 	bool can_manipulate()
@@ -105,14 +133,12 @@ namespace other {
 			mm_max_eye = 25.f;
 		//autoshoot max visible check = 10 meter
 
-		float _fa = aidsware::ui::get_float(xorstr_("checks"));
-		float _ri = aidsware::ui::get_float(xorstr_("rings"));
-
-		get_sphere_points(mm_max_eye, _ri, _fa, arr);
+		float _fa = aidsware::ui::get_float(xorstr_("checks")) / 4.0f;
+		
+		get_sphere_points(mm_max_eye, _fa, arr);
 
 		for (auto s : arr) {
 			Vector3 point = re_p + s;
-
 			if (!LineOfSight(point, re_p))
 				continue;
 
@@ -141,8 +167,7 @@ namespace other {
 		auto held = LocalPlayer::Entity()->GetHeldEntity<BaseProjectile>();
 		loco->modelState()->set_mounted(true);
 		Vector3 re_p = loco->transform( )->position( ) + loco->transform( )->up( ) * (PlayerEyes::EyeOffset( ).y + loco->eyes( )->viewOffset( ).y);
-		// real eye pos
-
+		
 		Vector3 choice = Vector3::Zero( );
 
 		if (LineOfSight(re_p, target_ply->find_mpv_bone( )->position) || !target_ply->isCached()) {
@@ -153,85 +178,11 @@ namespace other {
 		float desyncTime = (Time::realtimeSinceStartup( ) - loco->lastSentTickTime( )) - 0.03125 * 3;
 		float mm_max_eye = ((0.1f + ((desyncTime + 2.f / 60.f + 0.125f) * 1.5f) * loco->MaxVelocity( )));
 
-		/*
-		auto held = loco->GetHeldEntity<BaseMelee>();
-		if (held)
-			held->maxDistance() = 5.f + mm_max_eye;
-			*/
-		//old sk4ddu paste :(
-		/*
-		std::array<Vector3, 8> arr = {
-			Vector3(right.x * (mm_max_eye / 2), 0.f, right.z * (mm_max_eye / 2)), // small right
-			Vector3(right.x * mm_max_eye, 0.f, right.z * mm_max_eye), // big right
-
-			Vector3(-(right.x * (mm_max_eye / 2)), 0.f, -(right.z * (mm_max_eye / 2))), // small left
-			Vector3(-(right.x * mm_max_eye), 0.f, -(right.z * mm_max_eye)), // big left
-
-			Vector3(0.f, (mm_max_eye / 2), 0.f), // small up
-			Vector3(0.f, mm_max_eye, 0.f), // big up
-
-			Vector3(forward.x * (mm_max_eye / 2), 0.f, forward.z * (mm_max_eye / 2)), // small forward
-			Vector3(forward.x * mm_max_eye, 0.f, forward.z * mm_max_eye), // big forward
-		}; // restoring procedure: *= 1.428571428571429 for 0.7f
-		   //                      *= 0.7142857142857143 for 1.4f
-		*/
-
 		std::vector<Vector3> arr = {};
 
-		float _fa = aidsware::ui::get_float(xorstr_("checks"));
-		float _ri = aidsware::ui::get_float(xorstr_("rings"));
+		float _fa = aidsware::ui::get_float(xorstr_("checks")) / 4.0f;
 
-		get_sphere_points(mm_max_eye, _ri, _fa, arr);
-
-		//old diamond pattern
-		/*
-		for (int i = 0; i <= (int)_fa; i+=((mm_max_eye < 5.f) ? 2 : 1))
-		{
-			float a = (float)(i / _fa);
-			Vector3 up =
-				Vector3(0.f, mm_max_eye, 0.f);
-			Vector3 left =
-				Vector3(-(_right.x * mm_max_eye), 0.f, -(_right.z * mm_max_eye));
-			Vector3 right =
-				Vector3(_right.x * mm_max_eye, 0.f, _right.z * mm_max_eye);
-			Vector3 fwd =
-				Vector3(forward.x * mm_max_eye, 0.f, forward.z * mm_max_eye);
-
-			Vector3 bwd(-fwd.x, -fwd.y, -fwd.z);
-			
-			//straight each dir
-			arr.push_back(Vector3::Lerp(Vector3::Zero(), up, a));
-			arr.push_back(Vector3::Lerp(Vector3::Zero(), left, a));
-			arr.push_back(Vector3::Lerp(Vector3::Zero(), right, a));
-			arr.push_back(Vector3::Lerp(Vector3::Zero(), fwd, a));
-			arr.push_back(Vector3::Lerp(Vector3::Zero(), bwd, a));
-
-			//diagnoal
-			arr.push_back(Vector3::Lerp(up, right, a));
-			arr.push_back(Vector3::Lerp(up, left, a));
-			arr.push_back(Vector3::Lerp(up, fwd, a));
-			arr.push_back(Vector3::Lerp(up, bwd, a));
-			
-			//could also do right - left, right - fwd, left - fwd etc (idk about how much lag this will cause yet)
-			Vector3 v = Vector3::Lerp(fwd, right, a);
-			for (size_t is = 0; is < _fa; is++)
-				arr.push_back(Vector3::Lerp(v, up, (float)(is / _fa)));
-
-			v = Vector3::Lerp(fwd, left, a);
-			for (size_t is = 0; is < _fa; is++)
-				arr.push_back(Vector3::Lerp(v, up, (float)(is / _fa)));
-
-			//backwards test
-
-			v = Vector3::Lerp(bwd, right, a);
-			for (size_t is = 0; is < _fa; is++)
-				arr.push_back(Vector3::Lerp(v, up, (float)(is / _fa)));
-
-			v = Vector3::Lerp(bwd, left, a);
-			for (size_t is = 0; is < _fa; is++)
-				arr.push_back(Vector3::Lerp(v, up, (float)(is / _fa)));
-		}
-		*/
+		get_sphere_points(mm_max_eye, _fa, arr);
 		
 		for (auto s : arr) {
 			Vector3 point = re_p + s;

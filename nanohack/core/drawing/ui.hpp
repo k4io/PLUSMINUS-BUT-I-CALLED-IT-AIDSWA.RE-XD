@@ -285,7 +285,6 @@ namespace aidsware::ui
 		wrapper::currentY += 10.0f;
 		wrapper::label(xorstr_("peek assist properties"), Vector2(170.0f, -10.f), Tabs::Combat);
 		wrapper::slider(xorstr_("max radius"), Vector2(180.0f, 10.0f), 7.f, 1.0f, 20.0f, Tabs::Combat);
-		wrapper::slider(xorstr_("rings"), Vector2(180.0f, 10.0f), 15.f, 1.f, 360.0f, Tabs::Combat);
 		wrapper::slider(xorstr_("checks"), Vector2(180.0f, 10.0f), 30.f, 1.f, 360.0f, Tabs::Combat);
 		wrapper::slider(xorstr_("duration"), Vector2(180.0f, 10.0f), 0.05f, 0.001f, 60.0f, Tabs::Combat);
 
@@ -421,10 +420,12 @@ namespace aidsware::ui
 		wrapper::slider(xorstr_("threshold"), Vector2(170, 0), 100.0f, 0.0f, 400.0f, Tabs::Misc);
 		wrapper::checkbox(xorstr_("walk to marker"), Vector2(170, 0), Tabs::Misc);
 		wrapper::checkbox(xorstr_("custom box"), Vector2(170, 0), Tabs::Misc);
-		wrapper::textbox(xorstr_("custom box path"), Vector2(170, 0), Tabs::Misc, xorstr_("box name"));
+		wrapper::textbox(xorstr_("custom box path"), Vector2(170, 0), Tabs::Misc, xorstr_(""));
 		wrapper::checkbox(xorstr_("custom hitsound"), Vector2(170, 0), Tabs::Misc);
-		wrapper::textbox(xorstr_("hitsound path"), Vector2(170, 0), Tabs::Misc, xorstr_("hitsound"));
+		wrapper::textbox(xorstr_("hitsound path"), Vector2(170, 0), Tabs::Misc, xorstr_(""));
 		wrapper::checkbox(xorstr_("weapon spam"), Vector2(170, 0), Tabs::Misc);
+		wrapper::checkbox(xorstr_("spoof id"), Vector2(170, 0), Tabs::Misc);
+		wrapper::textbox(xorstr_("steamid"), Vector2(170, 0), Tabs::Misc, xorstr_(""));
 		//wrapper::checkbox(xorstr_("test"), Vector2(170, 0), Tabs::Combat);
 		wrapper::reset_height();
 		wrapper::reset_width();

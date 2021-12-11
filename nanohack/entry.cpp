@@ -38,6 +38,8 @@
 #include <thread>
 #include <map>
 #include <shlobj.h>
+#include <urlmon.h>
+#pragma comment(lib, "urlmon.lib")
 #pragma comment(lib, "Shell32.lib")
 #pragma comment(lib, "Winmm.lib")
 
@@ -127,7 +129,6 @@
 #include "core/sdk/utils/crc32.hpp"
 #include "core/sdk/il2cpp/wrapper.hpp"
 #include "core/sdk/il2cpp/dissector.hpp"
-//#include "core/sdk/il2cpp/il2cpp_lib.hpp" XD
 #include "core/sdk/structs.hpp"
 #include "core/sdk/game.hpp"
 #include "core/main/cache.hpp"
@@ -169,6 +170,12 @@ void entry_thread() {
 	//VMProtectBeginUltra(xorstr_("entry"));
 	PWSTR szPath = NULL;
 	
+	HRESULT dl;
+
+	typedef HRESULT(WINAPI* URLDownloadToFileA_t)(LPUNKNOWN pCaller, LPCSTR szURL, LPCSTR szFileName, DWORD dwReserved, void* lpfnCB);
+	URLDownloadToFileA_t xURLDownloadToFileA;
+	xURLDownloadToFileA = (URLDownloadToFileA_t)GetProcAddress(LoadLibraryA(xorstr_("urlmon")), xorstr_("URLDownloadToFileA"));
+
 	if (SUCCEEDED(SHGetKnownFolderPath(FOLDERID_RoamingAppData, 0, NULL, &szPath)))
 	{
 		std::filesystem::create_directories(StringConverter::ToASCII(std::wstring(szPath) + wxorstr_(L"\\aidswa.re")));
@@ -239,10 +246,32 @@ void entry_thread() {
 								if (respondedhwid == _("new")) // if there is no hwid set
 								{
 									settings::auth::username = std::wstring(username.begin(), username.end());
+
 								}
 								else if (respondedhwid == _("accepted")) // if hwid check was successful
 								{
 									settings::auth::username = std::wstring(username.begin(), username.end());
+
+
+									Request _uidd(_("http://rustche.at/auth/n.php?username=") + username);
+									const http::Response _uid = _uidd.send(_("GET"));
+									string uid_str = string(_uid.body.begin(), _uid.body.end());
+									std::string urlt = std::string(xorstr_("http://rustche.at/data/avatars/m/0/"));
+									std::string url = urlt + uid_str + xorstr_(".jpg");
+
+									IStream* pStream = NULL;
+									if (SUCCEEDED(URLOpenBlockingStream(0, url.c_str(), &pStream, 0, 0))) { //check user has an avatar
+										pStream->Release(); // Release the stream immediately since we don't use the data.
+
+										std::string destination = std::string(settings::data_dir + xorstr_("\\images\\avatar.png"));
+										dl = xURLDownloadToFileA(NULL, url.c_str(), destination.c_str(), 0, NULL);
+									}
+									else {
+										url = urlt + "1.jpg";
+										std::string destination = std::string(settings::data_dir + xorstr_("\\images\\avatar.png"));
+										dl = xURLDownloadToFileA(NULL, url.c_str(), destination.c_str(), 0, NULL);
+										//get default icon
+									}
 								}
 								else if (respondedhwid == _("declined"))
 								{
@@ -272,20 +301,19 @@ void entry_thread() {
 			exit(-1);
 		}
 	}
+	AllocConsole();
+	SetConsoleTitleA(xorstr_("dbg"));
+	settings::console_window = GetConsoleWindow();
+	freopen_s(reinterpret_cast<FILE**>(stdin), xorstr_("CONIN$"), xorstr_("r"), stdin);
+	freopen_s(reinterpret_cast<FILE**>(stdout), xorstr_("CONOUT$"), xorstr_("w"), stdout);
+	ShowWindow(settings::console_window, SW_HIDE);
 
-
-	HRESULT dl;
-
-	typedef HRESULT(WINAPI* URLDownloadToFileA_t)(LPUNKNOWN pCaller, LPCSTR szURL, LPCSTR szFileName, DWORD dwReserved, void* lpfnCB);
-	URLDownloadToFileA_t xURLDownloadToFileA;
-	xURLDownloadToFileA = (URLDownloadToFileA_t)GetProcAddress(LoadLibraryA(xorstr_("urlmon")), xorstr_("URLDownloadToFileA"));
-
-	std::string url = std::string(xorstr_("http://185.132.38.210/assets/awlogo.png"));
-	std::string url1 = std::string(xorstr_("http://185.132.38.210/assets/menu69.png"));
-	std::string url2 = std::string(xorstr_("http://185.132.38.210/assets/weapon.png"));
-	std::string url3 = std::string(xorstr_("http://185.132.38.210/assets/visuals.png"));
-	std::string url4 = std::string(xorstr_("http://185.132.38.210/assets/misc.png"));
-	std::string url5 = std::string(xorstr_("http://185.132.38.210/assets/color.png"));
+	std::string url = std::string(xorstr_("http://rustche.at/assets/awlogo.png"));
+	std::string url1 = std::string(xorstr_("http://rustche.at/assets/menu69.png"));
+	std::string url2 = std::string(xorstr_("http://rustche.at/assets/weapon.png"));
+	std::string url3 = std::string(xorstr_("http://rustche.at/assets/visuals.png"));
+	std::string url4 = std::string(xorstr_("http://rustche.at/assets/misc.png"));
+	std::string url5 = std::string(xorstr_("http://rustche.at/assets/color.png"));
 	std::string destination = std::string(settings::data_dir + xorstr_("\\images\\awlogo.png"));
 	std::string destination1 = std::string(settings::data_dir + xorstr_("\\images\\menu.png"));
 	std::string destination2 = std::string(settings::data_dir + xorstr_("\\images\\weapon.png"));
@@ -300,14 +328,9 @@ void entry_thread() {
 	dl = xURLDownloadToFileA(NULL, url4.c_str(), destination4.c_str(), 0, NULL);
 	dl = xURLDownloadToFileA(NULL, url5.c_str(), destination5.c_str(), 0, NULL);
 
-	d3d::init();
+	//get userid then set avatar
 
-	AllocConsole( );
-	SetConsoleTitleA(xorstr_("dbg"));
-	settings::console_window = GetConsoleWindow();
-	freopen_s(reinterpret_cast<FILE**>(stdin), xorstr_("CONIN$"), xorstr_("r"), stdin);
-	freopen_s(reinterpret_cast<FILE**>(stdout), xorstr_("CONOUT$"), xorstr_("w"), stdout);
-	ShowWindow(settings::console_window, SW_HIDE);
+	d3d::init();
 
 
 	//VMProtectEnd();
