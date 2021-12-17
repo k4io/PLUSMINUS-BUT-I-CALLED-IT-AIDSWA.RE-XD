@@ -1,5 +1,4 @@
 namespace entities {
-	AssetBundle* assets;
 	Shader* og_shader = nullptr;
 	std::vector<BasePlayer*> current_visible_players;
 	
@@ -132,43 +131,6 @@ namespace entities {
 
 	void do_chams(BasePlayer* player)
 	{
-		/*
-		SAPPHIRE_FIELD("PlayerModel", _multiMesh);
-		const auto multiMesh = *reinterpret_cast<std::uintptr_t*>(player->playerModel() + _multiMesh);
-
-		if (!multiMesh)
-			return;
-
-		SAPPHIRE_METHOD(get_renderers_fn, "SkinnedMultiMesh.get_Renderers()", 0, "", -1, managed_system::list<uintptr_t> *(*)(std::uintptr_t));
-		auto renderers = get_renderers_fn(multiMesh);
-
-		for (size_t idx{ 0 }; idx < renderers->size(); idx++)
-		{
-			auto renderer = renderers->value(idx);
-
-			if (renderer)
-			{
-				SAPPHIRE_ICALL(set_shader_fn, "UnityEngine.Material::set_shader()", void(*)(std::uintptr_t, std::uintptr_t));
-				SAPPHIRE_ICALL(load_asset_fn, "UnityEngine.AssetBundle::LoadAsset_Internal(System.String,System.Type)", std::uintptr_t(*)(std::uintptr_t, managed_system::string, std::uintptr_t));
-				SAPPHIRE_METHOD(set_color_fn, "UnityEngine::Material.SetColor()", 2, "", -1, void(*)(std::uintptr_t, managed_system::string, clr_t));
-				SAPPHIRE_METHOD(get_material_fn, "UnityEngine::Renderer.get_material()", -1, "", -1, std::uintptr_t(*)(std::uintptr_t));
-				SAPPHIRE_METHOD(set_float_fn, "UnityEngine::Material.SetFloat()", 2, "", -1, void(*)(std::uintptr_t, managed_system::string, float));
-
-				const auto material = get_material_fn(renderer);
-				if (!material)
-					return;
-
-				if (!chams)
-					chams = load_asset_fn(aw_assets, L"chams.shader", il2cpp_lib::type_object("UnityEngine", "Shader"));
-
-				set_shader_fn(material, chams);
-				set_color_fn(material, L"_ColorBehind", { 167, 98, 209, 255 });
-				set_color_fn(material, L"_ColorVisible", { 182, 3, 252, 255 });
-			}
-		}
-		return;
-		*/
-		
 		auto list = player->playerModel()->_multiMesh()->Renderers();
 		if (list) {
 			for (int i = 0; i < list->size; i++) {
@@ -181,35 +143,38 @@ namespace entities {
 					/*
 					if (material)
 					{
-						if (!chams)
+						if (chams != material->shader())
 						{
-							printf("set chams shader from bundle\n");
-							chams = aw_assets->LoadAsset(xorstr_("chams.shader"), Type::Shader());
+							if (!chams)
+							{
+								printf("set chams shader from bundle\n");
+								chams = aw_assets->LoadAsset<Shader>(xorstr_("chams.shader"), Type::Shader());
+							}
+
+							material->set_shader(chams);
+
+							if (player->playerModel()->isNpc())
+							{
+								printf("set npc\n");
+								material->SetColor(Shader::PropertyToID(xorstr_("_ColorVisible")), get_c(aidsware::ui::get_color("visible npc chams")));
+								material->SetColor(Shader::PropertyToID(xorstr_("_ColorBehind")), get_c(aidsware::ui::get_color("invisible npc chams")));
+								continue;
+							}
+
+							if (!player->playerModel()->isNpc() && player->is_visible() && player->is_teammate())
+							{
+								printf("set teammate\n");
+								material->SetColor(Shader::PropertyToID(xorstr_("_ColorVisible")), get_c(aidsware::ui::get_color("visible teammate chams")));
+								material->SetColor(Shader::PropertyToID(xorstr_("_ColorBehind")), get_c(aidsware::ui::get_color("invisible teammate chams")));
+								continue;
+							}
+
+							printf("set player\n");
+							material->SetColor(Shader::PropertyToID(xorstr_("_ColorVisible")), get_c(aidsware::ui::get_color("visible chams")));
+							material->SetColor(Shader::PropertyToID(xorstr_("_ColorBehind")), get_c(aidsware::ui::get_color("invisible chams")));
 						}
-
-						material->set_shader(chams);
-
-						if (player->playerModel()->isNpc())
-						{
-							printf("set npc\n");
-							material->SetColor(xorstr_("_ColorVisible"), get_c(aidsware::ui::get_color("visible npc chams")));
-							material->SetColor(xorstr_("_ColorBehind"), get_c(aidsware::ui::get_color("invisible npc chams")));
-							continue;
-						}
-
-						if (!player->playerModel()->isNpc() && player->is_visible() && player->is_teammate())
-						{
-							printf("set teammate\n");
-							material->SetColor(xorstr_("_ColorVisible"), get_c(aidsware::ui::get_color("visible teammate chams")));
-							material->SetColor(xorstr_("_ColorBehind"), get_c(aidsware::ui::get_color("invisible teammate chams")));
-							continue;
-						}
-
-						printf("set player\n");
-						material->SetColor(xorstr_("_ColorVisible"), get_c(aidsware::ui::get_color("visible chams")));
-						material->SetColor(xorstr_("_ColorBehind"), get_c(aidsware::ui::get_color("invisible chams")));
-						
-					}*/
+					}
+					*/
 					
 					if (material)
 					{
@@ -455,9 +420,12 @@ namespace entities {
 				Renderer::boldtext({ screen_center.x - 20, screen_center.y + 20 }, Color3(230, 180, 44), 14.f, true, true, wxorstr_(L"[i]"));
 
 			std::vector<BasePlayer*> temp_target_list{};
-			
+
 			if (aidsware::ui::get_bool(xorstr_("logs")))
 				LogSystem::Render();
+
+			if (aidsware::ui::get_bool(xorstr_("show prediction")))
+				LogSystem::RenderTraceResults();
 
 			int helis = 0;
 

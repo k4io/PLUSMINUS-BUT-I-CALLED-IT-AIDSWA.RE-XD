@@ -139,7 +139,6 @@ namespace FGUI
                   //DrawRoundedRectangle(arWidgetRegion.m_iLeft, arWidgetRegion.m_iTop, arWidgetRegion.m_iRight, arWidgetRegion.m_iBottom, { 28, 77, 128 }, 10.f);
                   //FGUI::RENDER.Rectangle(arWidgetRegion.m_iLeft + 105, arWidgetRegion.m_iTop - 2, arWidgetRegion.m_iRight - 105, arWidgetRegion.m_iBottom, { 53, 109, 166 });
                   //DrawRoundedRectangle(arWidgetRegion.m_iLeft + 100, arWidgetRegion.m_iTop + 2, arWidgetRegion.m_iRight - 110, arWidgetRegion.m_iBottom - 4, { 25, 117, 212 }, 10.f);
-
                   FGUI::RENDER.Line(arWidgetRegion.m_iLeft - 2, arWidgetRegion.m_iTop, arWidgetRegion.m_iLeft + 98, arWidgetRegion.m_iTop, { 100, 100, 117 }, 1.f);
                   FGUI::RENDER.Line(arWidgetRegion.m_iLeft - 2, arWidgetRegion.m_iTop + arWidgetRegion.m_iBottom, arWidgetRegion.m_iLeft + 98, arWidgetRegion.m_iTop + arWidgetRegion.m_iBottom, { 100, 100, 117 }, 1.f);
 

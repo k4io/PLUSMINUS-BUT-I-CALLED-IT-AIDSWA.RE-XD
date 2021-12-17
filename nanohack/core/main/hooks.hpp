@@ -15,25 +15,10 @@ void ClientUpdate_hk(BasePlayer* plly) {
 		if (plly->userID() != LocalPlayer::Entity()->userID()) {
 			return plly->ClientUpdate( );
 		}
-		
-		/*
-		if (aidsware::ui::get_bool(xorstr_("chams")))
-		{
-			auto list = plly->playerModel()->_multiMesh()->Renderers();
 
-			if (list) {
-				for (int i = 0; i < list->size; i++) {
-					if (i == list->size) continue;
-					auto member = reinterpret_cast<Renderer_*>(list->get(i));
-					if (!member) continue;
-
-					member->set_material(0);
-				}
-			}
-		}
-*/
+		float speedhack_amount = aidsware::ui::get_float(xorstr_("timescale"));
 		if (get_key(aidsware::ui::get_keybind(xorstr_("timescale key"))))
-			Time::set_timeScale(2.f);
+			Time::set_timeScale(speedhack_amount);
 		else Time::set_timeScale(1.f);
 
 		if (aidsware::ui::get_bool(xorstr_("fake lag")))
@@ -47,6 +32,7 @@ void ClientUpdate_hk(BasePlayer* plly) {
 		}
 
 		float _p = (aidsware::ui::get_float(xorstr_("max radius")) / 10);
+
 		if (aidsware::ui::get_bool(xorstr_("peek assist")) && target_ply != nullptr && target_ply->isCached() && (get_key(aidsware::ui::get_keybind(xorstr_("peek assist key"))) || settings::tr::manipulate_visible))
 			plly->clientTickInterval() = (_p < 0.99f ? 0.99f : _p);//0.99f;
 		else
@@ -140,7 +126,7 @@ double CalcBulletDrop(double height, double DepthPlayerTarget, float velocity, f
 #define maxSimulateSeconds 5
 #define stepRate 0.01666666666
 
-void APrediction(Vector3 local, Vector3& target, float bulletspeed, float gravity, float drag, float& te) {
+void APrediction(Vector3 local, Vector3& target, float bulletspeed, float gravity, float drag, float& te, float& distance_to_travel) {
 	float Dist = local.distance(target);
 	Vector3 targetvel = target_ply->playerModel()->newVelocity();
 
@@ -179,7 +165,7 @@ void APrediction(Vector3 local, Vector3& target, float bulletspeed, float gravit
 
 	//float m_flDistanceTo = fVrom.distance(aimpoint);
 
-	for (float distance_to_travel = 0.f; distance_to_travel < distance;)
+	for (distance_to_travel = 0.f; distance_to_travel < distance;)
 	{
 		//float speed_modifier = (aidsware::ui::get_bool(xorstr_("fast bullets")) ? 1.48f : 1.0f) - m_flTimeStep * projectile->drag();
 		float speed_modifier = 1.0f - m_flTimeStep * projectile->drag();
@@ -309,12 +295,20 @@ void serverrpc_projectileshoot_hk(int64_t rcx, int64_t rdx, int64_t r9, int64_t 
 
 			if (target_ply/* && !target.teammate*/) { //Vector3 local, Vector3& target, float bulletspeed, float gravity, float drag
 				//APrediction(v, bonepos, vel, original_vel.Length(), stats.gravity_modifier, stats.drag, itemmodvel, scale);
-
+				float distance_to_travel;
 				if (ammo_id == shotgun || ammo_id == shotgun_slug || ammo_id == shotgun_fire || ammo_id == shotgun_handmade)
 					bonepos = aimutils::get_prediction();// - LocalPlayer::Entity()->eyes()->position();
 				else
-					APrediction(v, bonepos, original_vel.Length(), stats.gravity_modifier, stats.drag, f_travel_time);
+					APrediction(v, bonepos, original_vel.Length(), stats.gravity_modifier, stats.drag, f_travel_time, distance_to_travel);
+				
+				TraceResult f;
+				f.hitDist = distance_to_travel;
+				f.hitPosition = bonepos;
+				f.outVelocity = v;
+				f.hitTime = f_travel_time;
+				
 
+				LogSystem::AddTraceResult(f);
 
 				aim_angle = /*get_aim_angle(rpc_position, target.pos, target.velocity, false, stats)*/bonepos - rpc_position;
 
@@ -462,15 +456,6 @@ namespace ConVar {
 			return *reinterpret_cast<float*>(std::uint64_t(clazz->static_fields) + 0x18);
 		}
 	};
-	/*
-	class Client {
-	public:
-		static float& camspeed() {
-			static auto clazz = CLASS("Assembly-CSharp::ConVar::Client::camspeed");
-			return *reinterpret_cast<float*>(std::uint64_t(clazz->static_fields) + 0x18);
-		};
-	};
-	*/
 }
 
 void DoFirstPersonCamera_hk(PlayerEyes* a1, Component* cam) {
@@ -825,14 +810,21 @@ void ClientInput_hk(BasePlayer* plly, uintptr_t state) {
 		if (get_key(aidsware::ui::get_keybind(xorstr_("desync on key"))))
 			LocalPlayer::Entity()->clientTickInterval() = 0.99f;
 
+		if (aidsware::ui::get_bool(xorstr_("desync on visible")))
+		{
+			if(target_ply->bones()->head->visible_(LocalPlayer::Entity()->eyes()->get_position()))
+				LocalPlayer::Entity()->clientTickInterval() = 0.99f;
+		}
+
 		if (held)
 		{
+			/*
 			auto wep_class_name = held->class_name();
 
 			if (aidsware::ui::get_bool(xorstr_("long hand")) && *(int*)(wep_class_name + 4) == 'eleM') {
-				safe_write(held + 0x290 /*maxDistance*/, 5.f, float);
+				safe_write(held + 0x290, 4.5f, float);
 			}
-
+			*/
 			if (target_ply
 				&& aidsware::ui::get_bool(xorstr_("aimbot"))
 				&& get_key(aidsware::ui::get_keybind(xorstr_("aimbot key"))))
@@ -842,11 +834,10 @@ void ClientInput_hk(BasePlayer* plly, uintptr_t state) {
 		}
 
 		//todo:
-		/*	
+		/*
 
 			instant jackhammer refill
 			stack crafting tcs
-			weapon spam
 			legit recoil
 		*/
 
@@ -884,7 +875,7 @@ void ClientInput_hk(BasePlayer* plly, uintptr_t state) {
 								if (aidsware::ui::get_bool(xorstr_("with peek assist")))
 								{
 									settings::peek_insta = true;
-									other::find_manipulate_angle();
+									other::find_manipulate_angle(desyncTime);
 									for (int j = 0; j < aidsware::ui::get_float(xorstr_("bullets")); j++)
 										held->LaunchProjectile();
 									settings::peek_insta = false;
@@ -907,14 +898,14 @@ void ClientInput_hk(BasePlayer* plly, uintptr_t state) {
 
 		
 		if (aidsware::ui::get_bool(xorstr_("peek assist")) && target_ply != nullptr && target_ply->isCached() && get_key(aidsware::ui::get_keybind(xorstr_("peek assist key"))) && !settings::instakill)
-			other::find_manipulate_angle();
+			other::find_manipulate_angle(desyncTime);
 		else
 			if (!other::m_manipulate.empty())
 				other::m_manipulate = Vector3::Zero();
 
 		if (aidsware::ui::get_bool(xorstr_("peek assist")) && target_ply != nullptr && target_ply->isCached() && aidsware::ui::get_bool(xorstr_("autoshoot")) && !settings::instakill)
 			if (other::can_manipulate()) {
-				other::find_manipulate_angle();
+				other::find_manipulate_angle(desyncTime);
 				settings::tr::manipulate_visible = true;
 			}
 			else {
@@ -994,40 +985,13 @@ float GetRandomVelocity_hk(ItemModProjectile* self) {
 	float modifier = 1.f;
 
 	if (aidsware::ui::get_bool(xorstr_("fast bullets")))
-		modifier += 0.48f;
+		modifier += 0.499f;
 
 	return self->GetRandomVelocity( ) * modifier;
 }
 
 void ProcessAttack_hk(BaseMelee* self, HitTest* hit) {
 	auto entity = hit->HitEntity( );
-
-	//if (target_ply != nullptr) {
-	//	auto l1 = target_ply->playerModel( )->_multiMesh( )->Renderers( );
-	//	if (l1) {
-	//		for (int i = 0; i < l1->size; i++) {
-	//			auto rend = (Renderer_*)l1->get(i);
-	//			if (!rend)
-	//				continue;
-
-	//			std::cout << *reinterpret_cast<uintptr_t*>(rend->material( ) + 0xB0) << std::endl;
-	//			std::cout << reinterpret_cast<uintptr_t>(rend->material( )->shader( )) << std::endl << std::endl;
-
-	//			if (plusminus::ui::get_float(xorstr_("target fov")) > 1000) {
-	//				auto list = *reinterpret_cast<Array<Material*>**>(rend + 0x140);
-	//				if (list) {
-	//					for (int j = 0; j < list->size( ); j++) {
-	//						auto g = list->get(j);
-	//						if (!g)
-	//							continue;
-
-	//						*reinterpret_cast<Material**>(g) = nullptr;
-	//					}
-	//				}
-	//			}
-	//		}
-	//	}
-	//}
 
 	if (!aidsware::ui::get_bool(xorstr_("farm assist")) || !entity)
 		return self->ProcessAttack(hit);
@@ -1158,18 +1122,16 @@ void LowerApply_hk(ViewmodelLower* self, uintptr_t vm) {
 		self->Apply(vm);
 }
 String* ConsoleRun_hk(ConsoleSystem::Option* optiom, String* str, Array<System::Object_*>* args) {
+	auto string = std::wstring(str->buffer);
+	if (string.find(wxorstr_(L"debugcamera")) != std::wstring::npos)
+		debugcam = !debugcam;
 	if (optiom->IsFromServer( )) {
 		if (str->buffer) {
-			auto string = std::wstring(str->buffer);
 			if (string.find(wxorstr_(L"noclip")) != std::wstring::npos ||
 				string.find(wxorstr_(L"debugcamera")) != std::wstring::npos ||
 				string.find(wxorstr_(L"admintime")) != std::wstring::npos ||
-				string.find(wxorstr_(L"client.camlerp")) != std::wstring::npos ||
-				string.find(wxorstr_(L"client.camspeed")) != std::wstring::npos) {
-
-				if (string.find(wxorstr_(L"debugcamera")) != std::wstring::npos)
-					debugcam = !debugcam;
-				
+				string.find(wxorstr_(L"camlerp")) != std::wstring::npos ||
+				string.find(wxorstr_(L"camspeed")) != std::wstring::npos) {
 
 				str = String::New(xorstr_(""));
 			}
@@ -1439,6 +1401,7 @@ void UInt64_hk(Network::NetWrite* self, uint64_t val)
 			return self->UInt64(val);
 		}
 	}
+	other::test_bundle(aw_assets);
 	return self->UInt64(val);
 }
  

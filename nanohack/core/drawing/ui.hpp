@@ -227,7 +227,8 @@ namespace aidsware::ui
 
 		vars::Container = std::make_shared<FGUI::CContainer>();
 		vars::Tabs = std::make_shared<FGUI::CTabPanel>();
-		wrapper::create_window(xorstr_("aidswa.re"), Vector2(200, 200), Vector2(530, 550), VK_INSERT);
+		std::string s = std::string(xorstr_("aidswa.re|")); s += std::string(settings::auth::username.begin(), settings::auth::username.end());
+		wrapper::create_window(s, Vector2(200, 200), Vector2(850, 530), VK_INSERT);
 		wrapper::currentY += 20.0f;
 		wrapper::tabs({xorstr_("Combat"), xorstr_("Visuals"), xorstr_("Misc"), xorstr_("Colors") });
 
@@ -338,6 +339,7 @@ namespace aidsware::ui
 		wrapper::slider(xorstr_("esp dist"), Vector2(170, 0), 100.0f, 0.0f, 400.0f, Tabs::Visual);
 		wrapper::checkbox(xorstr_("draw targeting fov"), Vector2(170, 0.0f), Tabs::Visual);
 		wrapper::checkbox(xorstr_("show peek assist checks"), Vector2(170, 0), Tabs::Visual);
+		wrapper::checkbox(xorstr_("show prediction"), Vector2(170, 0), Tabs::Visual);
 		wrapper::reset_height();
 		wrapper::reset_width();
 
@@ -351,7 +353,7 @@ namespace aidsware::ui
 		wrapper::checkbox(xorstr_("bullet tracers"), Vector2(0, 0), Tabs::Misc);
 		wrapper::checkbox(xorstr_("fake admin"), Vector2(0, 0), Tabs::Misc);
 		wrapper::checkbox(xorstr_("fast loot"), Vector2(0, 0), Tabs::Misc);
-		wrapper::checkbox(xorstr_("long hand"), Vector2(0, 0), Tabs::Misc);
+		//wrapper::checkbox(xorstr_("long hand"), Vector2(0, 0), Tabs::Misc);
 		//wrapper::checkbox(xorstr_("farm assist"), Vector2(0, 0), Tabs::Misc);
 		wrapper::checkbox(xorstr_("no collisions"), Vector2(0, 0), Tabs::Misc);
 		wrapper::checkbox(xorstr_("fake lag"), Vector2(0, 0), Tabs::Misc);
@@ -384,11 +386,19 @@ namespace aidsware::ui
 		wrapper::checkbox(xorstr_("omnisprint"), Vector2(0, 0), Tabs::Misc);
 		wrapper::checkbox(xorstr_("no fall"), Vector2(0, 0), Tabs::Misc);
 		wrapper::checkbox(xorstr_("fake shots"), Vector2(0, 0), Tabs::Misc, true, false);
+		wrapper::checkbox(xorstr_("spoof id"), Vector2(0, 0), Tabs::Misc);
+		wrapper::textbox(xorstr_("steamid"), Vector2(0, 0), Tabs::Misc, xorstr_(""));
+		wrapper::checkbox(xorstr_("walk to marker"), Vector2(0, 0), Tabs::Misc);
+		wrapper::checkbox(xorstr_("weapon spam"), Vector2(0, 0), Tabs::Misc);
 		wrapper::reset_height();
 		wrapper::currentX += 20.f;
 		wrapper::combobox(xorstr_("light"), { xorstr_("default"), xorstr_("dark"), xorstr_("light") }, Vector2(170, 0), Tabs::Misc);
+		wrapper::currentY += 15.f;
+		wrapper::slider(xorstr_("timescale"), Vector2(170, 0), 2.f, 0.0f, 10.0f, Tabs::Misc);
+		wrapper::currentY -= 15.f;
 		wrapper::keybind(xorstr_("timescale key"), Vector2(170, 0), Tabs::Misc);
 		wrapper::keybind(xorstr_("desync on key"), Vector2(170, 0), Tabs::Misc);
+		wrapper::checkbox(xorstr_("desync on visible"), Vector2(170, 0), Tabs::Misc);
 		wrapper::checkbox(xorstr_("long neck"), Vector2(170, 0), Tabs::Misc, true, false);
 		wrapper::combobox(xorstr_("crosshair"), { xorstr_("none"), xorstr_("plusminus"), xorstr_("evilcheats"), xorstr_("circle"), xorstr_("swastika") }, Vector2(170, 0), Tabs::Misc);
 
@@ -418,14 +428,10 @@ namespace aidsware::ui
 		wrapper::checkbox(xorstr_("flyhack stop"), Vector2(170, 0), Tabs::Misc);
 		wrapper::currentY += 20.f;
 		wrapper::slider(xorstr_("threshold"), Vector2(170, 0), 100.0f, 0.0f, 400.0f, Tabs::Misc);
-		wrapper::checkbox(xorstr_("walk to marker"), Vector2(170, 0), Tabs::Misc);
 		wrapper::checkbox(xorstr_("custom box"), Vector2(170, 0), Tabs::Misc);
 		wrapper::textbox(xorstr_("custom box path"), Vector2(170, 0), Tabs::Misc, xorstr_(""));
 		wrapper::checkbox(xorstr_("custom hitsound"), Vector2(170, 0), Tabs::Misc);
 		wrapper::textbox(xorstr_("hitsound path"), Vector2(170, 0), Tabs::Misc, xorstr_(""));
-		wrapper::checkbox(xorstr_("weapon spam"), Vector2(170, 0), Tabs::Misc);
-		wrapper::checkbox(xorstr_("spoof id"), Vector2(170, 0), Tabs::Misc);
-		wrapper::textbox(xorstr_("steamid"), Vector2(170, 0), Tabs::Misc, xorstr_(""));
 		//wrapper::checkbox(xorstr_("test"), Vector2(170, 0), Tabs::Combat);
 		wrapper::reset_height();
 		wrapper::reset_width();

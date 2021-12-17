@@ -1272,7 +1272,7 @@ public:
 		return reinterpret_cast<Item * (__fastcall*)(HeldEntity*)>(off)(this);
 	}
 };
-class Shader {
+class Shader { 
 public:
 	static Shader* Find(char* name) {
 		static auto off = METHOD("UnityEngine.CoreModule::UnityEngine::Shader::Find(String): Shader");
@@ -2324,6 +2324,61 @@ public:
 			}
 		}
 	}
+	float pi = 3.14159265358979323846;
+	static float normalize_angle(float angle) {
+		while (angle > 360.0f) {
+			angle -= 360.0f;
+		}
+		while (angle < 0.0f) {
+			angle += 360.0f;
+		}
+		return angle;
+	}
+	static Vector3 normalize_angles(Vector3 angles) {
+		angles.x = normalize_angle(angles.x);
+		angles.y = normalize_angle(angles.y);
+		angles.z = normalize_angle(angles.z);
+		return angles;
+	}
+	static Vector3 rotate_point(Vector3 center, Vector3 origin, float angle) {
+		float num = angle * 0.0174532924f;
+		float num2 = -std::sin(num);
+		float num3 = std::cos(num);
+		origin.x -= center.x;
+		origin.z -= center.z;
+		float num4 = origin.x * num3 - origin.z * num2;
+		float num5 = origin.x * num2 + origin.z * num3;
+		float num6 = num4 + center.x;
+		num5 += center.z;
+		return Vector3(num6, origin.y, num5);
+	}
+	static Vector3 euler_angles(Quaternion q1) {
+		float num = q1.w * q1.w;
+		float num2 = q1.x * q1.x;
+		float num3 = q1.y * q1.y;
+		float num4 = q1.z * q1.z;
+		float num5 = num2 + num3 + num4 + num;
+		float num6 = q1.x * q1.w - q1.y * q1.z;
+		Vector3 vector;
+		if (num6 > 0.4995f * num5) {
+			vector.y = 2.0f * std::atan2f(q1.y, q1.x);
+			vector.x = 1.57079637f;
+			vector.z = 0.0f;
+			return normalize_angles(vector * 57.2958f);
+		}
+		if (num6 < -0.4995f * num5) {
+			vector.y = -2.0f * std::atan2f(q1.y, q1.x);
+			vector.x = -1.57079637f;
+			vector.z = 0.0f;
+			return normalize_angles(vector * 57.2958f);
+		}
+		Quaternion quaternion = Quaternion(q1.w, q1.z, q1.x, q1.y);
+		vector.y = std::atan2f(2.0f * quaternion.x * quaternion.w + 2.0f * quaternion.y * quaternion.z, 1.0f - 2.0f * (quaternion.z * quaternion.z + quaternion.w * quaternion.w));
+		vector.x = std::asin(2.0f * (quaternion.x * quaternion.z - quaternion.w * quaternion.y));
+		vector.z = std::atan2f(2.0f * quaternion.x * quaternion.y + 2.0f * quaternion.z * quaternion.w, 1.0f - 2.0f * (quaternion.y * quaternion.y + quaternion.z * quaternion.z));
+		return normalize_angles(vector * 57.2958f);
+	}
+
 	static void RenderTraceResults() {
 		for (int i = 0; i < traceResults.size(); i++) {
 			TraceResult tracer = traceResults[i];
@@ -2331,7 +2386,48 @@ public:
 			Vector2 s_pos_end;
 			if (Camera::world_to_screen(tracer.hitPosition, s_pos_end)) {
 				//draw_line(s_pos_start, s_pos_end);
-				Renderer::filled_circle(s_pos_end, { 56, 104, 186 }, 5.f);
+				//Renderer::filled_circle(s_pos_end, { 56, 104, 186 }, 5.f);
+				
+				//3d cube xd
+				CBounds bounds = CBounds();
+
+
+				Color3 box_col = aidsware::ui::get_color("targeted boxes");;
+				float y = euler_angles(LocalPlayer::Entity()->bones()->eye_rot).y;
+				Vector3 center = tracer.hitPosition;
+				Vector3 extents = Vector3(0.2f, 0.2f, 0.2f);;
+				Vector3 frontTopLeft = rotate_point(center, Vector3(center.x - extents.x, center.y + extents.y, center.z - extents.z), y);
+				Vector3 frontTopRight = rotate_point(center, Vector3(center.x + extents.x, center.y + extents.y, center.z - extents.z), y);
+				Vector3 frontBottomLeft = rotate_point(center, Vector3(center.x - extents.x, center.y - extents.y, center.z - extents.z), y);
+				Vector3 frontBottomRight = rotate_point(center, Vector3(center.x + extents.x, center.y - extents.y, center.z - extents.z), y);
+				Vector3 backTopLeft = rotate_point(center, Vector3(center.x - extents.x, center.y + extents.y, center.z + extents.z), y);
+				Vector3 backTopRight = rotate_point(center, Vector3(center.x + extents.x, center.y + extents.y, center.z + extents.z), y);
+				Vector3 backBottomLeft = rotate_point(center, Vector3(center.x - extents.x, center.y - extents.y, center.z + extents.z), y);
+				Vector3 backBottomRight = rotate_point(center, Vector3(center.x + extents.x, center.y - extents.y, center.z + extents.z), y);
+
+				Vector2 frontTopLeft_2d, frontTopRight_2d, frontBottomLeft_2d, frontBottomRight_2d, backTopLeft_2d, backTopRight_2d, backBottomLeft_2d, backBottomRight_2d;
+				if (Camera::world_to_screen(frontTopLeft, frontTopLeft_2d) &&
+					Camera::world_to_screen(frontTopRight, frontTopRight_2d) &&
+					Camera::world_to_screen(frontBottomLeft, frontBottomLeft_2d) &&
+					Camera::world_to_screen(frontBottomRight, frontBottomRight_2d) &&
+					Camera::world_to_screen(backTopLeft, backTopLeft_2d) &&
+					Camera::world_to_screen(backTopRight, backTopRight_2d) &&
+					Camera::world_to_screen(backBottomLeft, backBottomLeft_2d) &&
+					Camera::world_to_screen(backBottomRight, backBottomRight_2d)) {
+
+					Renderer::line(frontTopLeft_2d, frontTopRight_2d, box_col, true, 1.5f);
+					Renderer::line(frontTopRight_2d, frontBottomRight_2d, box_col, true, 1.5f);
+					Renderer::line(frontBottomRight_2d, frontBottomLeft_2d, box_col, true, 1.5f);
+					Renderer::line(frontBottomLeft_2d, frontTopLeft_2d, box_col, true, 1.5f);
+					Renderer::line(backTopLeft_2d, backTopRight_2d, box_col, true, 1.5f);
+					Renderer::line(backTopRight_2d, backBottomRight_2d, box_col, true, 1.5f);
+					Renderer::line(backBottomRight_2d, backBottomLeft_2d, box_col, true, 1.5f);
+					Renderer::line(backBottomLeft_2d, backTopLeft_2d, box_col, true, 1.5f);
+					Renderer::line(frontTopLeft_2d, backTopLeft_2d, box_col, true, 1.5f);
+					Renderer::line(frontTopRight_2d, backTopRight_2d, box_col, true, 1.5f);
+					Renderer::line(frontBottomRight_2d, backBottomRight_2d, box_col, true, 1.5f);
+					Renderer::line(frontBottomLeft_2d, backBottomLeft_2d, box_col, true, 1.5f);
+				}
 			}
 		}
 	}
@@ -2396,17 +2492,6 @@ public:
 		else
 			target = target_ply->bones()->head->position;
 
-		TraceResult f = traceProjectile(LocalPlayer::Entity()->eyes()->get_position(),
-			this->initialVelocity(),
-			this->drag(),
-			Vector3(0, -9.1 * this->gravityModifier(), 0),
-			target);
-
-		//printf("this->initialVelocity(): (%ff, %ff, %ff)\n", this->initialVelocity());
-		//printf("this->drag(): (%ff, %ff, %ff)\n", this->drag());
-
-		LogSystem::AddTraceResult(f);
-		
 		return Launch_(this);
 	}
 	static inline void(*DoMovement_)(Projectile*, float) = nullptr;
@@ -3035,8 +3120,8 @@ public:
 	}																														  
 };																															  
 																															  
-//AssetBundle* aw_assets;																										  
-//Shader* chams;																												  
+AssetBundle* aw_assets;																										  
+Shader* chams;																												  
 																															  
 void initialize_cheat( ) {																									  
 	////VM_DOLPHIN_BLACK_START																								  
@@ -3051,7 +3136,7 @@ void initialize_cheat( ) {
 	//if (!aw_assets) // todo; use UnityWebRequestAssetBundle.GetAssetBundle to stream bundle from the github repo.
 	//	aw_assets = load_from_file_fn(String::New("C:\\aidsware.assets"), 0, 0);
 	//aw_assets = AssetBundle::LoadFromFile(const_cast<char*>(s.c_str()));
-	//aw_assets = AssetBundle::LoadFromFile(const_cast<char*>("C:\\sapphire\\assets.saph"));
+	aw_assets = AssetBundle::LoadFromFile(const_cast<char*>("C:\\sapphire\\assets.saph"));
 	//printf("aw_assets: 0x%p\n", aw_assets);
 
 	//ASSIGN_HOOK("Assembly-CSharp::EffectLibrary::CreateEffect(string, Effect): GameObject", EffectLibrary::CreateEffect_);
@@ -3096,7 +3181,7 @@ void initialize_cheat( ) {
 
 	ASSIGN_HOOK("Assembly-CSharp::BaseCombatEntity::DoHitNotify(HitInfo): Void", BaseCombatEntity::DoHitNotify_);
 
-	ASSIGN_HOOK("Assembly-CSharp::Client::OnRequestUserInformation(Message): Void", Network::Client::OnRequestUserInformation_	);
+	//ASSIGN_HOOK("Assembly-CSharp::Client::OnRequestUserInformation(Message): Void", Network::Client::OnRequestUserInformation_	);
 	ASSIGN_HOOK("Facepunch.Network::Network::NetWrite::UInt64(UInt64): Void", Network::NetWrite::UInt64_);
 	//il2cpp::hook(DDraw::OnGui_, xorstr_("OnGUI"), xorstr_("DDraw"), xorstr_("UnityEngine"));
 

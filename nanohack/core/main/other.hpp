@@ -162,7 +162,7 @@ namespace other {
 		return true;
 	}
 
-	void find_manipulate_angle( ) {
+	void find_manipulate_angle(float desyncTime) {
 		auto loco = LocalPlayer::Entity( );
 		auto held = LocalPlayer::Entity()->GetHeldEntity<BaseProjectile>();
 		loco->modelState()->set_mounted(true);
@@ -175,7 +175,7 @@ namespace other {
 			return;
 		}
 
-		float desyncTime = (Time::realtimeSinceStartup( ) - loco->lastSentTickTime( )) - 0.03125 * 3;
+		//float desyncTime = (Time::realtimeSinceStartup( ) - loco->lastSentTickTime( )) - 0.03125 * 3;
 		float mm_max_eye = ((0.1f + ((desyncTime + 2.f / 60.f + 0.125f) * 1.5f) * loco->MaxVelocity( )));
 
 		std::vector<Vector3> arr = {};

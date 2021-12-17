@@ -6,7 +6,7 @@
 #define authh
 #define _WINSOCKAPI_
 
-#include <VMProtectSDK.h>
+//#include <VMProtectSDK.h>
 
 #include <Windows.h>
 #include <stdint.h>

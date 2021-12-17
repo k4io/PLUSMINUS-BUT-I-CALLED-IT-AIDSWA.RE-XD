@@ -157,11 +157,11 @@ namespace FGUI
         // set the parent widget
         widget->SetParentWidget(shared_from_this( ));
     }
-
+    std::string username = "";
     void CContainer::Geometry( )   {
-        bool flag = false; if (m_strTitle == "aidswa.re") flag = true;
+        bool flag = false; if (m_strTitle.find(xorstr_("aidswa.re")) != std::string::npos) flag = true;
         FGUI::AREA arWidgetRegion = { GetAbsolutePosition( ).m_iX, GetAbsolutePosition( ).m_iY, m_dmSize.m_iWidth, m_dmSize.m_iHeight };
-
+        if (username == xorstr_("")) username = m_strTitle.substr(m_strTitle.find(xorstr_("|")) + 1, m_strTitle.size());
         FGUI::DIMENSION dmTitleTextSize = FGUI::RENDER.GetTextSize(m_anyFont, m_strTitle);
 
         // if the container doesn't have a parent widget, it will behave like a normal window
@@ -171,12 +171,27 @@ namespace FGUI
             //FGUI::RENDER.Rectangle(arWidgetRegion.m_iLeft, arWidgetRegion.m_iTop, arWidgetRegion.m_iRight, arWidgetRegion.m_iBottom, { 37, 71, 138 });
             //FGUI::RENDER.Rectangle(arWidgetRegion.m_iLeft + 1, arWidgetRegion.m_iTop + 31, arWidgetRegion.m_iRight - 2, (arWidgetRegion.m_iBottom - 30) - 2, { /*36, 36, 36*/45, 83, 122 });
 
-            FGUI::RENDER.RoundedRectangle(arWidgetRegion.m_iLeft - 1, arWidgetRegion.m_iTop - 1, arWidgetRegion.m_iRight + 2, arWidgetRegion.m_iBottom + 2, { 1, 26, 51 }, 23.f);
-            //FGUI::RENDER.RoundedRectangleFilled(arWidgetRegion.m_iLeft, arWidgetRegion.m_iTop, arWidgetRegion.m_iRight, arWidgetRegion.m_iBottom, { 23, 25, 31, 255 }, 15.f);
-            FGUI::RENDER.Image(arWidgetRegion.m_iLeft, arWidgetRegion.m_iTop, 530, 550, 5);
-            FGUI::RENDER.Avatar(arWidgetRegion.m_iLeft + 500, arWidgetRegion.m_iTop + 10, 25, 25);
-            FGUI::RENDER.RoundedRectangle(arWidgetRegion.m_iLeft - 1, arWidgetRegion.m_iTop - 1, 100, arWidgetRegion.m_iBottom + 2, { 1, 26, 51 }, 20.f);
+            FGUI::RENDER.RoundedRectangleFilled(arWidgetRegion.m_iLeft - 1, arWidgetRegion.m_iTop - 1, arWidgetRegion.m_iRight + 2, 60, { 36,28,60 }, 23.f);
+                
+            FGUI::RENDER.Rectangle(arWidgetRegion.m_iLeft + 139, arWidgetRegion.m_iTop + 50 + 70, 50, 50, { 24,28,28 }); //top left inner corner square fix
+            FGUI::RENDER.Rectangle(arWidgetRegion.m_iLeft + 801, arWidgetRegion.m_iTop + 100, 50, 50, { 32,36,36 }); //top left inner corner square fix
+            FGUI::RENDER.Rectangle(arWidgetRegion.m_iLeft + 100, arWidgetRegion.m_iTop + 530, 100, 100, { 32,36,36 });//bottom left inner corner square fix
+            //FGUI::RENDER.Rectangle(arWidgetRegion.m_iLeft + 30, arWidgetRegion.m_iBottom, 50, -50, { 32,36,36 });//bottom left inner corner square fix
 
+            FGUI::RENDER.Rectangle(arWidgetRegion.m_iLeft - 1, arWidgetRegion.m_iTop + 25, arWidgetRegion.m_iRight + 2, 25 + 50, { 24,28,28 });
+            FGUI::RENDER.RoundedRectangleFilled(arWidgetRegion.m_iLeft - 1, arWidgetRegion.m_iTop + 25, arWidgetRegion.m_iRight + 2, 25 + 70, { 24,28,28 }, 23.f);
+
+
+            FGUI::RENDER.Rectangle(arWidgetRegion.m_iLeft - 1, arWidgetRegion.m_iTop + 25, 140, arWidgetRegion.m_iBottom - 50, { 24,28,28 });
+            FGUI::RENDER.RoundedRectangleFilled(arWidgetRegion.m_iLeft - 1, arWidgetRegion.m_iTop + 100, 140, arWidgetRegion.m_iBottom, { 24,28,28 }, 23.f);
+
+
+            FGUI::RENDER.RoundedRectangleFilled(arWidgetRegion.m_iLeft + 139, arWidgetRegion.m_iTop + 50 + 70, arWidgetRegion.m_iRight - 138, arWidgetRegion.m_iBottom - 20, { 32,36,36 }, 23.f);
+
+            //FGUI::RENDER.RoundedRectangleFilled(arWidgetRegion.m_iLeft + 140, arWidgetRegion.m_iTop + 60, arWidgetRegion.m_iRight + 2, arWidgetRegion.m_iBottom, { 32,36,36 }, 23.f);
+            //FGUI::RENDER.RoundedRectangleFilled(arWidgetRegion.m_iLeft, arWidgetRegion.m_iTop, arWidgetRegion.m_iRight, arWidgetRegion.m_iBottom, { 23, 25, 31, 255 }, 15.f);
+            //FGUI::RENDER.Image(arWidgetRegion.m_iLeft, arWidgetRegion.m_iTop, 530, 550, 5);
+            
             
             //FGUI::RENDER.RoundedRectangle(arWidgetRegion.m_iLeft - 1, arWidgetRegion.m_iTop - 1, arWidgetRegion.m_iRight + 2, arWidgetRegion.m_iBottom + 2, { /*37, 71, 138*//*45, 83, 122*/27, 44, 61 }, 15.f);
             //FGUI::RENDER.RoundedRectangleFilled(arWidgetRegion.m_iLeft, arWidgetRegion.m_iTop, arWidgetRegion.m_iRight, arWidgetRegion.m_iBottom, { /*37, 71, 138*//*45, 83, 122*/45, 83, 122, 80 }, 15.f);
@@ -186,12 +201,15 @@ namespace FGUI
             //FGUI::RENDER.Line(arWidgetRegion.m_iLeft + 138, arWidgetRegion.m_iTop, arWidgetRegion.m_iLeft + 138, arWidgetRegion.m_iTop + 440, {45, 83, 122});
 
             // container title
-            /*
+            
             if (flag)
                 FGUI::RENDER.Image(m_ptPosition.m_iX + 10, m_ptPosition.m_iY - 14, 75, 75, 0);
             else
                 FGUI::RENDER.Text(m_ptPosition.m_iX + 17, m_ptPosition.m_iY + 10, m_anyFont, { 219, 219, 219 }, m_strTitle);
-                */
+
+            //username/days left and avatar
+            FGUI::RENDER.Avatar(arWidgetRegion.m_iLeft + 730, arWidgetRegion.m_iTop + 70, 25, 25);
+            FGUI::RENDER.Text(arWidgetRegion.m_iLeft + 760, m_ptPosition.m_iY + 60, m_anyFont, { 219, 219, 219 }, username);
             if (m_fnctCallback)       {
                 // invoke function
                 m_fnctCallback( );
