@@ -102,7 +102,7 @@ namespace FGUI
           {
               m_iEntrySpacing = 115;
 
-              arWidgetRegion = { GetAbsolutePosition().m_iX + (static_cast<int>(i) * m_iEntrySpacing), GetAbsolutePosition().m_iY, m_dmSize.m_iWidth, m_dmSize.m_iHeight };
+              arWidgetRegion = { GetAbsolutePosition().m_iX + (static_cast<int>(i) * m_iEntrySpacing), GetAbsolutePosition().m_iY + 200, m_dmSize.m_iWidth, m_dmSize.m_iHeight };
 
               if (m_ullSelectedEntry == i)
               {
@@ -110,9 +110,9 @@ namespace FGUI
                   //FGUI::RENDER.Gradient(arWidgetRegion.m_iLeft, arWidgetRegion.m_iTop + arWidgetRegion.m_iBottom, arWidgetRegion.m_iRight, 2, { 105, 127, 255 }, { 1, 26, 51 }, false);
                   //DrawRoundedRectangle();
                   //FGUI::RENDER.Rectangle(arWidgetRegion.m_iLeft, (arWidgetRegion.m_iTop - 5), arWidgetRegion.m_iRight, (arWidgetRegion.m_iBottom + 5), { 45, 83, 122 });
-                  FGUI::RENDER.RoundedRectangleFilled(arWidgetRegion.m_iLeft, arWidgetRegion.m_iTop, arWidgetRegion.m_iRight, arWidgetRegion.m_iBottom, { 45, 83, 122 }, 5.f);
+                  FGUI::RENDER.RoundedRectangleFilled(arWidgetRegion.m_iLeft, arWidgetRegion.m_iTop, arWidgetRegion.m_iRight - 4, arWidgetRegion.m_iBottom, { 45, 83, 122 }, 5.f);
                   //FGUI::RENDER.Text((arWidgetRegion.m_iLeft + 20), (arWidgetRegion.m_iTop + (arWidgetRegion.m_iBottom / 2) - 5), m_anyFont, { 219, 219, 219 }, m_prgpTabButtons[i]);
-                  FGUI::RENDER.Text((arWidgetRegion.m_iLeft + 20), (arWidgetRegion.m_iTop + (arWidgetRegion.m_iBottom / 2) - 5), m_anyFont, { 38, 148, 206 }, m_prgpTabButtons[i]);
+                  FGUI::RENDER.Text((arWidgetRegion.m_iLeft + 20), (arWidgetRegion.m_iTop + (arWidgetRegion.m_iBottom / 2) - 5), m_anyFont, { 24,28,28 }, m_prgpTabButtons[i]);
               }
               else
               {
@@ -135,17 +135,64 @@ namespace FGUI
 
               if (m_ullSelectedEntry == i)
               {
+                  switch (i)
+                  {
+                  case 0:
+
+                      //Aimbot group
+                      FGUI::RENDER.RoundedRectangleFilled(
+                          arWidgetRegion.m_iLeft + 150, 
+                          arWidgetRegion.m_iTop + 65, 
+                          arWidgetRegion.m_iRight + 125, 
+                          arWidgetRegion.m_iBottom + 170, 
+                          { 32,36,36 }, 23.f); 
+                      FGUI::RENDER.Text(arWidgetRegion.m_iLeft + 245,
+                          arWidgetRegion.m_iTop + 70,
+                          m_anyFont, { 43, 35, 61 }, "aimbot");
+
+                      //weapon group
+                      FGUI::RENDER.RoundedRectangleFilled(
+                          arWidgetRegion.m_iLeft + 400,
+                          arWidgetRegion.m_iTop + 65,
+                          arWidgetRegion.m_iRight + 100,
+                          arWidgetRegion.m_iBottom + 435,
+                          { 32,36,36 }, 23.f);
+                      FGUI::RENDER.Text(arWidgetRegion.m_iLeft + 490,
+                          arWidgetRegion.m_iTop + 62,
+                          m_anyFont, { 43, 35, 61 }, "weapon");
+
+                      //extras group
+                      FGUI::RENDER.RoundedRectangleFilled(
+                          arWidgetRegion.m_iLeft + 625,
+                          arWidgetRegion.m_iTop + 65,
+                          arWidgetRegion.m_iRight + 100,
+                          arWidgetRegion.m_iBottom + 435,
+                          { 32,36,36 }, 23.f);
+                      FGUI::RENDER.Text(arWidgetRegion.m_iLeft + 705,
+                          arWidgetRegion.m_iTop + 67,
+                          m_anyFont, { 43, 35, 61 }, "extras");
+
+
+
+                      break;
+                  case 1:
+                      break;
+                  case 2:
+                      break;
+                  case 3:
+                      break;
+                  }
                   //FGUI::RENDER.Rectangle(arWidgetRegion.m_iLeft, arWidgetRegion.m_iTop - 2, arWidgetRegion.m_iRight, arWidgetRegion.m_iBottom, { 57, 117, 179 });
                   //DrawRoundedRectangle(arWidgetRegion.m_iLeft, arWidgetRegion.m_iTop, arWidgetRegion.m_iRight, arWidgetRegion.m_iBottom, { 28, 77, 128 }, 10.f);
                   //FGUI::RENDER.Rectangle(arWidgetRegion.m_iLeft + 105, arWidgetRegion.m_iTop - 2, arWidgetRegion.m_iRight - 105, arWidgetRegion.m_iBottom, { 53, 109, 166 });
                   //DrawRoundedRectangle(arWidgetRegion.m_iLeft + 100, arWidgetRegion.m_iTop + 2, arWidgetRegion.m_iRight - 110, arWidgetRegion.m_iBottom - 4, { 25, 117, 212 }, 10.f);
-                  FGUI::RENDER.Line(arWidgetRegion.m_iLeft - 2, arWidgetRegion.m_iTop, arWidgetRegion.m_iLeft + 98, arWidgetRegion.m_iTop, { 100, 100, 117 }, 1.f);
-                  FGUI::RENDER.Line(arWidgetRegion.m_iLeft - 2, arWidgetRegion.m_iTop + arWidgetRegion.m_iBottom, arWidgetRegion.m_iLeft + 98, arWidgetRegion.m_iTop + arWidgetRegion.m_iBottom, { 100, 100, 117 }, 1.f);
+                  //FGUI::RENDER.Line(arWidgetRegion.m_iLeft - 2, arWidgetRegion.m_iTop, arWidgetRegion.m_iLeft + 98, arWidgetRegion.m_iTop, { 100, 100, 117 }, 1.f);
+                  //FGUI::RENDER.Line(arWidgetRegion.m_iLeft - 2, arWidgetRegion.m_iTop + arWidgetRegion.m_iBottom, arWidgetRegion.m_iLeft + 98, arWidgetRegion.m_iTop + arWidgetRegion.m_iBottom, { 100, 100, 117 }, 1.f);
 
-                  FGUI::RENDER.RoundedRectangleFilled(arWidgetRegion.m_iLeft - 1, arWidgetRegion.m_iTop + 1, 99, arWidgetRegion.m_iBottom - 2, { 23, 25, 31, 190 }, 0.f);
+                  FGUI::RENDER.RoundedRectangleFilled(arWidgetRegion.m_iLeft - 1, arWidgetRegion.m_iTop + 81, 138, arWidgetRegion.m_iBottom + 25, { 32,36,36, 190 }, 0.f);
 
-                  //FGUI::RENDER.Text((arWidgetRegion.m_iLeft + 15), (arWidgetRegion.m_iTop + (arWidgetRegion.m_iBottom / 2) - 8), m_anyFont, { 38, 148, 206 }, m_prgpTabButtons[i]);
-                  FGUI::RENDER.Image((arWidgetRegion.m_iLeft + 20), arWidgetRegion.m_iTop + 2, 50, 50, index);
+                  //FGUI::RENDER.Text((arWidgetRegion.m_iLeft + 15), (arWidgetRegion.m_iTop + (arWidgetRegion.m_iBottom / 2) - 8), m_anyFont, { 24,28,28 }, m_prgpTabButtons[i]);
+                  FGUI::RENDER.Image((arWidgetRegion.m_iLeft + 30), arWidgetRegion.m_iTop + 84, 75, 75, index);
               }
               else
               {
@@ -154,10 +201,10 @@ namespace FGUI
                   //FGUI::RENDER.Rectangle(arWidgetRegion.m_iLeft + 105, arWidgetRegion.m_iTop, arWidgetRegion.m_iRight - 105, arWidgetRegion.m_iBottom, { 31, 87, 145 });
                   //DrawRoundedRectangle(arWidgetRegion.m_iLeft + 100, arWidgetRegion.m_iTop + 2, arWidgetRegion.m_iRight - 110, arWidgetRegion.m_iBottom - 4, { 29, 99, 171 }, 10.f);
 
-                  FGUI::RENDER.Line(arWidgetRegion.m_iLeft - 2, arWidgetRegion.m_iTop, arWidgetRegion.m_iLeft + 96, arWidgetRegion.m_iTop, { 121,121,140 }, 1.f);
-                  FGUI::RENDER.Line(arWidgetRegion.m_iLeft - 2, arWidgetRegion.m_iTop + arWidgetRegion.m_iBottom, arWidgetRegion.m_iLeft + 96, arWidgetRegion.m_iTop + arWidgetRegion.m_iBottom, { 121,121,140 }, 1.f);
-                  //FGUI::RENDER.Text((arWidgetRegion.m_iLeft + 15), (arWidgetRegion.m_iTop + (arWidgetRegion.m_iBottom / 2) - 8), m_anyFont, { 38, 148, 206 }, m_prgpTabButtons[i]);
-                  FGUI::RENDER.Image((arWidgetRegion.m_iLeft + 20), arWidgetRegion.m_iTop + 2, 50, 50, index);
+                  //FGUI::RENDER.Line(arWidgetRegion.m_iLeft - 2, arWidgetRegion.m_iTop, arWidgetRegion.m_iLeft + 96, arWidgetRegion.m_iTop, { 121,121,140 }, 1.f);
+                  //FGUI::RENDER.Line(arWidgetRegion.m_iLeft - 2, arWidgetRegion.m_iTop + arWidgetRegion.m_iBottom, arWidgetRegion.m_iLeft + 96, arWidgetRegion.m_iTop + arWidgetRegion.m_iBottom, { 121,121,140 }, 1.f);
+                  //FGUI::RENDER.Text((arWidgetRegion.m_iLeft + 15), (arWidgetRegion.m_iTop + (arWidgetRegion.m_iBottom / 2) - 8), m_anyFont, { 24,28,28 }, m_prgpTabButtons[i]);
+                  FGUI::RENDER.Image((arWidgetRegion.m_iLeft + 30), arWidgetRegion.m_iTop + 84, 75, 75, index);
               }
           }
       }
@@ -179,7 +226,7 @@ namespace FGUI
       {
         m_iEntrySpacing = 100;
 
-        arWidgetRegion = { GetAbsolutePosition().m_iX - 8, GetAbsolutePosition().m_iY + (static_cast<int>(i) * m_iEntrySpacing) + 10, m_dmSize.m_iWidth, m_dmSize.m_iHeight + 57 };
+        arWidgetRegion = { GetAbsolutePosition().m_iX - 8, GetAbsolutePosition().m_iY + 80 + (static_cast<int>(i) * m_iEntrySpacing) + 10, m_dmSize.m_iWidth, m_dmSize.m_iHeight + 57 };
       }
 
       if (FGUI::INPUT.IsCursorInArea(arWidgetRegion))

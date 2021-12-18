@@ -3125,7 +3125,7 @@ Shader* chams;
 																															  
 void initialize_cheat( ) {																									  
 	////VM_DOLPHIN_BLACK_START																								  
-	////VMProtectBeginUltra(xorstr_("init"));																				  
+	//VMProtectBeginUltra(xorstr_("init"));																				  
 	init_classes( );
 	init_fields( );
 	init_methods( );
@@ -3190,6 +3190,6 @@ void initialize_cheat( ) {
 
 	settings::cheat_init = true;
 
-	////VMProtectEnd();
+	//VMProtectEnd();
 	////VM_DOLPHIN_BLACK_END
 }

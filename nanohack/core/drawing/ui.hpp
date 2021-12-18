@@ -106,12 +106,12 @@ namespace aidsware::ui
 
 		void reset_width()
 		{
-			currentX = 110.f;
+			currentX = 150.f;
 		}
 
 		void reset_height()
 		{
-			currentY = -15.f;
+			currentY = 120.f;
 		}
 
 		void create_window(std::string name, Vector2 position, Vector2 size, std::uint32_t menu_key)
@@ -225,9 +225,10 @@ namespace aidsware::ui
 		vars::groupBoxes = {};
 		vars::keybinders = {};
 
-		vars::Container = std::make_shared<FGUI::CContainer>();
+		vars::Container = std::make_shared<FGUI::CContainer>();//aidswa.re|kai|185
 		vars::Tabs = std::make_shared<FGUI::CTabPanel>();
 		std::string s = std::string(xorstr_("aidswa.re|")); s += std::string(settings::auth::username.begin(), settings::auth::username.end());
+		s += "|" + std::string(settings::auth::days_left.begin(), settings::auth::days_left.end());
 		wrapper::create_window(s, Vector2(200, 200), Vector2(850, 530), VK_INSERT);
 		wrapper::currentY += 20.0f;
 		wrapper::tabs({xorstr_("Combat"), xorstr_("Visuals"), xorstr_("Misc"), xorstr_("Colors") });
@@ -237,25 +238,61 @@ namespace aidsware::ui
 		wrapper::reset_width();
 		wrapper::reset_height();
 		wrapper::currentY -= 5.0f;
-		//wrapper::slider(xorstr_("shaders"), Vector2(0, 0), 1.0f, 1.0f, 40.0f);
-		wrapper::checkbox(xorstr_("psilent"), Vector2(0, 0), Tabs::Combat, true);
-		wrapper::currentY += 5.0f;
+		wrapper::currentX += 5.0f;
+
+		//aimbot group
 		wrapper::checkbox(xorstr_("aimbot"), Vector2(0, 0), Tabs::Combat, true, false);
 		wrapper::checkbox(xorstr_("bodyaim"), Vector2(0, 0), Tabs::Combat);
 		wrapper::currentY += 10.0f;
 		//wrapper::checkbox(xorstr_("silent melee"), Vector2(0, 0), Tabs::Combat);
 		wrapper::slider(xorstr_("smoothing"), Vector2(0, 0), 0.75f, 0.01f, 1.0f, Tabs::Combat);
 		wrapper::currentY -= 5.f;
+
+
+		//wrapper::slider(xorstr_("shaders"), Vector2(0, 0), 1.0f, 1.0f, 40.0f);
+		wrapper::checkbox(xorstr_("psilent"), Vector2(0, 0), Tabs::Combat, true);
+		wrapper::checkbox(xorstr_("target heli"), Vector2(0, 0), Tabs::Combat);
+
+		wrapper::reset_height();
+		wrapper::currentX += 70.0f;
+
+		//weapon group
+		wrapper::checkbox(xorstr_("hitbox attraction"), Vector2(180, 0), Tabs::Combat);
+		wrapper::checkbox(xorstr_("fat bullet"), Vector2(180, 0), Tabs::Combat);
+		wrapper::currentY += 15.0f;
+		wrapper::slider(xorstr_("bullet size"), Vector2(180, 0), 1.0f, 0.1f, 1.0f);
+		wrapper::currentY -= 10.f;
+		wrapper::checkbox(xorstr_("fast bullets"), Vector2(180, 0), Tabs::Combat);
+		wrapper::combobox(xorstr_("hitbox override"), { xorstr_("none"), xorstr_("body"), xorstr_("head"), xorstr_("random (all)"), xorstr_("random (main)") }, Vector2(180, 0), Tabs::Combat);
+
+		wrapper::checkbox(xorstr_("pierce"), Vector2(180, 0), Tabs::Combat);
+		wrapper::checkbox(xorstr_("rapid fire"), Vector2(180, 0), Tabs::Combat);
+		wrapper::checkbox(xorstr_("insta eoka"), Vector2(180, 0), Tabs::Combat);
+		wrapper::checkbox(xorstr_("automatic"), Vector2(180, 0), Tabs::Combat);
+
+		wrapper::currentY += 5.f;
+		wrapper::slider(xorstr_("target fov"), Vector2(180.f, 0.f), 300.0f, 30.0f, 2500.0f, Tabs::Combat);
+		wrapper::slider(xorstr_("recoil %"), Vector2(180.0f, 0.0f), 100.0f, 0.0f, 100.0f, Tabs::Combat);
+		wrapper::slider(xorstr_("spread %"), Vector2(180.0f, 0), 100.0f, 0.0f, 100.0f, Tabs::Combat);
+
+		wrapper::currentY -= 10.0f;
+		wrapper::checkbox(xorstr_("autoshoot"), Vector2(180.0f, 0), Tabs::Combat);
+
+		wrapper::currentY += 5.0f;
+		wrapper::checkbox(xorstr_("always heli weakspot"), Vector2(180, 0), Tabs::Combat);
+		wrapper::checkbox(xorstr_("insta charge compound"), Vector2(180, 0), Tabs::Combat);
+		
+		wrapper::currentX += 410.0f;
+		wrapper::reset_height();
+
 		wrapper::checkbox(xorstr_("peek assist"), Vector2(0, 0), Tabs::Combat, true, false);
 		wrapper::currentY += 10.0f;
+		wrapper::slider(xorstr_("max radius"), Vector2(0, 10.0f), 7.f, 1.0f, 20.0f, Tabs::Combat);
+		wrapper::slider(xorstr_("checks"), Vector2(0, 10.0f), 30.f, 1.f, 360.0f, Tabs::Combat);
+		wrapper::slider(xorstr_("duration"), Vector2(0, 10.0f), 0.05f, 0.001f, 60.0f, Tabs::Combat);
+
 		//wrapper::checkbox(xorstr_("silent melee"), Vector2(0, 0), Tabs::Combat);
-		wrapper::currentY -= 5.f;	
-		wrapper::checkbox(xorstr_("hitbox attraction"), Vector2(0, 0), Tabs::Combat);
-		wrapper::checkbox(xorstr_("fat bullet"), Vector2(0, 0), Tabs::Combat);
-		wrapper::currentY += 10.0f;
-		wrapper::slider(xorstr_("bullet size"), Vector2(0, 0), 1.0f, 0.1f, 1.0f);
 		wrapper::currentY -= 5.f;
-		wrapper::checkbox(xorstr_("fast bullets"), Vector2(0, 0), Tabs::Combat);
 
 		wrapper::checkbox(xorstr_("insta kill"), Vector2(0, 0), Tabs::Combat);
 		wrapper::keybind(xorstr_("insta kill key"), Vector2(0, 0.0f), Tabs::Combat);
@@ -265,38 +302,8 @@ namespace aidsware::ui
 		wrapper::currentY -= 5.f;
 		wrapper::checkbox(xorstr_("with peek assist"), Vector2(0, 0), Tabs::Combat);
 		wrapper::currentX += 20.f;
+
 		wrapper::reset_height();
-
-		//wrapper::currentY += 5.0f;
-		wrapper::combobox(xorstr_("hitbox override"), { xorstr_("none"), xorstr_("body"), xorstr_("head"), xorstr_("random (all)"), xorstr_("random (main)") }, Vector2(180, 0), Tabs::Combat);
-		wrapper::currentY += 5.f;
-		wrapper::label(xorstr_("weapon properties"), Vector2(170.0f, -10.f), Tabs::Combat);
-		wrapper::slider(xorstr_("target fov"), Vector2(180.f, 0.f), 300.0f, 30.0f, 2500.0f, Tabs::Combat);
-		wrapper::slider(xorstr_("recoil %"), Vector2(180.0f, 0.0f), 100.0f, 0.0f, 100.0f, Tabs::Combat);
-		wrapper::slider(xorstr_("spread %"), Vector2(180.0f, 0), 100.0f, 0.0f, 100.0f, Tabs::Combat);
-
-		wrapper::currentY -= 10.0f;
-		wrapper::checkbox(xorstr_("autoshoot"), Vector2(180.0f, 0), Tabs::Combat);
-		wrapper::checkbox(xorstr_("pierce"), Vector2(180.0f, 0), Tabs::Combat);
-		wrapper::checkbox(xorstr_("rapid fire"), Vector2(180.0f, 0), Tabs::Combat);
-		wrapper::checkbox(xorstr_("insta eoka"), Vector2(180.0f, 0), Tabs::Combat);
-		wrapper::checkbox(xorstr_("automatic"), Vector2(180.0f, 0), Tabs::Combat);
-		wrapper::checkbox(xorstr_("no sway"), Vector2(180.0f, 0), Tabs::Combat);
-
-		wrapper::currentY += 10.0f;
-		wrapper::label(xorstr_("peek assist properties"), Vector2(170.0f, -10.f), Tabs::Combat);
-		wrapper::slider(xorstr_("max radius"), Vector2(180.0f, 10.0f), 7.f, 1.0f, 20.0f, Tabs::Combat);
-		wrapper::slider(xorstr_("checks"), Vector2(180.0f, 10.0f), 30.f, 1.f, 360.0f, Tabs::Combat);
-		wrapper::slider(xorstr_("duration"), Vector2(180.0f, 10.0f), 0.05f, 0.001f, 60.0f, Tabs::Combat);
-
-		wrapper::currentY += 5.0f;
-		wrapper::checkbox(xorstr_("target heli"), Vector2(170, 0), Tabs::Combat);
-		wrapper::checkbox(xorstr_("always heli weakspot"), Vector2(170, 0), Tabs::Combat);
-		wrapper::checkbox(xorstr_("insta charge compound"), Vector2(170, 0), Tabs::Combat);
-		wrapper::currentY += 10.0f;
-		//float r = aidsware::ui::get_float(xorstr_("rings")) * aidsware::ui::get_float(xorstr_("checks")) * 20.f;
-		//wrapper::label(std::to_string(r).c_str(), Vector2(170, 0), Tabs::Combat);
-
 		
 		wrapper::reset_height();
 		wrapper::reset_width();

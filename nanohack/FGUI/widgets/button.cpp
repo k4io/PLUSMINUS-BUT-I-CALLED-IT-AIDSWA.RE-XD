@@ -70,14 +70,14 @@ namespace FGUI
         // button body
         if (FGUI::INPUT.IsCursorInArea(arWidgetRegion))
         {
-            //FGUI::RENDER.Rectangle(arWidgetRegion.m_iLeft, arWidgetRegion.m_iTop, arWidgetRegion.m_iRight, arWidgetRegion.m_iBottom, { /*64, 201, 108*/ 38, 148, 206 });
+            //FGUI::RENDER.Rectangle(arWidgetRegion.m_iLeft, arWidgetRegion.m_iTop, arWidgetRegion.m_iRight, arWidgetRegion.m_iBottom, { /*64, 201, 108*/ 24,28,28 });
 
-            FGUI::RENDER.RoundedRectangleFilled(arWidgetRegion.m_iLeft, arWidgetRegion.m_iTop, arWidgetRegion.m_iRight, arWidgetRegion.m_iBottom, { /*64, 201, 108*/ 38, 148, 206 }, 10.f);
+            FGUI::RENDER.RoundedRectangleFilled(arWidgetRegion.m_iLeft, arWidgetRegion.m_iTop, arWidgetRegion.m_iRight, arWidgetRegion.m_iBottom, { /*64, 201, 108*/ 40,36,36 }, 10.f);
         }
         else
         {
             //FGUI::RENDER.Rectangle(arWidgetRegion.m_iLeft, arWidgetRegion.m_iTop, arWidgetRegion.m_iRight, arWidgetRegion.m_iBottom, { /*48, 156, 82*/ 1, 26, 51 });
-            FGUI::RENDER.RoundedRectangleFilled(arWidgetRegion.m_iLeft, arWidgetRegion.m_iTop, arWidgetRegion.m_iRight, arWidgetRegion.m_iBottom, { /*48, 156, 82*/ 1, 26, 51 }, 10.f);
+            FGUI::RENDER.RoundedRectangleFilled(arWidgetRegion.m_iLeft, arWidgetRegion.m_iTop, arWidgetRegion.m_iRight, arWidgetRegion.m_iBottom, { /*48, 156, 82*/ 24,28,28 }, 10.f);
         }
 
         // button label

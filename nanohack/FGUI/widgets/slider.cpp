@@ -107,22 +107,22 @@ namespace FGUI
          //FGUI::RENDER.Rectangle(arWidgetRegion.m_iLeft, arWidgetRegion.m_iTop, m_dmSize.m_iWidth, m_dmSliderThumbSize.m_iHeight - 2, { 53, 78, 115 });
         //DrawRoundedRectangle(arWidgetRegion.m_iLeft, arWidgetRegion.m_iTop, m_dmSize.m_iWidth, m_dmSliderThumbSize.m_iHeight - 2, { 53, 78, 115 }, 1.f);
         //FGUI::RENDER.Line(arWidgetRegion.m_iLeft, arWidgetRegion.m_iTop, m_dmSize.m_iWidth, m_dmSize.m_iHeight, { 14, 36, 69 });
-        FGUI::RENDER.RoundedRectangleFilled(arWidgetRegion.m_iLeft, arWidgetRegion.m_iTop + 2, m_dmSize.m_iWidth, 4, { 85, 85, 98 }, 5.f);
+        FGUI::RENDER.RoundedRectangleFilled(arWidgetRegion.m_iLeft, arWidgetRegion.m_iTop + 2, m_dmSize.m_iWidth, 2, { 85, 85, 98 }, 5.f);
 
         // slider thumb
-        FGUI::RENDER.RoundedRectangleFilled(arWidgetRegion.m_iLeft, arWidgetRegion.m_iTop + 2, flLocation, 4, { 38, 148, 206 }, 5.f);
+        FGUI::RENDER.RoundedRectangleFilled(arWidgetRegion.m_iLeft - 1, arWidgetRegion.m_iTop + 2, flLocation, 2, { 24,28,28 }, 5.f);
         //FGUI::RENDER.Rectangle((arWidgetRegion.m_iLeft), (arWidgetRegion.m_iTop + 3), m_dmSliderThumbSize.m_iWidth + flLocation, 2, { /*41, 217, 89*/ 5, 70, 107 });
         //FGUI::RENDER.Line(arWidgetRegion.m_iLeft, arWidgetRegion.m_iTop, m_dmSize.m_iWidth, m_dmSize.m_iHeight, { 5, 70, 107 });
         //DrawRoundedRectangle((arWidgetRegion.m_iLeft), (arWidgetRegion.m_iTop), m_dmSliderThumbSize.m_iWidth + flLocation, m_dmSliderThumbSize.m_iHeight, { /*41, 217, 89*/ 5, 70, 107 }, 1.f);
          //FGUI::RENDER.Rectangle((arWidgetRegion.m_iLeft), (arWidgetRegion.m_iTop), m_dmSliderThumbSize.m_iWidth + flLocation, m_dmSliderThumbSize.m_iHeight - 2, { /*41, 217, 89*/ 13, 104, 158 });
         //DrawRoundedRectangle((arWidgetRegion.m_iLeft), (arWidgetRegion.m_iTop), m_dmSliderThumbSize.m_iWidth + flLocation, m_dmSliderThumbSize.m_iHeight - 2, { /*41, 217, 89*/ 13, 104, 158 }, 1.f);
-        FGUI::RENDER.Circle((arWidgetRegion.m_iLeft + m_dmSliderThumbSize.m_iWidth) + flLocation, (arWidgetRegion.m_iTop + 3) + 1, { 23, 25, 31 }, 5.f, 5.f);
-        FGUI::RENDER.Circle((arWidgetRegion.m_iLeft + m_dmSliderThumbSize.m_iWidth) + flLocation, (arWidgetRegion.m_iTop + 3) + 1, { 38, 148, 206 }, 3.f, 5.f);
+        FGUI::RENDER.Circle((arWidgetRegion.m_iLeft + m_dmSliderThumbSize.m_iWidth) + flLocation, (arWidgetRegion.m_iTop + 2) + 1, { 32,36,36 }, 5.f, 5.f);
+        FGUI::RENDER.Circle((arWidgetRegion.m_iLeft + m_dmSliderThumbSize.m_iWidth) + flLocation, (arWidgetRegion.m_iTop + 2) + 1, { 24,28,28 }, 3.f, 5.f);
 
         FGUI::AREA ar = { (GetAbsolutePosition().m_iX + m_dmSliderThumbSize.m_iWidth) + flLocation - 5, GetAbsolutePosition().m_iY - 5, 10, m_dmSize.m_iHeight };
         if (FGUI::INPUT.IsCursorInArea(ar))
         {
-            FGUI::RENDER.Circle((arWidgetRegion.m_iLeft + m_dmSliderThumbSize.m_iWidth) + flLocation, (arWidgetRegion.m_iTop + 3) + 1, { 36, 122, 173 }, 3.f, 5.f);
+            FGUI::RENDER.Circle((arWidgetRegion.m_iLeft + m_dmSliderThumbSize.m_iWidth) + flLocation, (arWidgetRegion.m_iTop + 2) + 1, { 32,36,36 }, 3.f, 5.f);
         }
 
         // slider label & value

@@ -82,19 +82,22 @@ namespace FGUI
     //FGUI::RENDER.Rectangle(arWidgetRegion.m_iLeft, arWidgetRegion.m_iTop, (arWidgetRegion.m_iRight - 2), (arWidgetRegion.m_iBottom - 2), { 53, 78, 115 });
     //DrawRoundedRectangle(arWidgetRegion.m_iLeft, arWidgetRegion.m_iTop, (arWidgetRegion.m_iRight - 4), (arWidgetRegion.m_iBottom - 4), { 34, 60, 115 }, 5.f);
 
-    FGUI::RENDER.RoundedRectangleFilled(arWidgetRegion.m_iLeft, arWidgetRegion.m_iTop, 20, 20, { 1, 26, 51 }, 2.f);
+    FGUI::RENDER.Image(arWidgetRegion.m_iLeft, arWidgetRegion.m_iTop, 20, 20, 8);
+    //FGUI::RENDER.RoundedRectangleFilled(arWidgetRegion.m_iLeft, arWidgetRegion.m_iTop, 20, 20, { 1, 26, 51 }, 2.f);
 
     //FGUI::RENDER.Circle(arWidgetRegion.m_iLeft + 5, arWidgetRegion.m_iTop + 5, { 34, 60, 115 }, 1.f, 10.f);
     if (m_bIsChecked)
     {
         if (FGUI::INPUT.IsCursorInArea(arWidgetRegion))
         {
-            FGUI::RENDER.RoundedRectangle(arWidgetRegion.m_iLeft, arWidgetRegion.m_iTop, 20, 20, { 27, 73, 131 }, 2.f);
+            FGUI::RENDER.RoundedRectangle(arWidgetRegion.m_iLeft, arWidgetRegion.m_iTop, 20, 20, { 24,28,28 }, 2.f);
             //FGUI::RENDER.Outline((arWidgetRegion.m_iLeft - 1), (arWidgetRegion.m_iTop - 1), arWidgetRegion.m_iRight, arWidgetRegion.m_iBottom, { /*33, 255, 94*/ 34, 60, 115 });
             //DrawRoundedRectangle((arWidgetRegion.m_iLeft), (arWidgetRegion.m_iTop), arWidgetRegion.m_iRight - 4, arWidgetRegion.m_iBottom - 4, { /*33, 255, 94*/ 10, 79, 120 }, 5.f);
         }
-
-        FGUI::RENDER.RoundedRectangleFilled(arWidgetRegion.m_iLeft, arWidgetRegion.m_iTop, 20, 20, { 38, 148, 206 }, 2.f);
+        FGUI::RENDER.Image(arWidgetRegion.m_iLeft, arWidgetRegion.m_iTop, 20, 20, 7);
+        FGUI::RENDER.Text(arWidgetRegion.m_iLeft + (arWidgetRegion.m_iRight) + 13, arWidgetRegion.m_iTop, m_anyFont, { 219, 219, 219 }, m_strTitle);
+        /*
+        FGUI::RENDER.RoundedRectangleFilled(arWidgetRegion.m_iLeft, arWidgetRegion.m_iTop, 20, 20, { 24,28,28 }, 2.f);
 
         //tick
         FGUI::RENDER.Line(arWidgetRegion.m_iLeft + 4, arWidgetRegion.m_iTop + 12, arWidgetRegion.m_iLeft + 7, arWidgetRegion.m_iTop + 15, { 255, 255, 255 }, 4.);
@@ -102,16 +105,17 @@ namespace FGUI
 
         FGUI::RENDER.Text(arWidgetRegion.m_iLeft + (arWidgetRegion.m_iRight) + 13, arWidgetRegion.m_iTop + 3, m_anyFont, { 219, 219, 219 }, m_strTitle);
         //FGUI::RENDER.Circle((arWidgetRegion.m_iLeft + 5), (arWidgetRegion.m_iTop + 5), { 13, 104, 158 }, 1.f, 5.f);
-        //DrawRoundedRectangle((arWidgetRegion.m_iLeft), (arWidgetRegion.m_iTop), (arWidgetRegion.m_iRight - 4), (arWidgetRegion.m_iBottom - 4), { /*41, 217, 89*/ 13, 104, 158 }, 5.f);
+        */
+       //DrawRoundedRectangle((arWidgetRegion.m_iLeft), (arWidgetRegion.m_iTop), (arWidgetRegion.m_iRight - 4), (arWidgetRegion.m_iBottom - 4), { /*41, 217, 89*/ 13, 104, 158 }, 5.f);
     }
     else
     {
         if (FGUI::INPUT.IsCursorInArea(arWidgetRegion))
         {
             //DrawRoundedRectangle((arWidgetRegion.m_iLeft), (arWidgetRegion.m_iTop), arWidgetRegion.m_iRight - 4, arWidgetRegion.m_iBottom - 4, { 53, 78, 115 }, 5.f);
-            FGUI::RENDER.RoundedRectangle(arWidgetRegion.m_iLeft, arWidgetRegion.m_iTop, 20, 20, { 27, 73, 131 }, 2.f);
+            FGUI::RENDER.RoundedRectangle(arWidgetRegion.m_iLeft, arWidgetRegion.m_iTop, 20, 20, { 24,28,28 }, 2.f);
         }
-        FGUI::RENDER.Text(arWidgetRegion.m_iLeft + (arWidgetRegion.m_iRight) + 13, arWidgetRegion.m_iTop + 3, m_anyFont, { 150, 150, 167 }, m_strTitle);
+        FGUI::RENDER.Text(arWidgetRegion.m_iLeft + (arWidgetRegion.m_iRight) + 13, arWidgetRegion.m_iTop, m_anyFont, { 150, 150, 167 }, m_strTitle);
     }
 
     // checkbox label

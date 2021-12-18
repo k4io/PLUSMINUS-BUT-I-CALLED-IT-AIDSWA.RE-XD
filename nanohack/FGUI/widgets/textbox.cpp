@@ -91,14 +91,14 @@ namespace FGUI
         {
             //FGUI::RENDER.Outline(arWidgetRegion.m_iLeft, arWidgetRegion.m_iTop, arWidgetRegion.m_iRight, arWidgetRegion.m_iBottom, { 0,0,0 });
             //FGUI::RENDER.Rectangle((arWidgetRegion.m_iLeft + 1), (arWidgetRegion.m_iTop + 1), (arWidgetRegion.m_iRight - 2), (arWidgetRegion.m_iBottom - 2), { 7, 46, 87 });
-            //FGUI::RENDER.RoundedRectangleFilled((arWidgetRegion.m_iLeft + 1), (arWidgetRegion.m_iTop + 1), (arWidgetRegion.m_iRight - 2), (arWidgetRegion.m_iBottom - 2), { 38, 148, 206 }, 2.f);
-            FGUI::RENDER.Line((arWidgetRegion.m_iLeft + 1), arWidgetRegion.m_iTop + (arWidgetRegion.m_iBottom - 2), arWidgetRegion.m_iLeft + (arWidgetRegion.m_iRight - 2), arWidgetRegion.m_iTop + (arWidgetRegion.m_iBottom - 2), { 38, 148, 206 }, 2.f);
+            //FGUI::RENDER.RoundedRectangleFilled((arWidgetRegion.m_iLeft + 1), (arWidgetRegion.m_iTop + 1), (arWidgetRegion.m_iRight - 2), (arWidgetRegion.m_iBottom - 2), { 24,28,28 }, 2.f);
+            FGUI::RENDER.Line((arWidgetRegion.m_iLeft + 1), arWidgetRegion.m_iTop + (arWidgetRegion.m_iBottom - 2), arWidgetRegion.m_iLeft + (arWidgetRegion.m_iRight - 2), arWidgetRegion.m_iTop + (arWidgetRegion.m_iBottom - 2), { 40,36,36 }, 2.f);
         }
         else
         {
             //FGUI::RENDER.Outline(arWidgetRegion.m_iLeft, arWidgetRegion.m_iTop, arWidgetRegion.m_iRight, arWidgetRegion.m_iBottom, { 6, 24, 43 });
             //FGUI::RENDER.RoundedRectangleFilled((arWidgetRegion.m_iLeft + 1), (arWidgetRegion.m_iTop + 1), (arWidgetRegion.m_iRight - 2), (arWidgetRegion.m_iBottom - 2), { 1, 26, 51 }, 2.f);
-            FGUI::RENDER.Line((arWidgetRegion.m_iLeft + 1), arWidgetRegion.m_iTop + (arWidgetRegion.m_iBottom - 2), arWidgetRegion.m_iLeft + (arWidgetRegion.m_iRight - 2), arWidgetRegion.m_iTop + (arWidgetRegion.m_iBottom - 2), { 1, 26, 51 }, 2.f);
+            FGUI::RENDER.Line((arWidgetRegion.m_iLeft + 1), arWidgetRegion.m_iTop + (arWidgetRegion.m_iBottom - 2), arWidgetRegion.m_iLeft + (arWidgetRegion.m_iRight - 2), arWidgetRegion.m_iTop + (arWidgetRegion.m_iBottom - 2), { 24,28,28 }, 2.f);
         }
 
         // textbox label
@@ -130,7 +130,7 @@ namespace FGUI
             FGUI::DIMENSION strTemporaryTextSize = FGUI::RENDER.GetTextSize(m_anyFont, strTemporaryText);
 
             // draw caret
-            FGUI::RENDER.Rectangle(arWidgetRegion.m_iLeft + (dmTitleTextSize.m_iWidth + 20) + (strTemporaryTextSize.m_iWidth + 1), arWidgetRegion.m_iTop + (arWidgetRegion.m_iBottom / 2) - (dmTitleTextSize.m_iHeight / 2), 1, dmTitleTextSize.m_iHeight, { 1, 1, 1 });
+            FGUI::RENDER.Rectangle(arWidgetRegion.m_iLeft + (dmTitleTextSize.m_iWidth + 20) + (strTemporaryTextSize.m_iWidth + 1), arWidgetRegion.m_iTop + (arWidgetRegion.m_iBottom / 2) - (dmTitleTextSize.m_iHeight / 2), 1, dmTitleTextSize.m_iHeight, { 24,28,28 });
         }
 
         // selected text rectangle

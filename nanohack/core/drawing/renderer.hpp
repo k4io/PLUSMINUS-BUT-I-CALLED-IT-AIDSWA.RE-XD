@@ -30,7 +30,7 @@ namespace Renderer {
 	ID2D1SolidColorBrush* m_pSolidBrush;
 	bool initialized = false;
 
-	ID2D1Bitmap* bitmaps[] = { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
+	ID2D1Bitmap* bitmaps[] = { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
 	ID2D1Bitmap* custom_box_bitmap = NULL;
 
 	ID2D1Bitmap* boxBitmap = nullptr;
@@ -140,6 +140,12 @@ namespace Renderer {
 			return false;
 		logo_dir = data_dir + wxorstr_(L"\\images\\avatar.png");
 		if (!SUCCEEDED(LoadBitmapFromFile(logo_dir.c_str(), &bitmaps[6])))
+			return false;
+		logo_dir = data_dir + wxorstr_(L"\\images\\checked.png");
+		if (!SUCCEEDED(LoadBitmapFromFile(logo_dir.c_str(), &bitmaps[7])))
+			return false;
+		logo_dir = data_dir + wxorstr_(L"\\images\\unchecked.png");
+		if (!SUCCEEDED(LoadBitmapFromFile(logo_dir.c_str(), &bitmaps[8])))
 			return false;
 
 		return true;

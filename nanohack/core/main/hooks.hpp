@@ -1428,7 +1428,7 @@ void ProjectileUpdate_hk(Projectile* self)
 void do_hooks( ) {
 	//VM_DOLPHIN_BLACK_START
 
-	//VMProtectBeginUltra(xorstr_("hook"));
+	VMProtectBeginUltra(xorstr_("hook"));
 
 	hookengine::hook(BasePlayer::ClientUpdate_, ClientUpdate_hk);
 	hookengine::hook(BasePlayer::ClientUpdate_Sleeping_, ClientUpdate_Sleeping_hk);
@@ -1472,13 +1472,13 @@ void do_hooks( ) {
 
 	hookengine::hook(Network::NetWrite::UInt64_, UInt64_hk);
 
-	//VMProtectEnd();
+	VMProtectEnd();
 	//VM_DOLPHIN_BLACK_END
 }
 
 void undo_hooks( ) {
 	//VM_DOLPHIN_BLACK_START
-	//VMProtectBeginUltra(xorstr_("unhook"));
+	VMProtectBeginUltra(xorstr_("unhook"));
 	hookengine::unhook(BasePlayer::ClientUpdate_, ClientUpdate_hk);
 	hookengine::unhook(PlayerWalkMovement::UpdateVelocity_, UpdateVelocity_hk);
 	hookengine::unhook(PlayerWalkMovement::HandleJumping_, HandleJumping_hk);
@@ -1517,6 +1517,6 @@ void undo_hooks( ) {
 
 	hookengine::unhook(Network::NetWrite::UInt64_, UInt64_hk);
 
-	//VMProtectEnd();
+	VMProtectEnd();
 	//VM_DOLPHIN_BLACK_END
 }

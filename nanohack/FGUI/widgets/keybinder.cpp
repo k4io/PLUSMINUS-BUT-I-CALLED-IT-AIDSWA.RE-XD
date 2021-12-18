@@ -41,14 +41,14 @@ namespace FGUI
     if (FGUI::INPUT.IsCursorInArea(arWidgetRegion) || m_bIsGettingKey)
     {
       //FGUI::RENDER.Outline(arWidgetRegion.m_iLeft, arWidgetRegion.m_iTop, arWidgetRegion.m_iRight, arWidgetRegion.m_iBottom, { /*174, 255, 156*/ 34, 60, 115 });
-      //FGUI::RENDER.Rectangle();
-        FGUI::RENDER.RoundedRectangleFilled((arWidgetRegion.m_iLeft + 1), (arWidgetRegion.m_iTop + 1), (arWidgetRegion.m_iRight - 2), (arWidgetRegion.m_iBottom - 2), { 38, 148, 206 }, 5.f);
+      //FGUI::RENDER.Rectangle();                                                                                                                                       
+        FGUI::RENDER.RoundedRectangleFilled((arWidgetRegion.m_iLeft + 1), (arWidgetRegion.m_iTop + 1), (arWidgetRegion.m_iRight - 2), (arWidgetRegion.m_iBottom - 2), { 40,36,36 }, 5.f);
     }
     else
     {
       //FGUI::RENDER.Outline(arWidgetRegion.m_iLeft, arWidgetRegion.m_iTop, arWidgetRegion.m_iRight, arWidgetRegion.m_iBottom, { 74, 110, 255 });
       //FGUI::RENDER.Rectangle();
-      FGUI::RENDER.RoundedRectangleFilled((arWidgetRegion.m_iLeft + 1), (arWidgetRegion.m_iTop + 1), (arWidgetRegion.m_iRight - 2), (arWidgetRegion.m_iBottom - 2), { 1, 26, 51 }, 5.f);
+      FGUI::RENDER.RoundedRectangleFilled((arWidgetRegion.m_iLeft + 1), (arWidgetRegion.m_iTop + 1), (arWidgetRegion.m_iRight - 2), (arWidgetRegion.m_iBottom - 2), { 24,28,28 }, 5.f);
     }
 
     // keybinder label

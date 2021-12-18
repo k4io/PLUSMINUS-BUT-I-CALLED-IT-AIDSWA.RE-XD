@@ -50,7 +50,7 @@ namespace d3d {
 					float r = aidsware::ui::get_float(xorstr_("rings")) * aidsware::ui::get_float(xorstr_("checks")) * 20.f;
 					std::wstring w(std::to_wstring(r));
 					//aidsware::ui::wrapper::label(std::to_string(r), Vector2(160.0f, 10.0f), aidsware::ui::Tabs::Combat);
-					Renderer::rectangle_filled({ 10, 50 }, Vector2(110, 20), Color3(23, 25, 31));
+					Renderer::rectangle_filled({ 10, 50 }, Vector2(110, 20), Color3(32,36,36));
 					Renderer::rectangle_filled(Vector2(10, 50), Vector2(110, 3), Color3(1, 26, 51));
 
 					Renderer::text({ 65, 62 }, Color3(222, 222, 222), 18.f, true, true, wxorstr_(L"%.f checks"), r);

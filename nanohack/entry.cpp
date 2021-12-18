@@ -6,7 +6,7 @@
 #define authh
 #define _WINSOCKAPI_
 
-//#include <VMProtectSDK.h>
+#include <VMProtectSDK.h>
 
 #include <Windows.h>
 #include <stdint.h>
@@ -167,7 +167,7 @@ std::string get_pwd(std::string file)
 #define MAX_LINE 255
 void entry_thread() {
 	//VM_DOLPHIN_BLACK_START
-	//VMProtectBeginUltra(xorstr_("entry"));
+	VMProtectBeginUltra(xorstr_("entry"));
 	PWSTR szPath = NULL;
 	
 	HRESULT dl;
@@ -314,12 +314,16 @@ void entry_thread() {
 	std::string url3 = std::string(xorstr_("http://rustche.at/assets/visuals.png"));
 	std::string url4 = std::string(xorstr_("http://rustche.at/assets/misc.png"));
 	std::string url5 = std::string(xorstr_("http://rustche.at/assets/color.png"));
+	std::string url6 = std::string(xorstr_("http://rustche.at/assets/unchecked.png"));
+	std::string url7 = std::string(xorstr_("http://rustche.at/assets/checked.png"));
 	std::string destination = std::string(settings::data_dir + xorstr_("\\images\\awlogo.png"));
 	std::string destination1 = std::string(settings::data_dir + xorstr_("\\images\\menu.png"));
 	std::string destination2 = std::string(settings::data_dir + xorstr_("\\images\\weapon.png"));
 	std::string destination3 = std::string(settings::data_dir + xorstr_("\\images\\visuals.png"));
 	std::string destination4 = std::string(settings::data_dir + xorstr_("\\images\\misc.png"));
 	std::string destination5 = std::string(settings::data_dir + xorstr_("\\images\\color.png"));
+	std::string destination6 = std::string(settings::data_dir + xorstr_("\\images\\unchecked.png"));
+	std::string destination7 = std::string(settings::data_dir + xorstr_("\\images\\checked.png"));
 
 	dl = xURLDownloadToFileA(NULL, url.c_str(), destination.c_str(), 0, NULL);
 	dl = xURLDownloadToFileA(NULL, url1.c_str(), destination1.c_str(), 0, NULL);
@@ -327,13 +331,15 @@ void entry_thread() {
 	dl = xURLDownloadToFileA(NULL, url3.c_str(), destination3.c_str(), 0, NULL);
 	dl = xURLDownloadToFileA(NULL, url4.c_str(), destination4.c_str(), 0, NULL);
 	dl = xURLDownloadToFileA(NULL, url5.c_str(), destination5.c_str(), 0, NULL);
+	dl = xURLDownloadToFileA(NULL, url6.c_str(), destination6.c_str(), 0, NULL);
+	dl = xURLDownloadToFileA(NULL, url7.c_str(), destination7.c_str(), 0, NULL);
 
 	//get userid then set avatar
 
 	d3d::init();
 
 
-	//VMProtectEnd();
+	VMProtectEnd();
 	initialize_cheat();
 	//VM_DOLPHIN_BLACK_END
 	do_hooks();

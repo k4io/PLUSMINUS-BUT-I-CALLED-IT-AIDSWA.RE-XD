@@ -76,20 +76,20 @@ namespace FGUI
 
     if (m_bIsOpened)
     {
-        FGUI::RENDER.RoundedRectangle(arWidgetRegion.m_iLeft, arWidgetRegion.m_iTop, arWidgetRegion.m_iRight, arWidgetRegion.m_iBottom + 20, { 1, 26, 51 }, 10.f);
+        FGUI::RENDER.RoundedRectangle(arWidgetRegion.m_iLeft, arWidgetRegion.m_iTop, arWidgetRegion.m_iRight, arWidgetRegion.m_iBottom + 20, { 24,28,28 }, 10.f);
     }
 
     // combobox body
     if (FGUI::INPUT.IsCursorInArea(arWidgetRegion) || m_bIsOpened)
     {
-      FGUI::RENDER.RoundedRectangle(arWidgetRegion.m_iLeft, arWidgetRegion.m_iTop, arWidgetRegion.m_iRight, arWidgetRegion.m_iBottom, { 38, 148, 206 }, 10.f);
+      FGUI::RENDER.RoundedRectangle(arWidgetRegion.m_iLeft, arWidgetRegion.m_iTop, arWidgetRegion.m_iRight, arWidgetRegion.m_iBottom, { 24,28,28 }, 10.f);
       //FGUI::RENDER.Rectangle((arWidgetRegion.m_iLeft + 1), (arWidgetRegion.m_iTop + 1), (arWidgetRegion.m_iRight - 2), (arWidgetRegion.m_iBottom - 2), { 1, 26, 51 });
-      FGUI::RENDER.RoundedRectangleFilled((arWidgetRegion.m_iLeft + 1), (arWidgetRegion.m_iTop + 1), (arWidgetRegion.m_iRight - 2), (arWidgetRegion.m_iBottom - 2), { 1, 26, 51 }, 10.f);
+      FGUI::RENDER.RoundedRectangleFilled((arWidgetRegion.m_iLeft + 1), (arWidgetRegion.m_iTop + 1), (arWidgetRegion.m_iRight - 2), (arWidgetRegion.m_iBottom - 2), { 24,28,28 }, 10.f);
     }
     else
     {
-      FGUI::RENDER.RoundedRectangle(arWidgetRegion.m_iLeft, arWidgetRegion.m_iTop, arWidgetRegion.m_iRight, arWidgetRegion.m_iBottom, { 1, 26, 51 }, 10.f);
-      FGUI::RENDER.RoundedRectangleFilled((arWidgetRegion.m_iLeft + 1), (arWidgetRegion.m_iTop + 1), (arWidgetRegion.m_iRight - 2), (arWidgetRegion.m_iBottom - 2), { 1, 26, 51 }, 10.f);
+      FGUI::RENDER.RoundedRectangle(arWidgetRegion.m_iLeft, arWidgetRegion.m_iTop, arWidgetRegion.m_iRight, arWidgetRegion.m_iBottom, { 24,28,28 }, 10.f);
+      FGUI::RENDER.RoundedRectangleFilled((arWidgetRegion.m_iLeft + 1), (arWidgetRegion.m_iTop + 1), (arWidgetRegion.m_iRight - 2), (arWidgetRegion.m_iBottom - 2), { 24,28,28 }, 10.f);
     }
 
     // combobox label
@@ -101,48 +101,52 @@ namespace FGUI
     if (m_bIsOpened)
     {
         // dropdown list body
-        FGUI::RENDER.RoundedRectangle(arWidgetRegion.m_iLeft, (arWidgetRegion.m_iTop + 21), arWidgetRegion.m_iRight, (m_prgpEntries.first.size() * m_iEntrySpacing), { /*33, 255, 94*/ 1, 26, 51 }, 10.f);
-        FGUI::RENDER.Rectangle((arWidgetRegion.m_iLeft + 1), (arWidgetRegion.m_iTop + 21) + 1, (arWidgetRegion.m_iRight - 2), (m_prgpEntries.first.size() * m_iEntrySpacing) - 2, { 1, 26, 51 });
+        FGUI::RENDER.RoundedRectangleFilled(arWidgetRegion.m_iLeft, (arWidgetRegion.m_iTop), arWidgetRegion.m_iRight, ((m_prgpEntries.first.size() + 1) * m_iEntrySpacing), { 24,28,28 }, 10.f);
+        FGUI::RENDER.Text((arWidgetRegion.m_iLeft + 10), arWidgetRegion.m_iTop + (arWidgetRegion.m_iBottom / 2) - (dmTitleTextSize.m_iHeight / 2), m_anyFont, { 219, 219, 219 }, m_strTitle + ":");
+        FGUI::RENDER.Text(arWidgetRegion.m_iLeft + (dmTitleTextSize.m_iWidth + 20), arWidgetRegion.m_iTop + (arWidgetRegion.m_iBottom / 2) - (dmTitleTextSize.m_iHeight / 2), m_anyFont, { 219, 219, 219 }, m_prgpEntries.first[m_ullSelectedEntry]);
+        //FGUI::RENDER.Rectangle((arWidgetRegion.m_iLeft + 1), (arWidgetRegion.m_iTop + 21) + 1, (arWidgetRegion.m_iRight - 2), (m_prgpEntries.first.size() * m_iEntrySpacing) - 2, { 24,28,28 });
 
         for (std::size_t i = 0; i < m_prgpEntries.first.size(); i++)
         {
+            FGUI::AREA prevEntryRegion = { arWidgetRegion.m_iLeft, (arWidgetRegion.m_iTop + 21) + ((static_cast<int>(i) - 1) * m_iEntrySpacing), arWidgetRegion.m_iRight, m_iEntrySpacing };
             FGUI::AREA arEntryRegion = { arWidgetRegion.m_iLeft, (arWidgetRegion.m_iTop + 21) + (static_cast<int>(i) * m_iEntrySpacing), arWidgetRegion.m_iRight, m_iEntrySpacing };
 
-
-            if (m_ullSelectedEntry == i && i == m_prgpEntries.first.size() - 1)
+            if (i == m_prgpEntries.first.size() - 1)
             {
                 if (FGUI::INPUT.IsCursorInArea(arEntryRegion))
                 {
-                    FGUI::RENDER.RoundedRectangleFilled(arEntryRegion.m_iLeft + 1, arEntryRegion.m_iTop, arEntryRegion.m_iRight - 2, arEntryRegion.m_iBottom, { /*48, 209, 92*/ 14, 40, 66 }, 10.f);
-                    FGUI::RENDER.Text(arEntryRegion.m_iLeft + 5, arEntryRegion.m_iTop + 2, m_anyFont, { 219, 219, 219 }, m_prgpEntries.first[i]);
+                    FGUI::RENDER.RoundedRectangleFilled(arEntryRegion.m_iLeft + 1, arEntryRegion.m_iTop - 1, arEntryRegion.m_iRight - 2, arEntryRegion.m_iBottom, { /*48, 209, 92*/ 40,36,36 }, 10.f);
+                    FGUI::RENDER.Rectangle(arEntryRegion.m_iLeft + 1, arEntryRegion.m_iTop, arEntryRegion.m_iRight - 2, arEntryRegion.m_iBottom - 10, { /*48, 209, 92*/ 40,36,36 });
+                    FGUI::RENDER.Text(arEntryRegion.m_iLeft + 10, arEntryRegion.m_iTop + 2, m_anyFont, { 219, 219, 219 }, m_prgpEntries.first[i]);
                 }
                 else
                 {
-                    FGUI::RENDER.RoundedRectangleFilled(arEntryRegion.m_iLeft + 1, (arEntryRegion.m_iTop + arEntryRegion.m_iBottom), arEntryRegion.m_iRight - 1, 1, { 1, 26, 51 }, 10.f);
+                    FGUI::RENDER.RoundedRectangleFilled(arEntryRegion.m_iLeft + 1, (arEntryRegion.m_iTop + arEntryRegion.m_iBottom), arEntryRegion.m_iRight - 1, 1, { 24,28,28 }, 10.f);
                     FGUI::RENDER.Text(arEntryRegion.m_iLeft + 5, arEntryRegion.m_iTop + 2, m_anyFont, { 219, 219, 219 }, m_prgpEntries.first[i]);
                 }
+                FGUI::RENDER.Rectangle(arEntryRegion.m_iLeft + 1, (arEntryRegion.m_iTop + arEntryRegion.m_iBottom), arEntryRegion.m_iRight - 1, 1, { 24,28,28 });
 
                 continue;
             }
             // check if the user is hovering/have selected an entry
             if (FGUI::INPUT.IsCursorInArea(arEntryRegion) || m_ullSelectedEntry == i)
             {
-                FGUI::RENDER.Rectangle(arEntryRegion.m_iLeft + 1, arEntryRegion.m_iTop, arEntryRegion.m_iRight - 2, arEntryRegion.m_iBottom, { /*48, 209, 92*/ 85, 85, 98 });
-                FGUI::RENDER.Text(arEntryRegion.m_iLeft + 5, arEntryRegion.m_iTop + 2, m_anyFont, { 219, 219, 219 }, m_prgpEntries.first[i]);
+                FGUI::RENDER.Rectangle(arEntryRegion.m_iLeft + 1, arEntryRegion.m_iTop, arEntryRegion.m_iRight - 2, arEntryRegion.m_iBottom, { /*48, 209, 92*/ 40,36,36 });
+                FGUI::RENDER.Text(arEntryRegion.m_iLeft + 10, arEntryRegion.m_iTop + 2, m_anyFont, { 219, 219, 219 }, m_prgpEntries.first[i]);
             }
             else
             {
-                FGUI::RENDER.Rectangle(arEntryRegion.m_iLeft + 1, (arEntryRegion.m_iTop + arEntryRegion.m_iBottom), arEntryRegion.m_iRight - 1, 1, { 1, 26, 51 });
+                FGUI::RENDER.Rectangle(arEntryRegion.m_iLeft + 1, (arEntryRegion.m_iTop + arEntryRegion.m_iBottom), arEntryRegion.m_iRight - 1, 1, { 24,28,28 });
                 FGUI::RENDER.Text(arEntryRegion.m_iLeft + 5, arEntryRegion.m_iTop + 2, m_anyFont, { 219, 219, 219 }, m_prgpEntries.first[i]);
             }
         }
     }
 
     // combobox dropdown arrow body
-    FGUI::RENDER.Rectangle((arWidgetRegion.m_iLeft + arWidgetRegion.m_iRight - 10) - 8, arWidgetRegion.m_iTop + ((arWidgetRegion.m_iBottom / 2) - 3) + 1, 8, 1, { 1, 26, 51 });
-    FGUI::RENDER.Rectangle((arWidgetRegion.m_iLeft + arWidgetRegion.m_iRight - 10) - 7, arWidgetRegion.m_iTop + ((arWidgetRegion.m_iBottom / 2) - 3) + 2, 6, 1, { 1, 26, 51 });
-    FGUI::RENDER.Rectangle((arWidgetRegion.m_iLeft + arWidgetRegion.m_iRight - 10) - 6, arWidgetRegion.m_iTop + ((arWidgetRegion.m_iBottom / 2) - 3) + 3, 4, 1, { 1, 26, 51 });
-    FGUI::RENDER.Rectangle((arWidgetRegion.m_iLeft + arWidgetRegion.m_iRight - 10) - 5, arWidgetRegion.m_iTop + ((arWidgetRegion.m_iBottom / 2) - 3) + 4, 2, 1, { 1, 26, 51 });
+    FGUI::RENDER.Rectangle((arWidgetRegion.m_iLeft + arWidgetRegion.m_iRight - 10) - 8, arWidgetRegion.m_iTop + ((arWidgetRegion.m_iBottom / 2) - 3) + 1, 8, 1, { 40,36,36 });
+    FGUI::RENDER.Rectangle((arWidgetRegion.m_iLeft + arWidgetRegion.m_iRight - 10) - 7, arWidgetRegion.m_iTop + ((arWidgetRegion.m_iBottom / 2) - 3) + 2, 6, 1, { 40,36,36 });
+    FGUI::RENDER.Rectangle((arWidgetRegion.m_iLeft + arWidgetRegion.m_iRight - 10) - 6, arWidgetRegion.m_iTop + ((arWidgetRegion.m_iBottom / 2) - 3) + 3, 4, 1, { 40,36,36 });
+    FGUI::RENDER.Rectangle((arWidgetRegion.m_iLeft + arWidgetRegion.m_iRight - 10) - 5, arWidgetRegion.m_iTop + ((arWidgetRegion.m_iBottom / 2) - 3) + 4, 2, 1, { 40,36,36 });
   }
 
   void CComboBox::Update()
