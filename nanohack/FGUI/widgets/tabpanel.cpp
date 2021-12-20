@@ -201,11 +201,11 @@ namespace FGUI
                           arWidgetRegion.m_iLeft + 625,
                           arWidgetRegion.m_iTop - 35,
                           arWidgetRegion.m_iRight + 100,
-                          arWidgetRegion.m_iBottom + 290,
+                          arWidgetRegion.m_iBottom + 360,
                           { 32,36,36 }, 23.f);
                       FGUI::RENDER.Text(arWidgetRegion.m_iLeft + 715,
                           arWidgetRegion.m_iTop - 30,
-                          m_anyFont, { 220, 120, 220 }, "extras");
+                          m_anyFont, { 220, 120, 220 }, "world");
                       break;
                   case 2:
                       FGUI::RENDER.RoundedRectangleFilled(

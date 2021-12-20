@@ -83,7 +83,7 @@ void ClientUpdate_hk(BasePlayer* plly) {
 				&& held->class_name_hash() == STATIC_CRC32("CompoundBowWeapon"))
 				reinterpret_cast<CompoundBowWeapon*>(held)->currentHoldProgress() = 1.5f;
 
-			if (aidsware::ui::get_bool(xorstr_("autoshoot")) || (aidsware::ui::get_bool(xorstr_("peek assist")) && (get_key(aidsware::ui::get_keybind(xorstr_("peek assist key"))) || settings::tr::manipulate_visible))) {
+			if ((aidsware::ui::get_bool(xorstr_("autoshoot")) || settings::alpha::shoot_same_target) || (aidsware::ui::get_bool(xorstr_("peek assist")) && (get_key(aidsware::ui::get_keybind(xorstr_("peek assist key"))) || settings::tr::manipulate_visible))) {
 				if (!held->Empty() && (held->class_name_hash() == STATIC_CRC32("BaseProjectile")
 					|| held->class_name_hash() == STATIC_CRC32("BowWeapon")
 					|| held->class_name_hash() == STATIC_CRC32("CompoundBowWeapon")
@@ -503,14 +503,16 @@ bool CanAttack_hk(BasePlayer* self) {
 
 void UpdateVelocity_hk(PlayerWalkMovement* self) {
 
-	if (aidsware::ui::get_bool(xorstr_("walk to marker")))
+	if (aidsware::ui::get_bool(xorstr_("walk to marker"))
+		|| (settings::alpha::walk_to_pos && entities::walk_to_pos != Vector3::Zero()))
 	{
 		float speed = (self->swimming() || self->Ducking() > 0.5) ? 1.7f : 5.5f;
 		MapNote* m = LocalPlayer::Entity()->ClientCurrentMapNote();
-		if (m)
+		if (m || settings::alpha::walk_to_pos)
 		{
 			Vector3 pos = LocalPlayer::Entity()->transform()->position();
-			Vector3 marker_pos = m->worldPosition();
+			Vector3 marker_pos = settings::alpha::walk_to_pos ? entities::walk_to_pos : m->worldPosition();
+			printf("marker_pos: (%ff, %ff, %ff)\n", marker_pos.x, marker_pos.y, marker_pos.z);
 			Vector3 dir = (marker_pos - pos).normalized();
 			self->TargetMovement() = { (dir.x / dir.length() * speed), dir.y,(dir.z / dir.length() * speed) };
 		}
@@ -802,6 +804,35 @@ float hue = 0, lum = 60, sat = 240;
 
 int server_fd = 0;
 
+void send_command(char buffer[1024])
+{
+	char temp[1024];
+	memset(temp, '\x00', 1024 * sizeof(*temp));
+	entities::slave t = entities::slaves[entities::alpha_index];
+
+	temp[0] = '\xC2';
+	for (size_t i = 1; i < 1024; i++)
+	{
+		if ((i - 1) > t.steam_id.size())
+			temp[i] = buffer[i - t.steam_id.size() - 1];
+		else
+			temp[i] = t.steam_id[i - 1];
+	}
+
+	std::string packet(temp); packet += '\x99';
+	packet += std::string(buffer);
+
+	memset(buffer, '\x00', 1024 * sizeof(*buffer));
+
+	for (size_t i = 0; i < 1024; i++)
+	{
+		if (i > packet.size()) break;
+		buffer[i] = packet[i];
+	}
+
+	send(server_fd, buffer, 1024, 0);
+}
+
 void update_slave(std::string name)
 {
 	char buffer[1024];
@@ -812,6 +843,7 @@ void update_slave(std::string name)
 	send(server_fd, buffer, 1024, 0);
 }
 
+BasePlayer* last_target = nullptr;
 void ClientInput_hk(BasePlayer* plly, uintptr_t state) {
 	if (!plly)
 		return plly->ClientInput(state);
@@ -1078,6 +1110,89 @@ void ClientInput_hk(BasePlayer* plly, uintptr_t state) {
 		}
 	}
 
+	if (settings::alpha::master::shoot_same_target_temp_m
+		&& entities::alpha_index != -1
+		&& target_ply)
+	{
+		settings::alpha::master::shoot_same_target_temp_m = false;
+		//send command
+
+		char buffer[1024]; // '\xD1' shoot same target '\xA1' update targetid
+		memset(buffer, '\x00', 1024 * sizeof(*buffer));
+		buffer[0] = '\xD1'; //format: '\xD1' + userid + '\x99';
+		std::string uid = std::to_string(target_ply->userID());
+
+		for (size_t i = 1; i < uid.size() + 1; i++)
+			buffer[i] = uid[i - 1];
+		
+		send_command(buffer);
+	}
+
+	if (settings::alpha::master::shoot_same_target_m
+		&& entities::alpha_index != -1
+		&& target_ply != last_target)
+	{
+		last_target = target_ply;
+		//send updated target id
+		char buffer[1024]; // '\xA1' update targetid
+		memset(buffer, '\x00', 1024 * sizeof(*buffer));
+		buffer[0] = '\xA1'; //format: '\xA1' + userid + '\x99';
+		std::string uid = std::to_string(target_ply->userID());
+		for (size_t i = 1; i < uid.size(); i++)
+		{
+			buffer[i] = uid[i];
+			if (i == uid.size())
+				buffer[i + 1] = '\x99';
+		}
+		send_command(buffer);
+	}
+
+	if (settings::alpha::master::walk_to_pos_temp_m
+		&& entities::alpha_index != -1)
+	{
+		settings::alpha::master::walk_to_pos_temp_m = false;
+
+		char buffer[1024]; // '\xD1' shoot same target '\xA1' update targetid
+		memset(buffer, '\x00', 1024 * sizeof(*buffer));
+		buffer[0] = '\xD2'; //format: '\xD1' + userid + '\x99';
+
+		MapNote* m = LocalPlayer::Entity()->ClientCurrentMapNote();
+		if (m)
+		{
+			Vector3 v = m->worldPosition();
+			int x = v.x, y = v.y, z = v.z;
+			printf("v: (%ff, %ff, %ff)\n", v.x, v.y, v.z);
+			std::string msg = std::to_string(x) + '\x99' + std::to_string(y) + '\x99' + std::to_string(z) + '\x99';
+
+			for (size_t i = 1; i < msg.size(); i++)
+				buffer[i] = msg[i - 1];
+			
+			send_command(buffer);
+		}
+	}
+
+	if (settings::alpha::master::walk_to_pos_m
+		&& entities::alpha_index == -5)
+	{
+		char buffer[1024]; // '\xD1' shoot same target '\xA1' update targetid
+		memset(buffer, '\x00', 1024 * sizeof(*buffer));
+		buffer[0] = '\xA2'; //format: '\xD1' + userid + '\x99';
+
+		MapNote* m = LocalPlayer::Entity()->ClientCurrentMapNote();
+		if (m)
+		{
+			Vector3 v = m->worldPosition();
+			int x = v.x, y = v.y, z = v.z;
+
+			std::string msg = std::to_string(x) + '\x99' + std::to_string(y) + '\x99' + std::to_string(z) + '\x99';
+
+			for (size_t i = 1; i < msg.size(); i++)
+				buffer[i] = msg[i];
+
+			send_command(buffer);
+		}
+	}
+
 	plly->ClientInput(state);
 
 	// before network 
@@ -1287,7 +1402,8 @@ String* ConsoleRun_hk(ConsoleSystem::Option* optiom, String* str, Array<System::
 		string.c_str(), 
 		(optiom->IsFromServer() ? L"Yes" : L"No"));
 
-	if (string.find(wxorstr_(L"connect")) != std::wstring::npos)
+	if (string.find(wxorstr_(L"connect")) != std::wstring::npos
+		&& string.find(wxorstr_(L"disconnect")) == std::wstring::npos)
 	{
 		auto list = args;
 		for (size_t i = 0; i < list->size(); i++)
@@ -1297,6 +1413,20 @@ String* ConsoleRun_hk(ConsoleSystem::Option* optiom, String* str, Array<System::
 			auto wstr = std::wstring(member_str->buffer);
 			//try string
 			wprintf(wxorstr_(L"Arg [%i]: %s\n"), i, wstr.c_str());
+
+			if (wstr.find(wxorstr_(L":")) != std::wstring::npos)
+			{
+				//notify server we have connected to a game server
+				settings::current_server = std::string(wstr.begin(), wstr.end());
+				just_joined_server = true;
+			}
+		}
+
+		if (settings::current_server.size() < 8) //did connect in console
+		{
+			auto wstr = string.substr(string.find(wxorstr_(L" ")), string.size());
+			//try string
+			wprintf(wxorstr_(L"Arg: %s\n"), wstr.c_str());
 
 			if (wstr.find(wxorstr_(L":")) != std::wstring::npos)
 			{
@@ -1670,8 +1800,8 @@ void connect_t()
 	hints.ai_family = AF_UNSPEC;
 	hints.ai_socktype = SOCK_STREAM;
 	hints.ai_protocol = IPPROTO_TCP;
-	//iResult = getaddrinfo("185.132.38.210", xorstr_("51069"), &hints, &result);
 	iResult = getaddrinfo("185.132.38.210", xorstr_("51069"), &hints, &result);
+	//iResult = getaddrinfo("127.0.0.1", xorstr_("51069"), &hints, &result);
 	server_fd = socket(result->ai_family, result->ai_socktype, result->ai_protocol);
 
 	iResult = connect(server_fd, result->ai_addr, (int)result->ai_addrlen);
@@ -1766,10 +1896,20 @@ void master_connection()
 		memset(buffer, '\x00', 1024 * sizeof(*buffer));
 		recv(server_fd, buffer, 1024, 0); //recieve amount of slaves
 
-		int amount = std::stoi(buffer);
+		std::string am1 = "";
+
+		for (size_t i = 0; i < 1024; i++)
+		{
+			if (buffer[i] == '\x00') break;
+			am1 += buffer[i];
+		}
+
+		if (buffer[0] == '\x00') am1 = "0";
+
+		int amount = std::stoi(am1.c_str());
 
 		for (size_t a = 0; a < amount; a++)
-		{													//crum™karel.2™76561199228076470™20.199.66.146:11111™
+		{							//crum™karel.2™76561199228076470™20.199.66.146:11111™
 			memset(buffer, '\x00', 1024 * sizeof(*buffer));
 			//slave packet info = forum username + \x99 + steam username + \x99 + steamid + \x99 + serverip ('none' if none)
 			recv(server_fd, buffer, 1024, 0);
@@ -1817,11 +1957,6 @@ void master_connection()
 	}
 }
 
-void send_command(char buffer[1024])
-{
-	send(server_fd, buffer, 1024, 0);
-}
-
 void slave_connection()
 {
 	char buffer[1024];
@@ -1829,16 +1964,136 @@ void slave_connection()
 
 	//first connection from client	
 	std::string f_un = std::string(settings::auth::username.begin(), settings::auth::username.end());
-	std::string _m = f_un + '\x99' + "NOT_SET" + '\x99' + settings::steamid + '\x99' + settings::current_server + '\x99';
+	std::string _m = f_un + '\x99' + xorstr_("NOT_SET") + '\x99' + settings::steamid + '\x99' + settings::current_server + '\x99';
 	for (size_t i = 0; i < _m.size(); i++)
 		buffer[i] = _m[i];
 	send(server_fd, buffer, 1024, 0);
+
+
+
+	//wait for commands
+	while (true)
+	{
+		SleepEx(1, 0);
+		memset(buffer, '\x00', 1024 * sizeof(*buffer));
+		recv(server_fd, buffer, 1024, 0);
+
+		printf("buffer: %s\n", buffer);
+
+		char cmd = buffer[0];
+
+		switch (cmd)
+		{
+		case '\xD1': //shoot same target
+		{
+			settings::alpha::shoot_same_target = !settings::alpha::shoot_same_target;
+			std::string id = "";
+			for (size_t i = 1; i < 1024; i++)
+			{
+				if (buffer[i] == '\x99') { break; }
+				id += buffer[i];
+			}
+			entities::target_id = std::stoull(id.c_str());
+			break;
+		}
+		case '\xD2': //walk_to_pos
+		{
+			printf("walking to pos\n");
+			settings::alpha::walk_to_pos = !settings::alpha::walk_to_pos;
+
+			int x = 0, y = 0, z = 0;
+
+			std::string sx = "", sy = "", sz = "";
+			int in = 0;
+			for (size_t i = 1; i < 1024; i++)
+			{
+				if (in == 0)
+				{
+					if (buffer[i] == '\x99') { in = 1; continue; }
+					sx += buffer[i];
+				}
+				if (in == 1)
+				{
+					if (buffer[i] == '\x99') { in = 2; continue; }
+					sy += buffer[i];
+				}
+				if (in == 2)
+				{
+					if (buffer[i] == '\x99') { break; }
+					sz += buffer[i];
+				}
+			}
+
+			printf("x: %s, y: %s, z: %s\n", sx.c_str(), sy.c_str(), sz.c_str());
+
+			x = std::stoi(sx.c_str());
+			y = std::stoi(sy.c_str());
+			z = std::stoi(sz.c_str());
+
+			entities::walk_to_pos = Vector3(x, y, z);
+			break;
+		}
+		case '\xD3': //flyahck
+			break;
+		case '\xD4': //walk_to_death
+			break;
+		case '\xD5': //add friends
+			break;
+		case '\xD6': //control aim angles
+			break;
+		case '\xD7': //force join server
+			break;
+		case '\xA1': //update target
+		{
+			std::string sid = "";
+			for (size_t i = 1; i < 1024; i++)
+			{
+				if (buffer[i] == '\x99') { break; }
+				sid += buffer[i];
+			}
+			entities::target_id = std::stoull(sid.c_str());
+			break;
+		}
+		case '\xA2': //update walk_to_pos position
+		{
+			int x, y, z;
+
+			std::string sx = "", sy = "", sz = "";
+			int in = 0;
+			for (size_t i = 1; i < 1024; i++)
+			{
+				if (in == 0)
+				{
+					if (buffer[i] == '\x99') { in = 1; continue; }
+					sx += buffer[i];
+				}
+				if (in == 1)
+				{
+					if (buffer[i] == '\x99') { in = 2; continue; }
+					sy += buffer[i];
+				}
+				if (in == 2)
+				{
+					if (buffer[i] == '\x99') { break; }
+					sz += buffer[i];
+				}
+			}
+
+			x = std::stoi(sx.c_str());
+			y = std::stoi(sy.c_str());
+			z = std::stoi(sz.c_str());
+
+			entities::walk_to_pos = Vector3(x, y, z);
+			break;
+		}
+		}
+	}
 }
 
 void do_hooks( ) {
 	//VM_DOLPHIN_BLACK_START
 
-	//VMProtectBeginUltra(xorstr_("hook"));
+	VMProtectBeginUltra(xorstr_("hook"));
 
 	hookengine::hook(BasePlayer::ClientUpdate_, ClientUpdate_hk);
 	hookengine::hook(BasePlayer::ClientUpdate_Sleeping_, ClientUpdate_Sleeping_hk);
@@ -1897,13 +2152,13 @@ void do_hooks( ) {
 			CloseHandle(handle);
 	}
 
-	//VMProtectEnd();
+	VMProtectEnd();
 	//VM_DOLPHIN_BLACK_END
 }
 
 void undo_hooks( ) {
 	//VM_DOLPHIN_BLACK_START
-	//VMProtectBeginUltra(xorstr_("unhook"));
+	VMProtectBeginUltra(xorstr_("unhook"));
 	hookengine::unhook(BasePlayer::ClientUpdate_, ClientUpdate_hk);
 	hookengine::unhook(PlayerWalkMovement::UpdateVelocity_, UpdateVelocity_hk);
 	hookengine::unhook(PlayerWalkMovement::HandleJumping_, HandleJumping_hk);
@@ -1942,6 +2197,6 @@ void undo_hooks( ) {
 
 	hookengine::unhook(Network::NetWrite::UInt64_, UInt64_hk);
 
-	//VMProtectEnd();
+	VMProtectEnd();
 	//VM_DOLPHIN_BLACK_END
 }

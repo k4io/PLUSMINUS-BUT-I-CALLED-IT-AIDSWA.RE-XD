@@ -203,6 +203,7 @@ namespace aidsware::ui
 			builder.SpawnIn(vars::Container, false);
 		}
 	}
+
 	std::vector<std::string> configs{};
 	bool a123_ = false;
 	inline void OnSetupDevice()
@@ -306,13 +307,22 @@ namespace aidsware::ui
 		{
 			wrapper::currentY += 50.f;
 			wrapper::checkbox(xorstr_("show users"), Vector2(0, 0), Tabs::Combat);
-			wrapper::button(xorstr_("test"), [&]() {
+			wrapper::button(xorstr_("shoot target"), [&]() {
+				settings::alpha::master::shoot_same_target_m = !settings::alpha::master::shoot_same_target_m;
+				settings::alpha::master::shoot_same_target_temp_m = true;
 				/*
 				if (!get_text(xorstr_("config name")).empty())
 					vars::Container->SaveToFile(settings::data_dir + xorstr_("\\") + get_text(xorstr_("config name")) + xorstr_(".cfg"));
 				*/
-				}, Vector2(170, 0), Tabs::Misc);
-				
+				}, Vector2(0, 0), Tabs::Combat);			
+			wrapper::button(xorstr_("go to marker"), [&]() {
+					settings::alpha::master::walk_to_pos_m = !settings::alpha::master::shoot_same_target_m;
+					settings::alpha::master::walk_to_pos_temp_m = true;
+					/*
+					if (!get_text(xorstr_("config name")).empty())
+						vars::Container->SaveToFile(settings::data_dir + xorstr_("\\") + get_text(xorstr_("config name")) + xorstr_(".cfg"));
+					*/
+					}, Vector2(0, 0), Tabs::Combat);
 		}
 
 		wrapper::reset_height();
@@ -359,7 +369,9 @@ namespace aidsware::ui
 
 		wrapper::reset_height();
 		wrapper::currentX += 225; //170
-		wrapper::checkbox(xorstr_("ores"), Vector2(180, 0), Tabs::Visual);
+		wrapper::checkbox(xorstr_("stone ore"), Vector2(180, 0), Tabs::Visual);
+		wrapper::checkbox(xorstr_("sulfur ore"), Vector2(180, 0), Tabs::Visual);
+		wrapper::checkbox(xorstr_("metal ore"), Vector2(180, 0), Tabs::Visual);
 		wrapper::checkbox(xorstr_("stashes"), Vector2(180, 0), Tabs::Visual);
 		wrapper::checkbox(xorstr_("traps"), Vector2(180, 0), Tabs::Visual);
 		wrapper::checkbox(xorstr_("hemp"), Vector2(180, 0), Tabs::Visual);
@@ -371,6 +383,7 @@ namespace aidsware::ui
 		wrapper::checkbox(xorstr_("storage"), Vector2(180, 0), Tabs::Visual);
 		wrapper::checkbox(xorstr_("vehicles"), Vector2(180, 0), Tabs::Visual);
 		wrapper::checkbox(xorstr_("patrol-heli"), Vector2(180, 0), Tabs::Visual);
+		wrapper::checkbox(xorstr_("presents"), Vector2(180, 0), Tabs::Visual);
 		//wrapper::checkbox(xorstr_("raid esp"), Vector2(170, 0), Tabs::Visual);
 		wrapper::reset_height();
 		wrapper::reset_width();

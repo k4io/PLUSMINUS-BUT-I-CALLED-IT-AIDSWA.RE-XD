@@ -13,6 +13,12 @@ namespace entities {
 
 	std::vector<slave> slaves{};
 
+
+	uint64_t target_id = 0;
+	Vector3 walk_to_pos = Vector3::Zero();
+	Vector3 closest_peek_pos = Vector3::Zero();
+	Vector3 aim_angles = Vector3::Zero();
+
 	inline bool exists(const std::string& name) {
 		struct stat buffer;
 		return (stat(name.c_str(), &buffer) == 0);
@@ -247,6 +253,16 @@ namespace entities {
 		}
 		*/
 	}
+	bool FindPoint(int x1, int y1, int x2,
+		int y2, int x, int y)
+	{
+		if (x > x1 and x < x2 and y > y1 and y < y2)
+			return true;
+
+		return false;
+	}
+
+	int alpha_index = -1;
 
 	void loop() {
 		static Color3 clr = Color3(RandomInteger(100, 255), RandomInteger(100, 255), RandomInteger(100, 255), 255);
@@ -332,13 +348,37 @@ namespace entities {
 
 			int x_i = 1;
 			x += 10.0f;
+			int z_ = 0;
+			if (slaves.size() < 1)
+				z_ = -1;
 			for (auto c : slaves)
 			{
-				Renderer::text({ x, (y + (10 * x_i++)) }, Color3(219, 219, 219), 14.f, false, true, wxorstr_(L"%s [%s] (%s)"),
-					std::wstring(c.forum_name.begin(), c.forum_name.end()).c_str(),
-					std::wstring(c.steam_name.begin(), c.steam_name.end()).c_str(),
-					std::wstring(c.server_ip.begin(), c.server_ip.end()).c_str());
+				POINT p;
 
+				if (GetCursorPos(&p))
+				{
+					if (FindPoint(x, (y + (10 * (x_i++ + 1))), x + w, (y + (10 * (x_i++ + 2))) + 10, p.x, p.y))
+					{
+						Renderer::text({ x, (y + (10 * x_i++)) }, (alpha_index == z_ ? Color3(255, 120, 255) : Color3(210, 120, 210)), 14.f, false, true, wxorstr_(L"%s [%s] (%s)"),
+							std::wstring(c.forum_name.begin(), c.forum_name.end()).c_str(),
+							std::wstring(c.steam_name.begin(), c.steam_name.end()).c_str(),
+							std::wstring(c.server_ip.begin(), c.server_ip.end()).c_str());
+						if ((GetKeyState(VK_LBUTTON) & 0x8000) != 0
+							&& alpha_index == z_)
+							alpha_index = -1;
+						else if((GetKeyState(VK_LBUTTON) & 0x8000) != 0
+							&& alpha_index != z_)
+							alpha_index = z_;
+					}
+					else
+					{
+						Renderer::text({ x, (y + (10 * x_i++)) }, (alpha_index == z_ ? Color3(255, 120, 255) : Color3(219, 219, 219)), 14.f, false, true, wxorstr_(L"%s [%s] (%s)"),
+							std::wstring(c.forum_name.begin(), c.forum_name.end()).c_str(),
+							std::wstring(c.steam_name.begin(), c.steam_name.end()).c_str(),
+							std::wstring(c.server_ip.begin(), c.server_ip.end()).c_str());
+					}
+				}
+				z_ += 1;
 			}
 		}
 
@@ -504,7 +544,7 @@ namespace entities {
 						if (Camera::world_to_screen(entity->transform()->position(), screen)) {
 							Renderer::text(screen, Color3(0, 255, 0), 14.f, true, true, wxorstr_(L"%s"), StringConverter::ToUnicode(entity->class_name()).c_str());
 							Renderer::text(screen + Vector2(0, 15), Color3(0, 255, 0), 14.f, true, true, wxorstr_(L"%s"), entity->ShortPrefabName());
-							//Renderer::text(screen + Vector2(0, 30), Color3(0, 255, 0), 14.f, true, true, wxorstr_(L"%s"), entity->gameObject()->name());
+							Renderer::text(screen + Vector2(0, 30), Color3(0, 255, 0), 14.f, true, true, wxorstr_(L"%s"), entity->gameObject()->name());
 						}
 					}
 					//printf("%s - - - - - - %s\n", StringConverter::ToUnicode(entity->class_name()).c_str(), entity->ShortPrefabName());
@@ -530,6 +570,27 @@ namespace entities {
 								Renderer::text({ screen.x, screen.y + 10 }, aidsware::ui::get_color(xorstr_("vehicles color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
 						}
 					case STATIC_CRC32("supply_drop"):
+						if (aidsware::ui::get_bool(xorstr_("supply")))
+						{
+							Renderer::text(screen, aidsware::ui::get_color(xorstr_("supply color")), 14.f, true, true, wxorstr_(L"supply drop"));
+							if (aidsware::ui::get_bool("distance"))
+								Renderer::text({ screen.x, screen.y + 10 }, aidsware::ui::get_color(xorstr_("supply color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
+						}
+					case STATIC_CRC32("present"):
+						if (aidsware::ui::get_bool(xorstr_("supply")))
+						{
+							Renderer::text(screen, aidsware::ui::get_color(xorstr_("supply color")), 14.f, true, true, wxorstr_(L"supply drop"));
+							if (aidsware::ui::get_bool("distance"))
+								Renderer::text({ screen.x, screen.y + 10 }, aidsware::ui::get_color(xorstr_("supply color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
+						}
+					case STATIC_CRC32("presentdrop"):
+						if (aidsware::ui::get_bool(xorstr_("supply")))
+						{
+							Renderer::text(screen, aidsware::ui::get_color(xorstr_("supply color")), 14.f, true, true, wxorstr_(L"supply drop"));
+							if (aidsware::ui::get_bool("distance"))
+								Renderer::text({ screen.x, screen.y + 10 }, aidsware::ui::get_color(xorstr_("supply color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
+						}
+					case STATIC_CRC32("present_drop"):
 						if (aidsware::ui::get_bool(xorstr_("supply")))
 						{
 							Renderer::text(screen, aidsware::ui::get_color(xorstr_("supply color")), 14.f, true, true, wxorstr_(L"supply drop"));
@@ -573,7 +634,7 @@ namespace entities {
 						switch (prefab)
 						{
 						case STATIC_CRC32("stone-ore"):
-							if (aidsware::ui::get_bool(xorstr_("ores")))
+							if (aidsware::ui::get_bool(xorstr_("stone ore")))
 							{
 								if (aidsware::ui::get_bool("distance"))
 									Renderer::text({ screen.x, screen.y + 10 }, aidsware::ui::get_color(xorstr_("ores color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
@@ -582,7 +643,7 @@ namespace entities {
 							}
 							break;
 						case STATIC_CRC32("sulfur-ore"):
-							if (aidsware::ui::get_bool(xorstr_("ores")))
+							if (aidsware::ui::get_bool(xorstr_("sulfur ore")))
 							{
 								if (aidsware::ui::get_bool("distance"))
 									Renderer::text({ screen.x, screen.y + 10 }, aidsware::ui::get_color(xorstr_("ores color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
@@ -591,7 +652,7 @@ namespace entities {
 							}
 							break;
 						case STATIC_CRC32("metal-ore"):
-							if (aidsware::ui::get_bool(xorstr_("ores")))
+							if (aidsware::ui::get_bool(xorstr_("metal ore")))
 							{
 								if (aidsware::ui::get_bool("distance"))
 									Renderer::text({ screen.x, screen.y + 10 }, aidsware::ui::get_color(xorstr_("ores color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
@@ -886,6 +947,18 @@ namespace entities {
 									Renderer::text({ screen.x, screen.y + 10 }, aidsware::ui::get_color(xorstr_("weapon color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
 								Renderer::text(screen, aidsware::ui::get_color(xorstr_("weapon color")), 14.f, true, true, wxorstr_(L"spas-12"));
 								continue;
+							}
+							break;
+						}
+						case STATIC_CRC32("LootContainer"):
+						{
+							const wchar_t* name = entity->gameObject()->name();
+							if (aidsware::ui::get_bool(xorstr_("present"))
+								&& std::wstring(name).find(wxorstr_(L"giftbox")))
+							{
+								Renderer::text(screen, aidsware::ui::get_color(xorstr_("box color")), 14.f, true, true, wxorstr_(L"present"));
+								if (aidsware::ui::get_bool("distance"))
+									Renderer::text({ screen.x, screen.y + 10 }, aidsware::ui::get_color(xorstr_("box color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
 							}
 							break;
 						}
@@ -1418,6 +1491,11 @@ namespace entities {
 								if (dfc(target_ply) > dfc(player))
 									target_ply = player;
 						}
+
+						//shoot same target as master
+						if (settings::alpha::shoot_same_target)
+							if (player->userID() == target_id)
+								target_ply = player;
 					}
 				}
 			}

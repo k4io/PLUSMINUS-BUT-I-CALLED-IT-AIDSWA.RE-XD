@@ -26,6 +26,42 @@ namespace settings {
 	std::string current_server = "none";
 	std::string steamid = "69";
 
+	namespace alpha {
+		namespace master {
+			bool shoot_same_target_m = false;
+			bool shoot_same_target_temp_m = false;
+
+			bool walk_to_pos_m = false; //uses map marker
+			bool walk_to_pos_temp_m = false; //uses map marker
+
+			bool flyhack_m = false;
+
+			bool walk_to_death_m = false;
+
+			bool friends_m = false;
+
+			bool control_aim_angles_m = false;
+
+			bool force_join_server_m = false;
+		}
+
+		bool shoot_same_target = false;
+
+		bool walk_to_pos = false; //uses map marker
+
+		bool flyhack = false;
+
+		bool walk_to_death = false;
+
+		bool friends = false;
+
+		bool control_aim_angles = false;
+
+		bool force_join_server = false;
+
+		//control certain features etc
+	}
+
 	namespace tr {
 		bool manipulated = false;
 		bool manipulate_visible = false;
