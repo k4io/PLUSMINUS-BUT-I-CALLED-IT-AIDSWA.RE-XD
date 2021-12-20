@@ -146,38 +146,109 @@ namespace FGUI
                           arWidgetRegion.m_iRight + 125, 
                           arWidgetRegion.m_iBottom + 170, 
                           { 32,36,36 }, 23.f); 
-                      FGUI::RENDER.Text(arWidgetRegion.m_iLeft + 245,
+                      FGUI::RENDER.Text(arWidgetRegion.m_iLeft + 250,
                           arWidgetRegion.m_iTop + 70,
-                          m_anyFont, { 43, 35, 61 }, "aimbot");
+                          m_anyFont, { 220, 120, 220 }, "aimbot");
 
                       //weapon group
                       FGUI::RENDER.RoundedRectangleFilled(
                           arWidgetRegion.m_iLeft + 400,
                           arWidgetRegion.m_iTop + 65,
                           arWidgetRegion.m_iRight + 100,
-                          arWidgetRegion.m_iBottom + 435,
+                          arWidgetRegion.m_iBottom + 400,
                           { 32,36,36 }, 23.f);
                       FGUI::RENDER.Text(arWidgetRegion.m_iLeft + 490,
-                          arWidgetRegion.m_iTop + 62,
-                          m_anyFont, { 43, 35, 61 }, "weapon");
+                          arWidgetRegion.m_iTop + 70,
+                          m_anyFont, { 220, 120, 220 }, "weapon");
 
                       //extras group
                       FGUI::RENDER.RoundedRectangleFilled(
                           arWidgetRegion.m_iLeft + 625,
                           arWidgetRegion.m_iTop + 65,
                           arWidgetRegion.m_iRight + 100,
-                          arWidgetRegion.m_iBottom + 435,
+                          arWidgetRegion.m_iBottom + 275,
                           { 32,36,36 }, 23.f);
-                      FGUI::RENDER.Text(arWidgetRegion.m_iLeft + 705,
-                          arWidgetRegion.m_iTop + 67,
-                          m_anyFont, { 43, 35, 61 }, "extras");
-
+                      FGUI::RENDER.Text(arWidgetRegion.m_iLeft + 715,
+                          arWidgetRegion.m_iTop + 70,
+                          m_anyFont, { 220, 120, 220 }, "extras");
 
 
                       break;
                   case 1:
+                      FGUI::RENDER.RoundedRectangleFilled(
+                          arWidgetRegion.m_iLeft + 150,
+                          arWidgetRegion.m_iTop - 35,
+                          arWidgetRegion.m_iRight + 125,
+                          arWidgetRegion.m_iBottom + 300,
+                          { 32,36,36 }, 23.f);
+                      FGUI::RENDER.Text(arWidgetRegion.m_iLeft + 250,
+                          arWidgetRegion.m_iTop - 30,
+                          m_anyFont, { 220, 120, 220 }, "player");
+
+                      //weapon group
+                      FGUI::RENDER.RoundedRectangleFilled(
+                          arWidgetRegion.m_iLeft + 400,
+                          arWidgetRegion.m_iTop - 35,
+                          arWidgetRegion.m_iRight + 100,
+                          arWidgetRegion.m_iBottom + 260,
+                          { 32,36,36 }, 23.f);
+                      FGUI::RENDER.Text(arWidgetRegion.m_iLeft + 485,
+                          arWidgetRegion.m_iTop - 30,
+                          m_anyFont, { 220, 120, 220 }, "gameplay");
+
+                      //extras group
+                      FGUI::RENDER.RoundedRectangleFilled(
+                          arWidgetRegion.m_iLeft + 625,
+                          arWidgetRegion.m_iTop - 35,
+                          arWidgetRegion.m_iRight + 100,
+                          arWidgetRegion.m_iBottom + 290,
+                          { 32,36,36 }, 23.f);
+                      FGUI::RENDER.Text(arWidgetRegion.m_iLeft + 715,
+                          arWidgetRegion.m_iTop - 30,
+                          m_anyFont, { 220, 120, 220 }, "extras");
                       break;
                   case 2:
+                      FGUI::RENDER.RoundedRectangleFilled(
+                          arWidgetRegion.m_iLeft + 150,
+                          arWidgetRegion.m_iTop - 135,
+                          arWidgetRegion.m_iRight + 125,
+                          arWidgetRegion.m_iBottom + 245,
+                          { 32,36,36 }, 23.f);
+                      FGUI::RENDER.Text(arWidgetRegion.m_iLeft + 250,
+                          arWidgetRegion.m_iTop - 130,
+                          m_anyFont, { 220, 120, 220 }, "player");
+
+                      //weapon group
+                      FGUI::RENDER.RoundedRectangleFilled(
+                          arWidgetRegion.m_iLeft + 150,
+                          arWidgetRegion.m_iTop + 180,
+                          arWidgetRegion.m_iRight + 125,
+                          arWidgetRegion.m_iBottom + 120,
+                          { 32,36,36 }, 23.f);
+                      FGUI::RENDER.Text(arWidgetRegion.m_iLeft + 260,
+                          arWidgetRegion.m_iTop + 185,
+                          m_anyFont, { 220, 120, 220 }, "misc");
+
+                      //extras group
+                      FGUI::RENDER.RoundedRectangleFilled(
+                          arWidgetRegion.m_iLeft + 400,
+                          arWidgetRegion.m_iTop - 135,
+                          arWidgetRegion.m_iRight + 100,
+                          arWidgetRegion.m_iBottom + 320,
+                          { 32,36,36 }, 23.f);
+                      FGUI::RENDER.Text(arWidgetRegion.m_iLeft + 485,
+                          arWidgetRegion.m_iTop - 130,
+                          m_anyFont, { 220, 120, 220 }, "movement");
+
+                      FGUI::RENDER.RoundedRectangleFilled(
+                          arWidgetRegion.m_iLeft + 625,
+                          arWidgetRegion.m_iTop - 135,
+                          arWidgetRegion.m_iRight + 100,
+                          arWidgetRegion.m_iBottom + 310,
+                          { 32,36,36 }, 23.f);
+                      FGUI::RENDER.Text(arWidgetRegion.m_iLeft + 700,
+                          arWidgetRegion.m_iTop - 130,
+                          m_anyFont, { 220, 120, 220 }, "configuration");
                       break;
                   case 3:
                       break;

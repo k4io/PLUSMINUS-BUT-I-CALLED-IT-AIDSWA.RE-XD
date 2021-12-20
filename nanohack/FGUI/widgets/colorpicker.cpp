@@ -48,9 +48,9 @@ namespace FGUI
     FGUI::AREA arWidgetRegion = { GetAbsolutePosition().m_iX, GetAbsolutePosition().m_iY, m_dmSize.m_iWidth, m_dmSize.m_iHeight };
 
     // color picker button body
-    FGUI::RENDER.Outline((arWidgetRegion.m_iLeft), (arWidgetRegion.m_iTop + 2), m_dmSize.m_iWidth, (m_dmSize.m_iHeight - 2), { 74, 110, 255 });
-    FGUI::RENDER.Rectangle((arWidgetRegion.m_iLeft) + 1, (arWidgetRegion.m_iTop + 3), (m_dmSize.m_iWidth - 2), (m_dmSize.m_iHeight - 4), { 34, 60, 115 });
-    FGUI::RENDER.Rectangle((arWidgetRegion.m_iLeft) + 1, (arWidgetRegion.m_iTop + 3), (m_dmSize.m_iWidth - 2), (m_dmSize.m_iHeight - 4), m_clrDefault);
+    FGUI::RENDER.RoundedRectangle((arWidgetRegion.m_iLeft), (arWidgetRegion.m_iTop + 2), m_dmSize.m_iWidth, (m_dmSize.m_iHeight - 2), { 45, 83, 122 }, 3.f);
+    FGUI::RENDER.RoundedRectangleFilled((arWidgetRegion.m_iLeft), (arWidgetRegion.m_iTop + 2), m_dmSize.m_iWidth, (m_dmSize.m_iHeight - 2), { 102, 122, 122 }, 3.f);
+    FGUI::RENDER.RoundedRectangleFilled((arWidgetRegion.m_iLeft), (arWidgetRegion.m_iTop + 2), m_dmSize.m_iWidth, (m_dmSize.m_iHeight - 2), { m_clrDefault }, 3.f);
 
     if (m_bIsOpened)
     {
@@ -59,9 +59,9 @@ namespace FGUI
       FGUI::AREA arColorPickerRegion = { (GetAbsolutePosition().m_iX + 25), GetAbsolutePosition().m_iY, dmColorPickerSize.m_iWidth, dmColorPickerSize.m_iHeight };
 
       // color picker body
-      FGUI::RENDER.Rectangle(arColorPickerRegion.m_iLeft, arColorPickerRegion.m_iTop, arColorPickerRegion.m_iRight, arColorPickerRegion.m_iBottom, { 100, 100, 100 });
-      FGUI::RENDER.Outline(arColorPickerRegion.m_iLeft - 1, arColorPickerRegion.m_iTop - 1, (arColorPickerRegion.m_iRight + 3), (arColorPickerRegion.m_iBottom + 3), { 74, 110, 255 });
-      FGUI::RENDER.Rectangle(arColorPickerRegion.m_iLeft, arColorPickerRegion.m_iTop, (arColorPickerRegion.m_iRight + 40), arColorPickerRegion.m_iBottom, { 245, 245, 245 });
+      FGUI::RENDER.RoundedRectangleFilled(arColorPickerRegion.m_iLeft, arColorPickerRegion.m_iTop, arColorPickerRegion.m_iRight, arColorPickerRegion.m_iBottom, { 100, 100, 100 }, 3.f);
+      FGUI::RENDER.RoundedRectangle(arColorPickerRegion.m_iLeft - 1, arColorPickerRegion.m_iTop - 1, (arColorPickerRegion.m_iRight + 3), (arColorPickerRegion.m_iBottom + 3), { 32,36,36 }, 3.f);
+      FGUI::RENDER.RoundedRectangleFilled(arColorPickerRegion.m_iLeft, arColorPickerRegion.m_iTop, (arColorPickerRegion.m_iRight + 40), arColorPickerRegion.m_iBottom, { 245, 245, 245 }, 3.f);
 
       for (std::size_t i = 0; i < static_cast<unsigned int>(arColorPickerRegion.m_iBottom); i += GetPixelation())
       {

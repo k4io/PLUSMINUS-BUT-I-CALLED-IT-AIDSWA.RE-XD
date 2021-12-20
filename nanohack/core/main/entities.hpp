@@ -1,7 +1,18 @@
 namespace entities {
 	Shader* og_shader = nullptr;
 	std::vector<BasePlayer*> current_visible_players;
-	
+
+	struct slave
+	{
+		std::string forum_name;
+		std::string steam_name;
+		std::string steam_id;
+		std::string server_ip;
+		int sockfd;
+	};
+
+	std::vector<slave> slaves{};
+
 	inline bool exists(const std::string& name) {
 		struct stat buffer;
 		return (stat(name.c_str(), &buffer) == 0);
@@ -131,6 +142,37 @@ namespace entities {
 
 	void do_chams(BasePlayer* player)
 	{
+		chams = aw_assets->LoadAsset<Shader>(xorstr_("chams"), Type::Shader());
+
+
+		auto mesh = player->playerModel()->_multiMesh();
+		if (mesh)
+		{
+			auto list = mesh->Renderers();
+			for (size_t i = 0; i < list->size; i++)
+			{
+				if (i == list->size) continue;
+				auto renderer = reinterpret_cast<Renderer_*>(list->get(i));
+				if (renderer)
+				{
+					const auto material = renderer->material();
+					if (material)
+					{
+						if (chams != material->shader()) {
+							material->set_shader(chams);
+						}
+						else
+						{
+							material->SetColor(xorstr_("_ColorVisible"), get_c(aidsware::ui::get_color("visible chams")));
+							material->SetColor(xorstr_("_ColorBehind"), get_c(aidsware::ui::get_color("invisible chams")));
+						}
+						material->SetInt(xorstr_("_ZTest"), 8); //maybe try _ZTest Less & _ZTest Greater
+					}
+				}
+			}
+		}
+
+		/*
 		auto list = player->playerModel()->_multiMesh()->Renderers();
 		if (list) {
 			for (int i = 0; i < list->size; i++) {
@@ -140,41 +182,36 @@ namespace entities {
 				{
 					const auto material = _renderer->material();
 
-					/*
 					if (material)
 					{
 						if (chams != material->shader())
 						{
-							if (!chams)
-							{
-								printf("set chams shader from bundle\n");
-								chams = aw_assets->LoadAsset<Shader>(xorstr_("chams.shader"), Type::Shader());
-							}
-
+							printf("set chams shader on material %i\n", i);
 							material->set_shader(chams);
+						}
 
+						if (chams)
+						{
 							if (player->playerModel()->isNpc())
 							{
-								printf("set npc\n");
-								material->SetColor(Shader::PropertyToID(xorstr_("_ColorVisible")), get_c(aidsware::ui::get_color("visible npc chams")));
-								material->SetColor(Shader::PropertyToID(xorstr_("_ColorBehind")), get_c(aidsware::ui::get_color("invisible npc chams")));
+								material->SetColor(xorstr_("_ColorVisible"), get_c(aidsware::ui::get_color("visible npc chams")));
+								material->SetColor(xorstr_("_ColorBehind"), get_c(aidsware::ui::get_color("invisible npc chams")));
 								continue;
 							}
 
 							if (!player->playerModel()->isNpc() && player->is_visible() && player->is_teammate())
 							{
-								printf("set teammate\n");
-								material->SetColor(Shader::PropertyToID(xorstr_("_ColorVisible")), get_c(aidsware::ui::get_color("visible teammate chams")));
-								material->SetColor(Shader::PropertyToID(xorstr_("_ColorBehind")), get_c(aidsware::ui::get_color("invisible teammate chams")));
+								material->SetColor(xorstr_("_ColorVisible"), get_c(aidsware::ui::get_color("visible teammate chams")));
+								material->SetColor(xorstr_("_ColorBehind"), get_c(aidsware::ui::get_color("invisible teammate chams")));
 								continue;
 							}
 
-							printf("set player\n");
-							material->SetColor(Shader::PropertyToID(xorstr_("_ColorVisible")), get_c(aidsware::ui::get_color("visible chams")));
-							material->SetColor(Shader::PropertyToID(xorstr_("_ColorBehind")), get_c(aidsware::ui::get_color("invisible chams")));
+							material->SetColor(xorstr_("_ColorVisible"), get_c(aidsware::ui::get_color("visible chams")));
+							material->SetColor(xorstr_("_ColorBehind"), get_c(aidsware::ui::get_color("invisible chams")));
 						}
 					}
-					*/
+					material->SetInt(xorstr_("_ZTest"), 8); //maybe try _ZTest Less & _ZTest Greater
+					
 					
 					if (material)
 					{
@@ -204,10 +241,11 @@ namespace entities {
 							material->SetInt(xorstr_("_ZTest"), 8); //maybe try _ZTest Less & _ZTest Greater
 						}
 					}
+					
 				}
 			}
 		}
-		
+		*/
 	}
 
 	void loop() {
@@ -284,6 +322,24 @@ namespace entities {
 			Renderer::rounded_rectangle_filled(belt::pos.x + 5.0f, belt::pos.y + 20.0f + 5.0f, w - 10, h - 10, Color3(25, 25, 25), 5.f);
 			//draw_image(float x, float y, float w, float h, const wchar_t* filename)
 			//Renderer::draw_image(100, 100, 200, 200, wxorstr_(L"C:\\awlogo.png"));
+		}
+
+		if (aidsware::ui::get_bool(xorstr_("show users")))
+		{
+			float x = 1684, y = 391, w = 200, h = 300;
+			Renderer::rounded_rectangle_filled(x, y, w, h, { 24,28,28 }, 10.f);
+			Renderer::rounded_box(x, y, w, h, { 150, 150, 167 }, 10.f);
+
+			int x_i = 1;
+			x += 10.0f;
+			for (auto c : slaves)
+			{
+				Renderer::text({ x, (y + (10 * x_i++)) }, Color3(219, 219, 219), 14.f, false, true, wxorstr_(L"%s [%s] (%s)"),
+					std::wstring(c.forum_name.begin(), c.forum_name.end()).c_str(),
+					std::wstring(c.steam_name.begin(), c.steam_name.end()).c_str(),
+					std::wstring(c.server_ip.begin(), c.server_ip.end()).c_str());
+
+			}
 		}
 
 		if (aidsware::ui::get_bool(xorstr_("flyhack indicator"))
@@ -441,7 +497,7 @@ namespace entities {
 				if (!entity->IsValid()) {
 					continue;
 				}
-				/*
+				
 				if (aidsware::ui::get_bool(xorstr_("debug"))) {
 					if (entity->transform()->position().distance(LocalPlayer::Entity()->transform()->position()) <= 25.f) {
 						Vector2 screen;
@@ -453,7 +509,7 @@ namespace entities {
 					}
 					//printf("%s - - - - - - %s\n", StringConverter::ToUnicode(entity->class_name()).c_str(), entity->ShortPrefabName());
 				}
-				*/
+				
 
 
 				Vector2 screen;
@@ -983,7 +1039,7 @@ namespace entities {
 						c == STATIC_CRC32("NPCMurderer") ||
 						c == STATIC_CRC32("NPCPlayer") ||
 						c == STATIC_CRC32("HumanNPC") ||
-						c == STATIC_CRC32("Scientist") ||
+						c == STATIC_CRC32("ScientistNPC") ||
 						c == STATIC_CRC32("HTNPlayer") ||
 						c == STATIC_CRC32("HumanNPCNew") ||
 						c == STATIC_CRC32("ScientistNPCNew") ||

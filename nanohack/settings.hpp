@@ -23,6 +23,9 @@ namespace settings {
 	uintptr_t il_init_methods;
 	uintptr_t serverrpc_projectileshoot;
 
+	std::string current_server = "none";
+	std::string steamid = "69";
+
 	namespace tr {
 		bool manipulated = false;
 		bool manipulate_visible = false;

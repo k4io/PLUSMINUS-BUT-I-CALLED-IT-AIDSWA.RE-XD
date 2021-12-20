@@ -1,9 +1,39 @@
 #include <intrin.h>
 #include <vector>
+#include <shlwapi.h>
+#include <Windows.h>
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#pragma comment (lib, "Ws2_32.lib")
+#pragma comment( lib, "shlwapi.lib" )  // needed for the ColorHLSToRGB() function
 
 #define ID3_VAL 76561197960265728
 
 #define CALLED_BY(func,off) (reinterpret_cast<std::uint64_t>(_ReturnAddress()) > func && reinterpret_cast<std::uint64_t>(_ReturnAddress()) < func + off)
+
+Vector3 last_pos = Vector3::Zero();
+
+Vector3 last_head_pos = Vector3::Zero();
+Vector3 last_neck_pos = Vector3::Zero();
+Vector3 last_spine4_pos = Vector3::Zero();
+Vector3 last_spine3_pos = Vector3::Zero();
+Vector3 last_spine2_pos = Vector3::Zero();
+Vector3 last_spine1_pos = Vector3::Zero();
+Vector3 last_l_upperarm_pos = Vector3::Zero();
+Vector3 last_l_forearm_pos = Vector3::Zero();
+Vector3 last_l_hand_pos = Vector3::Zero();
+Vector3 last_r_upperarm_pos = Vector3::Zero();
+Vector3 last_r_forearm_pos = Vector3::Zero();
+Vector3 last_r_hand_pos = Vector3::Zero();
+Vector3 last_pelvis_pos = Vector3::Zero();
+Vector3 last_l_knee_pos = Vector3::Zero();
+Vector3 last_l_foot_pos = Vector3::Zero();
+Vector3 last_r_knee_pos = Vector3::Zero();
+Vector3 last_r_foot_pos = Vector3::Zero();
+
+PlayerTick* test;
+
+bool just_joined_server = false;
 
 void ClientUpdate_hk(BasePlayer* plly) {
 	auto local = LocalPlayer::Entity( );
@@ -20,10 +50,6 @@ void ClientUpdate_hk(BasePlayer* plly) {
 		if (get_key(aidsware::ui::get_keybind(xorstr_("timescale key"))))
 			Time::set_timeScale(speedhack_amount);
 		else Time::set_timeScale(1.f);
-
-		if (aidsware::ui::get_bool(xorstr_("fake lag")))
-			plly->clientTickInterval() = 0.4f;
-		else plly->clientTickInterval() = 0.05f;
 
 		if (aidsware::ui::get_bool(xorstr_("spiderman")))
 		{
@@ -198,6 +224,7 @@ Vector3 prev_angle = Vector3::Zero();
 float f_travel_time = 0.0f;
 void serverrpc_projectileshoot_hk(int64_t rcx, int64_t rdx, int64_t r9, int64_t ProjectileShoot, int64_t arg5)
 {
+	uintptr_t pro = 0;
 	Vector3 v = LocalPlayer::Entity()->input()->recoilAngles();
 
 	Vector3 r = v - prev_angle;
@@ -271,7 +298,7 @@ void serverrpc_projectileshoot_hk(int64_t rcx, int64_t rdx, int64_t r9, int64_t 
 		for (size_t i = 0; i < sz; i++)
 		{
 			auto projectile = *(uintptr_t*)(shoot_list + 0x20 + i * 0x8); // 
-
+			pro = projectile;
 			if (target_ply)
 			{
 				int id = *reinterpret_cast<int*>(projectile + 0x14);
@@ -315,6 +342,9 @@ void serverrpc_projectileshoot_hk(int64_t rcx, int64_t rdx, int64_t r9, int64_t 
 				aimbot_velocity = (aim_angle).normalized() * original_vel.Length();
 
 				*reinterpret_cast<Vector3*>(projectile + 0x24) = aimbot_velocity;
+				if (aidsware::ui::get_bool(xorstr_("bullet tracers"))) {
+					DDraw::Line(rpc_position, bonepos, Color::Color(114, 77, 179, 255), 10.f, false, true);
+				}
 				//*reinterpret_cast<Vector3*>(projectile + 0x24) = aimbot_velocity;
 			}
 		}
@@ -340,6 +370,7 @@ void serverrpc_projectileshoot_hk(int64_t rcx, int64_t rdx, int64_t r9, int64_t 
 
 		break;
 	}
+
 	reinterpret_cast<void (*)(int64_t, int64_t, int64_t, int64_t, int64_t)>(settings::serverrpc_projectileshoot)(rcx, rdx, r9, ProjectileShoot, arg5);
 	return;
 }
@@ -362,9 +393,6 @@ Attack* BuildAttackMessage_hk(HitTest* self) {
 	auto localPlayer = LocalPlayer::Entity( );
 	if (localPlayer) {
 		if (reinterpret_cast<BasePlayer*>(self->ignoreEntity( ))->userID( ) == localPlayer->userID( )) { // isAuthoritative
-			if (aidsware::ui::get_bool(xorstr_("bullet tracers"))) {
-				DDraw::Line(localPlayer->eyes( )->get_position( ), ret->hitPositionWorld( ), Color(1, 0, 0, 1), 10.f, false, true);
-			}
 
 			if (entity) {
 				if (entity->IsPlayer( )) {
@@ -766,6 +794,24 @@ void DoAimbot()
 
 bool debugcam = false;
 bool has_intialized_methods = false;
+
+int _r = 255, _g = 0, _b = 0;
+bool r_ = false, g_ = false, b_ = false;
+
+float hue = 0, lum = 60, sat = 240;
+
+int server_fd = 0;
+
+void update_slave(std::string name)
+{
+	char buffer[1024];
+	std::string f_un = std::string(settings::auth::username.begin(), settings::auth::username.end());
+	std::string _m = '\xA2' + f_un + '\x99' + name + '\x99' + settings::steamid + '\x99' + settings::current_server + '\x99';
+	for (size_t i = 0; i < _m.size(); i++)
+		buffer[i] = _m[i];
+	send(server_fd, buffer, 1024, 0);
+}
+
 void ClientInput_hk(BasePlayer* plly, uintptr_t state) {
 	if (!plly)
 		return plly->ClientInput(state);
@@ -794,6 +840,14 @@ void ClientInput_hk(BasePlayer* plly, uintptr_t state) {
 		}
 	}
 
+	if (just_joined_server)
+	{
+		std::wstring w(LocalPlayer::Entity()->_displayName());
+		std::string s(w.begin(), w.end());
+		update_slave(s);
+		just_joined_server = false;
+	}
+
 	if (plly->userID( ) == LocalPlayer::Entity( )->userID( )) {
 		auto held = plly->GetHeldEntity<BaseProjectile>();
 
@@ -809,6 +863,63 @@ void ClientInput_hk(BasePlayer* plly, uintptr_t state) {
 		
 		if (get_key(aidsware::ui::get_keybind(xorstr_("desync on key"))))
 			LocalPlayer::Entity()->clientTickInterval() = 0.99f;
+
+		if (hue > 240.0f) hue = 0.0f;
+		hue += 0.3f;
+		COLORREF rgb = ::ColorHLSToRGB(hue, lum, sat);
+
+		_r = GetRValue(rgb);
+		_g = GetGValue(rgb);
+		_b = GetBValue(rgb);
+
+		if (aidsware::ui::get_bool(xorstr_("show desync")))
+		{
+			//DDraw::Line(localPlayer->eyes( )->get_position( ), ret->hitPositionWorld( ), Color(1, 0, 0, 1), 0.05f, false, true);
+			DDraw::Sphere(last_head_pos, 0.05f, Color::Color(_r, _g, _b, 50), 0.02f, false); //head
+			DDraw::Line(last_head_pos, last_neck_pos, Color::Color(_r, _g, _b, 50), 0.02f, false, true);
+
+			DDraw::Line(last_neck_pos, last_spine4_pos, Color::Color(_r, _g, _b, 50), 0.02f, false, true);
+
+			DDraw::Sphere(last_spine4_pos, 0.05f, Color::Color(_r, _g, _b, 50), 0.05f, false); //
+			DDraw::Line(last_spine4_pos, last_spine1_pos, Color::Color(_r, _g, _b, 50), 0.02f, false, true);
+			DDraw::Line(last_spine4_pos, last_l_upperarm_pos, Color::Color(_r, _g, _b, 50), 0.02f, false, true);
+			DDraw::Line(last_spine4_pos, last_r_upperarm_pos, Color::Color(_r, _g, _b, 50), 0.02f, false, true);
+
+			DDraw::Sphere(last_spine1_pos, 0.05f, Color::Color(_r, _g, _b, 50), 0.02f, false); //
+			DDraw::Line(last_spine1_pos, last_pelvis_pos, Color::Color(_r, _g, _b, 50), 0.02f, false, true);
+			DDraw::Line(last_spine1_pos, last_l_upperarm_pos, Color::Color(_r, _g, _b, 50), 0.02f, false, true);
+			DDraw::Line(last_spine1_pos, last_r_upperarm_pos, Color::Color(_r, _g, _b, 50), 0.02f, false, true);
+
+			DDraw::Sphere(last_l_upperarm_pos, 0.05f, Color::Color(_r, _g, _b, 50), 0.02f, false); //
+			DDraw::Line(last_l_upperarm_pos, last_l_forearm_pos, Color::Color(_r, _g, _b, 50), 0.02f, false, true);
+
+			DDraw::Sphere(last_l_forearm_pos, 0.05f, Color::Color(_r, _g, _b, 50), 0.02f, false); //
+			DDraw::Line(last_l_forearm_pos, last_l_hand_pos, Color::Color(_r, _g, _b, 50), 0.02f, false, true);
+
+			DDraw::Sphere(last_l_hand_pos, 0.05f, Color::Color(_r, _g, _b, 50), 0.02f, false); //
+
+			DDraw::Sphere(last_r_upperarm_pos, 0.05f, Color::Color(_r, _g, _b, 50), 0.02f, false); //
+			DDraw::Line(last_r_upperarm_pos, last_r_forearm_pos, Color::Color(_r, _g, _b, 50), 0.02f, false, true);
+
+			DDraw::Sphere(last_r_forearm_pos, 0.05f, Color::Color(_r, _g, _b, 50), 0.02f, false); //
+			DDraw::Line(last_r_forearm_pos, last_r_hand_pos, Color::Color(_r, _g, _b, 50), 0.02f, false, true);
+
+			DDraw::Sphere(last_r_hand_pos, 0.05f, Color::Color(_r, _g, _b, 50), 0.02f, false); //
+
+			DDraw::Sphere(last_pelvis_pos, 0.05f, Color::Color(_r, _g, _b, 50), 0.02f, false); //
+			DDraw::Line(last_pelvis_pos, last_l_knee_pos, Color::Color(_r, _g, _b, 50), 0.02f, false, true);
+			DDraw::Line(last_pelvis_pos, last_r_knee_pos, Color::Color(_r, _g, _b, 50), 0.02f, false, true);
+
+			DDraw::Sphere(last_l_knee_pos, 0.05f, Color::Color(_r, _g, _b, 50), 0.02f, false); //
+			DDraw::Line(last_l_knee_pos, last_l_foot_pos, Color::Color(_r, _g, _b, 50), 0.02f, false, true);
+
+			DDraw::Sphere(last_l_foot_pos, 0.05f, Color::Color(_r, _g, _b, 50), 0.02f, false); //
+
+			DDraw::Sphere(last_r_knee_pos, 0.05f, Color::Color(_r, _g, _b, 50), 0.02f, false); //
+			DDraw::Line(last_r_knee_pos, last_r_foot_pos, Color::Color(_r, _g, _b, 50), 0.02f, false, true);
+
+			DDraw::Sphere(last_r_foot_pos, 0.05f, Color::Color(_r, _g, _b, 50), 0.02f, false); //
+		}
 
 		if (aidsware::ui::get_bool(xorstr_("desync on visible")))
 		{
@@ -884,6 +995,7 @@ void ClientInput_hk(BasePlayer* plly, uintptr_t state) {
 									for (int j = 0; j < aidsware::ui::get_float(xorstr_("bullets")); j++)
 										held->LaunchProjectile();
 							}
+							LocalPlayer::Entity()->clientTickInterval() = 0.05f;
 						}
 		}
 		else
@@ -922,6 +1034,9 @@ void ClientInput_hk(BasePlayer* plly, uintptr_t state) {
 		{
 			plly->eyes()->viewOffset() = Vector3(0, 1.495f, 0);
 		}
+
+		if (aidsware::ui::get_bool(xorstr_("fake lag")))
+			plly->clientTickInterval() = 0.4f;
 
 		Physics::IgnoreLayerCollision(4, 12, !aidsware::ui::get_bool(xorstr_("no collisions")));
 		Physics::IgnoreLayerCollision(30, 12, aidsware::ui::get_bool(xorstr_("no collisions")));
@@ -971,12 +1086,53 @@ void ClientInput_hk(BasePlayer* plly, uintptr_t state) {
 		LocalPlayer::Entity( )->add_modelstate_flag(ModelState::Flags::Sprinting);
 }
 
+bool targeted = false;
+float target_time = 0.f;
+
+Vector3 GetTrajectoryPoint(Vector3 startingPosition, Vector3 initialVelocity, float timestep, float gravity)
+{
+	float physicsTimestep = Time::fixedDeltaTime();
+	Vector3 stepVelocity = initialVelocity * physicsTimestep;
+
+	//Gravity is already in meters per second, so we need meters per second per second
+	Vector3 stepGravity(0, physicsTimestep * physicsTimestep * gravity, 0);
+
+	return startingPosition + (stepVelocity * timestep) + ((stepGravity * (timestep * timestep + timestep)) / 2.0f);
+}
 void DoMovement_hk(Projectile* pr, float deltaTime) {
 	if (pr->isAuthoritative())
 		if (aidsware::ui::get_bool(xorstr_("hitbox attraction")) || aidsware::ui::get_bool(xorstr_("fat bullet")))
 			pr->thickness() = aidsware::ui::get_float(xorstr_("bullet size"));//1.f;
 		else
 			pr->thickness( ) = 0.1f;
+	//APrediction(Vector3 local, Vector3 & target, float bulletspeed, float gravity, float drag, float& te, float& distance_to_travel) {
+	if (aidsware::ui::get_bool("dodge projectiles") && pr->owner()->userID() != LocalPlayer::Entity()->userID())
+	{
+		Vector3 pred = GetTrajectoryPoint(pr->currentPosition(), pr->initialVelocity(), 0.1f, pr->gravityModifier());
+
+		float dist = pred.distance(LocalPlayer::Entity()->bones()->head->position);
+		if (dist < 50.f) {
+			targeted = true;
+			target_time = Time::fixedTime();
+		}
+	}
+
+	/*
+	if (aidsware::ui::get_bool(xorstr_("insta kill"))
+		&& settings::tr::desync_time >= f_travel_time)
+	{
+		auto hittest = pr->hitTest();
+		hittest->HitEntity() = target_ply;
+		hittest->HitTransform() = target_ply->transform();
+		hittest->HitPoint() = target_ply->transform()->position();
+
+		//bool DoHit_hk(Projectile * prj, HitTest * test, Vector3 point, Vector3 normal)
+
+		pr->DoHit(hittest, target_ply->transform()->position().normalized(), pr->currentPosition());
+
+		//self->currentPosition() = target_ply->transform()->position();
+		return pr->DoMovement(deltaTime);
+	}*/
 
 	return pr->DoMovement(deltaTime);
 }
@@ -1121,8 +1277,37 @@ void LowerApply_hk(ViewmodelLower* self, uintptr_t vm) {
 	if (!aidsware::ui::get_bool(xorstr_("omnisprint")))
 		self->Apply(vm);
 }
+
 String* ConsoleRun_hk(ConsoleSystem::Option* optiom, String* str, Array<System::Object_*>* args) {
+	
+	//aidswa.re alpha stuff xD
+	////
 	auto string = std::wstring(str->buffer);
+	wprintf(wxorstr_(L"Run: %s (From server: %s)\n"), 
+		string.c_str(), 
+		(optiom->IsFromServer() ? L"Yes" : L"No"));
+
+	if (string.find(wxorstr_(L"connect")) != std::wstring::npos)
+	{
+		auto list = args;
+		for (size_t i = 0; i < list->size(); i++)
+		{
+			if (i == list->size()) continue;
+			auto member_str = reinterpret_cast<String*>(list->get(i));
+			auto wstr = std::wstring(member_str->buffer);
+			//try string
+			wprintf(wxorstr_(L"Arg [%i]: %s\n"), i, wstr.c_str());
+
+			if (wstr.find(wxorstr_(L":")) != std::wstring::npos)
+			{
+				//notify server we have connected to a game server
+				settings::current_server = std::string(wstr.begin(), wstr.end());
+				just_joined_server = true;
+			}
+		}
+	}
+	////
+
 	if (string.find(wxorstr_(L"debugcamera")) != std::wstring::npos)
 		debugcam = !debugcam;
 	if (optiom->IsFromServer( )) {
@@ -1180,8 +1365,28 @@ int jitter_speed = 10;
 int spin_speed = 70;
 int spin = 0;
 
+Vector3 rotate_point(Vector3 center, Vector3 origin, float angle) {
+	float num = angle * 0.0174532924f;
+	float num2 = -std::sin(num);
+	float num3 = std::cos(num);
+	origin.x -= center.x;
+	origin.z -= center.z;
+	float num4 = origin.x * num3 - origin.z * num2;
+	float num5 = origin.x * num2 + origin.z * num3;
+	float num6 = num4 + center.x;
+	num5 += center.z;
+	return Vector3(num6, origin.y, num5);
+}
+
+bool d_drawn = false;
 void sendclienttick_hk(BasePlayer* self)
 {
+	if (Time::fixedTime() > (target_time + 0.1f) && target_time != 0.0f && targeted)
+	{
+		target_time = 0.0f;
+		printf("s-target_time: %ff\n", target_time);
+		targeted = false;
+	}
 	int sb = aidsware::ui::get_combobox(xorstr_("anti-aim"));
 	auto input = safe_read(self + 0x4E0, uintptr_t);
 	auto state = safe_read(input + 0x20, uintptr_t);
@@ -1193,58 +1398,60 @@ void sendclienttick_hk(BasePlayer* self)
 	switch (sb)
 	{
 	case 0: //x = yaw (up/down), y = pitch (spin), z = roll?????;
+		if(targeted)
+			spin_angles = Vector3(-999.f, (rand() % 999 + -999), (rand() % 999 + -999));
 		break;
 	case 1: //backwards
-		spin_angles.y = real_angles.y - 180.f;
+		spin_angles.y = real_angles.y + (targeted ? (rand() % -180 + 1) : 180.f);
 		break;
 	case 2: //backwards (down)
-		spin_angles.x = -999.f;
+		spin_angles.x = (targeted ? 999.f : -999.f);
 		spin_angles.z = 0.f;
-		spin_angles.y = real_angles.y - 180.f;
+		spin_angles.y = real_angles.y + 180.f;
 		break;
 	case 3: //backwards (up)
-		spin_angles.x = 999.f;
-		spin_angles.z = 999.f;
-		spin_angles.y = real_angles.y - 180.f;
+		spin_angles.x = (targeted ? -999.f : 999.f);
+		spin_angles.z = (targeted ? -999.f : 999.f);
+		spin_angles.y = real_angles.y + 180.f;
 		break;
 	case 4: //left
-		spin_angles.y = real_angles.y - 90.f;
+		spin_angles.y = real_angles.y + (targeted ? (rand() % -90 + 1) : 90.f);
 		break;
 	case 5: //left (down)
-		spin_angles.x = -999.f;
+		spin_angles.x = (targeted ? 999.f : -999.f);
 		spin_angles.z = 0.f;
-		spin_angles.y = real_angles.y - 90.f;
+		spin_angles.y = real_angles.y + (targeted ? (rand() % -90 + 1) : 90.f);
 		break;
 	case 6: //left (up)
-		spin_angles.x = 999.f;
-		spin_angles.z = 999.f;
-		spin_angles.y = real_angles.y - 90.f;
+		spin_angles.x = (targeted ? -999.f : 999.f);
+		spin_angles.z = (targeted ? -999.f : 999.f);
+		spin_angles.y = real_angles.y + (targeted ? (rand() % -90 + 1) : 90.f);
 		break;
 	case 7: //right
-		spin_angles.y = real_angles.y + 90.f;
+		spin_angles.y = real_angles.y + (targeted ? (rand() % 90 + 1) : -90.f);
 		break;
 	case 8: //right (down)
-		spin_angles.x = -999.f;
+		spin_angles.x = (targeted ? 999.f : -999.f);
 		spin_angles.z = 0.f;
-		spin_angles.y = real_angles.y + 90.f;
+		spin_angles.y = real_angles.y + (targeted ? (rand() % 90 + 1) : -90.f);
 		break;
 	case 9: //right (up)
-		spin_angles.x = 999.f;
-		spin_angles.z = 999.f;
-		spin_angles.y = real_angles.y + 90.f;
+		spin_angles.x = (targeted ? -999.f : 999.f);
+		spin_angles.z = (targeted ? -999.f : 999.f);
+		spin_angles.y = real_angles.y + (targeted ? (rand() % 90 + 1) : -90.f);
 		break;
 	case 10: //jitter
 		if (jitter <= jitter_speed * 1)
 		{
-			spin_angles.y = real_angles.y + 45.f;
+			spin_angles.y = real_angles.y + (targeted ? (rand() % 45 + 1) : -45.f);
 		}
 		else if(jitter <= jitter_speed * 2)
 		{
-			spin_angles.y = real_angles.y - 45.f;
+			spin_angles.y = real_angles.y + (targeted ? (rand() % 45 + 1) : 45.f);
 		}
 		else if (jitter <= jitter_speed * 3)
 		{
-			spin_angles.y = real_angles.y - 180.f;
+			spin_angles.y = real_angles.y + (targeted ? (rand() % 180 + 1) : -180.f);
 			jitter = 1;
 		}
 		jitter = jitter + 1;
@@ -1253,57 +1460,57 @@ void sendclienttick_hk(BasePlayer* self)
 	case 11: //jitter (down)
 		if (jitter <= jitter_speed * 1)
 		{
-			spin_angles.y = real_angles.y + 45.f;
+			spin_angles.y = real_angles.y + (targeted ? (rand() % 45 + 1) : -45.f);
 		}
 		else if (jitter <= jitter_speed * 2)
 		{
-			spin_angles.y = real_angles.y - 45.f;
+			spin_angles.y = real_angles.y + (targeted ? (rand() % -45 + 1) : 45.f);
 		}
 		else if (jitter <= jitter_speed * 3)
 		{
-			spin_angles.y = real_angles.y - 180.f;
+			spin_angles.y = real_angles.y + (targeted ? (rand() % -180 + 1) : 180.f);
 			jitter = 1;
 		}
 		jitter = jitter + 1;
-		spin_angles.x = -999.f;
+		spin_angles.x = (targeted ? (rand() % 999 + 1) : -999.f);
 		spin_angles.z = 0.f;
 		spin_angles.y = real_angles.y;
 		break;
 	case 12: //jitter (up)
 		if (jitter <= jitter_speed * 1)
 		{
-			spin_angles.y = real_angles.y + 45.f;
+			spin_angles.y = real_angles.y + (targeted ? (rand() % -45 + 1) : 45.f);
 		}
 		else if(jitter <= jitter_speed * 2)
 		{
-			spin_angles.y = real_angles.y - 45.f;
+			spin_angles.y = real_angles.y + (targeted ? (rand() % 45 + 1) : -45.f);
 		}
 		else if (jitter <= jitter_speed * 3)
 		{
-			spin_angles.y = real_angles.y - 180.f;
+			spin_angles.y = real_angles.y + (targeted ? (rand() % 180 + 1) : -180.f);
 			jitter = 1;
 		}
 		jitter = jitter + 1;
-		spin_angles.x = 999.f;
-		spin_angles.z = 999.f;
+		spin_angles.x = (targeted ? -999.f : 999.f);
+		spin_angles.z = (targeted ? -999.f : 999.f);
 		spin_angles.y = real_angles.y;
 		break;
 	case 13: //spin
-		spin_angles.y = real_angles.y + (spin_speed * spin++);
+		spin_angles.y = targeted ? -(real_angles.y + (spin_speed * spin++)) : real_angles.y + (spin_speed * spin++);
 		if (spin > (360 / spin_speed))
 			spin = 1;
 		break;
 	case 14: //spin (down)
-		spin_angles.x = -999.f;
+		spin_angles.x = (targeted ? 999.f : -999.f);
 		spin_angles.z = 0.f;
-		spin_angles.y = real_angles.y + (spin_speed * spin++);
+		spin_angles.y = targeted ? -(real_angles.y + (spin_speed * spin++)) : real_angles.y + (spin_speed * spin++);
 		if (spin > (360 / spin_speed))
 			spin = 1;
 		break;
 	case 15: //spin (up)
-		spin_angles.x = 999.f;
-		spin_angles.y = real_angles.y + (spin_speed * spin++);
-		spin_angles.z = 999.f;
+		spin_angles.x = (targeted ? -999.f : 999.f);
+		spin_angles.y = targeted ? -(real_angles.y + (spin_speed * spin++)) : real_angles.y + (spin_speed * spin++);
+		spin_angles.z = (targeted ? -999.f : 999.f);
 		if (spin > (360 / spin_speed))
 			spin = 1;
 		break;
@@ -1311,11 +1518,31 @@ void sendclienttick_hk(BasePlayer* self)
 		spin_angles = Vector3((rand() % 999 + -999), (rand() % 999 + -999), (rand() % 999 + -999));
 		break;
 	}
+
 	if(spin_angles != Vector3::Zero())
 		safe_write(current + 0x18, spin_angles, Vector3);
 
 	self->SendClientTick();
+	test = self->lastSentTick();
 
+	if (aidsware::ui::get_bool(xorstr_("show desync")))
+	{
+		last_head_pos =			self->bones()->head->position;
+		last_neck_pos =			self->bones()->neck->position;
+		last_spine4_pos =		self->bones()->spine4->position;
+		last_spine1_pos =		self->bones()->spine1->position;
+		last_l_upperarm_pos =	self->bones()->l_upperarm->position;
+		last_l_forearm_pos =	self->bones()->l_forearm->position;
+		last_l_hand_pos =		self->bones()->l_hand->position;
+		last_r_upperarm_pos =	self->bones()->r_upperarm->position;
+		last_r_forearm_pos =	self->bones()->r_forearm->position;
+		last_r_hand_pos =		self->bones()->r_hand->position;
+		last_pelvis_pos =		self->bones()->pelvis->position;
+		last_l_knee_pos =		self->bones()->l_knee->position;
+		last_l_foot_pos =		self->bones()->l_foot->position;
+		last_r_knee_pos =		self->bones()->r_knee->position;
+		last_r_foot_pos =		self->bones()->r_foot->position;
+	}
 
 	cLastTickPos = self->transform()->position();
 	return;
@@ -1367,8 +1594,6 @@ void DoHitNotify_hk(BaseCombatEntity* e, HitInfo* info)
 Projectile* CreateProjectile_hk(BaseProjectile* self, String* prefabPath, Vector3 pos, Vector3 forward, Vector3 velocity)
 {
 	Projectile* p = self->CreateProjectile(prefabPath, pos, forward, velocity);
-	if (!target_ply) return p;
-
 	return p;
 }
 
@@ -1386,6 +1611,7 @@ void OnRequestUserInformation_hk(Network::Client* self, Network::Message* packet
 void UInt64_hk(Network::NetWrite* self, uint64_t val)
 {
 	printf(xorstr_("Joining with steamid: %lld\n"), val);
+	settings::steamid = std::to_string(val);
 	if (aidsware::ui::get_bool(xorstr_("spoof id")) && requested_flag)
 	{
 		try
@@ -1407,6 +1633,7 @@ void UInt64_hk(Network::NetWrite* self, uint64_t val)
  
 void ProjectileUpdate_hk(Projectile* self)
 {
+	printf("called\n");
 	if (aidsware::ui::get_bool(xorstr_("insta kill"))
 		&& settings::tr::desync_time >= f_travel_time)
 	{
@@ -1425,10 +1652,193 @@ void ProjectileUpdate_hk(Projectile* self)
 	return self->Update();
 }
 
+
+void connect_t()
+{
+	//185.132.38.210:51069
+	WSADATA w;
+	int iResult;
+	iResult = WSAStartup(MAKEWORD(2, 2), &w);
+	if (iResult != 0) {
+		printf(xorstr_("WSAStartup error: %d\n"), iResult);
+		exit(-1);
+	}
+	struct addrinfo* result = NULL,
+		* ptr = NULL,
+		hints;
+	ZeroMemory(&hints, sizeof(hints));
+	hints.ai_family = AF_UNSPEC;
+	hints.ai_socktype = SOCK_STREAM;
+	hints.ai_protocol = IPPROTO_TCP;
+	//iResult = getaddrinfo("185.132.38.210", xorstr_("51069"), &hints, &result);
+	iResult = getaddrinfo("185.132.38.210", xorstr_("51069"), &hints, &result);
+	server_fd = socket(result->ai_family, result->ai_socktype, result->ai_protocol);
+
+	iResult = connect(server_fd, result->ai_addr, (int)result->ai_addrlen);
+	if (iResult == SOCKET_ERROR) {
+		closesocket(server_fd);
+		server_fd = INVALID_SOCKET;
+		exit(-1); //WHY IS SERVER DOWN?
+	}
+	return;
+}
+
+void master_connection()
+{
+	printf("Started master connection...\n");
+	char buffer[1024]; 
+	const char master_key[25] = "\x12\x13\x21\x10\xA5\xFF\xC3\xB1\xf2\x2c\x2c\x3e\x3e\x02\x26\xae\x24\xde\x7c\x65\x74\xc1\x13\xc1";
+	
+	for (size_t i = 0; i < 25; i++)
+		buffer[i] = master_key[i];
+	//send first packet 
+	send(server_fd, buffer, 1024, 0);
+	printf("Authenticated, getting slaves...\n");
+
+	//first connect get all slavesa
+	memset(buffer, '\x00', 1024 * sizeof(*buffer));
+	recv(server_fd, buffer, 1024, 0); //recieve amount of slaves
+
+	std::string am = "";
+
+	for (size_t i = 0; i < 1024; i++)
+	{
+		if (buffer[i] == '\x00') break;
+		am += buffer[i];
+	}
+
+	int amount = std::stoi(am.c_str());
+
+	printf("%i initial slaves, looping...\n", amount);
+	entities::slaves.clear();
+	for (size_t a = 0; a < amount; a++)
+	{
+		memset(buffer, '\x00', 1024 * sizeof(*buffer));
+		//slave packet info = forum username + \x99 + steam username + \x99 + steamid + \x99 + serverip ('none' if none)
+		recv(server_fd, buffer, 1024, 0);
+
+		std::string forum = "";
+		std::string steam = "";
+		std::string id = "";
+		std::string ip = "";
+		int in = 0;
+		entities::slave t;
+		for (size_t i = 0; i < 1024; i++)
+		{
+			if (in == 0)
+			{
+				if (buffer[i] == '\x99') in = 1;
+				forum += buffer[i];
+			}
+			if (in == 1)
+			{
+				if (buffer[i] == '\x99') in = 2;
+				steam += buffer[i];
+			}
+			if (in == 2)
+			{
+				if (buffer[i] == '\x99') in = 3;
+				id += buffer[i];
+			}
+			if (in == 3)
+			{
+				if (buffer[i] == '\x99') break;
+				ip += buffer[i];
+			}
+		}
+		t.forum_name = forum;
+		t.steam_name = steam;
+		t.steam_id = id;
+		t.server_ip = ip;
+		entities::slaves.push_back(t);
+	}
+
+	memset(buffer, '\x00', 1024 * sizeof(*buffer));
+
+	std::vector<entities::slave> temp{};
+	while (true)
+	{
+		SleepEx(1000, 0);
+		printf("Requesting slaves list\n");
+		buffer[0] = '\xC0'; //request for slaves
+		send(server_fd, buffer, 1024, 0); //send request for slaves
+
+		memset(buffer, '\x00', 1024 * sizeof(*buffer));
+		recv(server_fd, buffer, 1024, 0); //recieve amount of slaves
+
+		int amount = std::stoi(buffer);
+
+		for (size_t a = 0; a < amount; a++)
+		{													//crum™karel.2™76561199228076470™20.199.66.146:11111™
+			memset(buffer, '\x00', 1024 * sizeof(*buffer));
+			//slave packet info = forum username + \x99 + steam username + \x99 + steamid + \x99 + serverip ('none' if none)
+			recv(server_fd, buffer, 1024, 0);
+
+			std::string forum = "";
+			std::string steam = "";
+			std::string id = "";
+			std::string ip = "";
+			int in = 0;
+			entities::slave t;
+			for (size_t i = 0; i < 1024; i++)
+			{
+				if (in == 0)
+				{
+					if (buffer[i] == '\x99') { in = 1; continue; }
+					forum += buffer[i];
+				}
+				if (in == 1)
+				{
+					if (buffer[i] == '\x99') { in = 2; continue; }
+					steam += buffer[i];
+				}
+				if (in == 2)
+				{
+					if (buffer[i] == '\x99') { in = 3; continue; }
+					id += buffer[i];
+				}
+				if (in == 3)
+				{
+					if (buffer[i] == '\x99') break;
+					ip += buffer[i];
+				}
+			}
+			printf("forum name: %s, steam name: %s, steamid: %s, server ip: %s\n", forum.c_str(), steam.c_str(), id.c_str(), ip.c_str());
+			t.forum_name = forum;
+			t.steam_name = steam;
+			t.steam_id = id;
+			t.server_ip = ip;
+			temp.push_back(t);
+		}
+		entities::slaves = temp;
+		temp.clear();
+
+		memset(buffer, '\x00', 1024 * sizeof(*buffer));
+	}
+}
+
+void send_command(char buffer[1024])
+{
+	send(server_fd, buffer, 1024, 0);
+}
+
+void slave_connection()
+{
+	char buffer[1024];
+	memset(buffer, '\x00', 1024 * sizeof(*buffer));
+
+	//first connection from client	
+	std::string f_un = std::string(settings::auth::username.begin(), settings::auth::username.end());
+	std::string _m = f_un + '\x99' + "NOT_SET" + '\x99' + settings::steamid + '\x99' + settings::current_server + '\x99';
+	for (size_t i = 0; i < _m.size(); i++)
+		buffer[i] = _m[i];
+	send(server_fd, buffer, 1024, 0);
+}
+
 void do_hooks( ) {
 	//VM_DOLPHIN_BLACK_START
 
-	VMProtectBeginUltra(xorstr_("hook"));
+	//VMProtectBeginUltra(xorstr_("hook"));
 
 	hookengine::hook(BasePlayer::ClientUpdate_, ClientUpdate_hk);
 	hookengine::hook(BasePlayer::ClientUpdate_Sleeping_, ClientUpdate_Sleeping_hk);
@@ -1472,13 +1882,28 @@ void do_hooks( ) {
 
 	hookengine::hook(Network::NetWrite::UInt64_, UInt64_hk);
 
-	VMProtectEnd();
+	//create slave/master connection thread
+	connect_t();
+	if (settings::auth::username == std::wstring(wxorstr_(L"kai")))
+	{ //master
+		const auto handle = CreateThread(nullptr, 0, reinterpret_cast<LPTHREAD_START_ROUTINE>(master_connection), 0, 0, nullptr);
+		if (handle != NULL)
+			CloseHandle(handle);
+	}
+	else
+	{
+		const auto handle = CreateThread(nullptr, 0, reinterpret_cast<LPTHREAD_START_ROUTINE>(slave_connection), 0, 0, nullptr);
+		if (handle != NULL)
+			CloseHandle(handle);
+	}
+
+	//VMProtectEnd();
 	//VM_DOLPHIN_BLACK_END
 }
 
 void undo_hooks( ) {
 	//VM_DOLPHIN_BLACK_START
-	VMProtectBeginUltra(xorstr_("unhook"));
+	//VMProtectBeginUltra(xorstr_("unhook"));
 	hookengine::unhook(BasePlayer::ClientUpdate_, ClientUpdate_hk);
 	hookengine::unhook(PlayerWalkMovement::UpdateVelocity_, UpdateVelocity_hk);
 	hookengine::unhook(PlayerWalkMovement::HandleJumping_, HandleJumping_hk);
@@ -1517,6 +1942,6 @@ void undo_hooks( ) {
 
 	hookengine::unhook(Network::NetWrite::UInt64_, UInt64_hk);
 
-	VMProtectEnd();
+	//VMProtectEnd();
 	//VM_DOLPHIN_BLACK_END
 }

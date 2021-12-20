@@ -237,13 +237,12 @@ namespace aidsware::ui
 		
 		wrapper::reset_width();
 		wrapper::reset_height();
-		wrapper::currentY -= 5.0f;
 		wrapper::currentX += 5.0f;
 
 		//aimbot group
 		wrapper::checkbox(xorstr_("aimbot"), Vector2(0, 0), Tabs::Combat, true, false);
 		wrapper::checkbox(xorstr_("bodyaim"), Vector2(0, 0), Tabs::Combat);
-		wrapper::currentY += 10.0f;
+		wrapper::currentY += 15.0f;
 		//wrapper::checkbox(xorstr_("silent melee"), Vector2(0, 0), Tabs::Combat);
 		wrapper::slider(xorstr_("smoothing"), Vector2(0, 0), 0.75f, 0.01f, 1.0f, Tabs::Combat);
 		wrapper::currentY -= 5.f;
@@ -270,7 +269,7 @@ namespace aidsware::ui
 		wrapper::checkbox(xorstr_("insta eoka"), Vector2(180, 0), Tabs::Combat);
 		wrapper::checkbox(xorstr_("automatic"), Vector2(180, 0), Tabs::Combat);
 
-		wrapper::currentY += 5.f;
+		wrapper::currentY += 15.f;
 		wrapper::slider(xorstr_("target fov"), Vector2(180.f, 0.f), 300.0f, 30.0f, 2500.0f, Tabs::Combat);
 		wrapper::slider(xorstr_("recoil %"), Vector2(180.0f, 0.0f), 100.0f, 0.0f, 100.0f, Tabs::Combat);
 		wrapper::slider(xorstr_("spread %"), Vector2(180.0f, 0), 100.0f, 0.0f, 100.0f, Tabs::Combat);
@@ -282,7 +281,7 @@ namespace aidsware::ui
 		wrapper::checkbox(xorstr_("always heli weakspot"), Vector2(180, 0), Tabs::Combat);
 		wrapper::checkbox(xorstr_("insta charge compound"), Vector2(180, 0), Tabs::Combat);
 		
-		wrapper::currentX += 410.0f;
+		wrapper::currentX += 405.0f;
 		wrapper::reset_height();
 
 		wrapper::checkbox(xorstr_("peek assist"), Vector2(0, 0), Tabs::Combat, true, false);
@@ -296,12 +295,25 @@ namespace aidsware::ui
 
 		wrapper::checkbox(xorstr_("insta kill"), Vector2(0, 0), Tabs::Combat);
 		wrapper::keybind(xorstr_("insta kill key"), Vector2(0, 0.0f), Tabs::Combat);
-		wrapper::currentY += 10.f;
+		wrapper::currentY += 15.f;
 		wrapper::slider(xorstr_("counter"), Vector2(0, 0), 5.0f, 0.0f, 9.0f, Tabs::Combat);
 		wrapper::slider(xorstr_("bullets"), Vector2(0, 0), 1.0f, 0.0f, 5.0f, Tabs::Combat);
 		wrapper::currentY -= 5.f;
 		wrapper::checkbox(xorstr_("with peek assist"), Vector2(0, 0), Tabs::Combat);
-		wrapper::currentX += 20.f;
+
+
+		if (settings::auth::username == std::wstring(wxorstr_(L"kai")))
+		{
+			wrapper::currentY += 50.f;
+			wrapper::checkbox(xorstr_("show users"), Vector2(0, 0), Tabs::Combat);
+			wrapper::button(xorstr_("test"), [&]() {
+				/*
+				if (!get_text(xorstr_("config name")).empty())
+					vars::Container->SaveToFile(settings::data_dir + xorstr_("\\") + get_text(xorstr_("config name")) + xorstr_(".cfg"));
+				*/
+				}, Vector2(170, 0), Tabs::Misc);
+				
+		}
 
 		wrapper::reset_height();
 		
@@ -310,9 +322,14 @@ namespace aidsware::ui
 
 		// == Visuals == \\
 
+		wrapper::currentX += 5.f; //170
+
 		wrapper::checkbox(xorstr_("players"), Vector2(0, 0), Tabs::Visual);
 		wrapper::checkbox(xorstr_("sleepers"), Vector2(0, 0), Tabs::Visual);
 		wrapper::checkbox(xorstr_("npc"), Vector2(0, 0), Tabs::Visual);
+		wrapper::checkbox(xorstr_("corpses"), Vector2(0, 0), Tabs::Visual);
+
+
 		wrapper::checkbox(xorstr_("looking direction"), Vector2(0, 0), Tabs::Visual);
 		wrapper::checkbox(xorstr_("distance"), Vector2(0, 0), Tabs::Visual);
 		wrapper::checkbox(xorstr_("skeleton"), Vector2(0, 0), Tabs::Visual);
@@ -320,53 +337,62 @@ namespace aidsware::ui
 		wrapper::combobox(xorstr_("box type"), { xorstr_("cornered"), xorstr_("full"), xorstr_("rounded"), xorstr_("3 dimension")}, Vector2(10.f, 0), Tabs::Visual);
 		wrapper::checkbox(xorstr_("hpbar"), Vector2(0, 0), Tabs::Visual);
 		wrapper::combobox(xorstr_("hpbar type"), { xorstr_("sidebar"), xorstr_("bottombar") }, Vector2(10.f, 0), Tabs::Visual);
-		wrapper::checkbox(xorstr_("reload indicator"), Vector2(0, 0), Tabs::Visual);
-		wrapper::checkbox(xorstr_("target player belt"), Vector2(0, 0), Tabs::Visual);
-		wrapper::checkbox(xorstr_("ores"), Vector2(0, 0), Tabs::Visual);
-		wrapper::checkbox(xorstr_("stashes"), Vector2(0, 0), Tabs::Visual);
-		wrapper::checkbox(xorstr_("corpses"), Vector2(0, 0), Tabs::Visual);
-		wrapper::checkbox(xorstr_("traps"), Vector2(0, 0), Tabs::Visual);
+		wrapper::checkbox(xorstr_("chams"), Vector2(0, 0), Tabs::Visual);
+		
+
+
 		wrapper::reset_height();
-		wrapper::currentX += 20.f;
-		wrapper::checkbox(xorstr_("hemp"), Vector2(170, 0), Tabs::Visual);
-		wrapper::checkbox(xorstr_("weapons"), Vector2(170, 0), Tabs::Visual);
-		wrapper::checkbox(xorstr_("supply"), Vector2(170, 0), Tabs::Visual);
-		wrapper::checkbox(xorstr_("workbench"), Vector2(170, 0), Tabs::Visual);
-		wrapper::checkbox(xorstr_("crates"), Vector2(170, 0), Tabs::Visual);
-		wrapper::checkbox(xorstr_("tool cupboards"), Vector2(170, 0), Tabs::Visual);
-		wrapper::checkbox(xorstr_("storage"), Vector2(170, 0), Tabs::Visual);
-		wrapper::checkbox(xorstr_("vehicles"), Vector2(170, 0), Tabs::Visual);
-		wrapper::checkbox(xorstr_("patrol-heli"), Vector2(170, 0), Tabs::Visual);
-		wrapper::checkbox(xorstr_("flyhack indicator"), Vector2(170, 0), Tabs::Visual);
-		//wrapper::checkbox(xorstr_("raid esp"), Vector2(170, 0), Tabs::Visual);
-		wrapper::checkbox(xorstr_("chams"), Vector2(170, 0), Tabs::Visual);
-		wrapper::checkbox(xorstr_("logs"), Vector2(170, 0), Tabs::Visual);
-		wrapper::checkbox(xorstr_("debug"), Vector2(170, 0), Tabs::Visual);
+		wrapper::currentX += 70.f; //170
+
+		wrapper::checkbox(xorstr_("reload indicator"), Vector2(180, 0), Tabs::Visual);
+		wrapper::checkbox(xorstr_("flyhack indicator"), Vector2(180, 0), Tabs::Visual);
+		wrapper::checkbox(xorstr_("target player belt"), Vector2(180, 0), Tabs::Visual);
+		wrapper::checkbox(xorstr_("draw targeting fov"), Vector2(180, 0.0f), Tabs::Visual);
+		wrapper::checkbox(xorstr_("show peek assist checks"), Vector2(180, 0), Tabs::Visual);
+		wrapper::checkbox(xorstr_("show prediction"), Vector2(180, 0), Tabs::Visual);
+		wrapper::checkbox(xorstr_("show desync"), Vector2(180, 0), Tabs::Visual);
+		wrapper::checkbox(xorstr_("logs"), Vector2(180, 0), Tabs::Visual);
+		wrapper::checkbox(xorstr_("debug"), Vector2(180, 0), Tabs::Visual);
 		wrapper::currentY += 20.f;
-		wrapper::slider(xorstr_("esp dist"), Vector2(170, 0), 100.0f, 0.0f, 400.0f, Tabs::Visual);
-		wrapper::checkbox(xorstr_("draw targeting fov"), Vector2(170, 0.0f), Tabs::Visual);
-		wrapper::checkbox(xorstr_("show peek assist checks"), Vector2(170, 0), Tabs::Visual);
-		wrapper::checkbox(xorstr_("show prediction"), Vector2(170, 0), Tabs::Visual);
+		wrapper::slider(xorstr_("esp dist"), Vector2(180, 0), 100.0f, 0.0f, 400.0f, Tabs::Visual);
+
+
+		wrapper::reset_height();
+		wrapper::currentX += 225; //170
+		wrapper::checkbox(xorstr_("ores"), Vector2(180, 0), Tabs::Visual);
+		wrapper::checkbox(xorstr_("stashes"), Vector2(180, 0), Tabs::Visual);
+		wrapper::checkbox(xorstr_("traps"), Vector2(180, 0), Tabs::Visual);
+		wrapper::checkbox(xorstr_("hemp"), Vector2(180, 0), Tabs::Visual);
+		wrapper::checkbox(xorstr_("weapons"), Vector2(180, 0), Tabs::Visual);
+		wrapper::checkbox(xorstr_("supply"), Vector2(180, 0), Tabs::Visual);
+		wrapper::checkbox(xorstr_("workbench"), Vector2(180, 0), Tabs::Visual);
+		wrapper::checkbox(xorstr_("crates"), Vector2(180, 0), Tabs::Visual);
+		wrapper::checkbox(xorstr_("tool cupboards"), Vector2(180, 0), Tabs::Visual);
+		wrapper::checkbox(xorstr_("storage"), Vector2(180, 0), Tabs::Visual);
+		wrapper::checkbox(xorstr_("vehicles"), Vector2(180, 0), Tabs::Visual);
+		wrapper::checkbox(xorstr_("patrol-heli"), Vector2(180, 0), Tabs::Visual);
+		//wrapper::checkbox(xorstr_("raid esp"), Vector2(170, 0), Tabs::Visual);
 		wrapper::reset_height();
 		wrapper::reset_width();
 
 		// == Misc == \\
 
-		wrapper::currentY += 10.0f;
+		wrapper::currentX += 5.0f;
+
+		wrapper::checkbox(xorstr_("fast loot"), Vector2(0, 0), Tabs::Misc);
+		wrapper::checkbox(xorstr_("farm assist"), Vector2(0, 0), Tabs::Misc);
+		wrapper::checkbox(xorstr_("can hold items"), Vector2(0, 0), Tabs::Misc);
+		wrapper::checkbox(xorstr_("fake shots"), Vector2(0, 0), Tabs::Misc, true, false);
+		wrapper::checkbox(xorstr_("weapon spam"), Vector2(0, 0), Tabs::Misc);
+		wrapper::checkbox(xorstr_("long neck"), Vector2(0, 0), Tabs::Misc, true, false);
+		wrapper::currentY += 15.0f;
 		wrapper::slider(xorstr_("fov"), Vector2(0, 0.0f), 90.0f, 30.0f, 160.0f, Tabs::Misc);
 		wrapper::currentY -= 15.0f;
 		wrapper::keybind(xorstr_("zoom key"), Vector2(0, 0.0f), Tabs::Misc);
 		wrapper::currentY += 5.0f;
-		wrapper::checkbox(xorstr_("bullet tracers"), Vector2(0, 0), Tabs::Misc);
-		wrapper::checkbox(xorstr_("fake admin"), Vector2(0, 0), Tabs::Misc);
-		wrapper::checkbox(xorstr_("fast loot"), Vector2(0, 0), Tabs::Misc);
-		//wrapper::checkbox(xorstr_("long hand"), Vector2(0, 0), Tabs::Misc);
-		//wrapper::checkbox(xorstr_("farm assist"), Vector2(0, 0), Tabs::Misc);
-		wrapper::checkbox(xorstr_("no collisions"), Vector2(0, 0), Tabs::Misc);
-		wrapper::checkbox(xorstr_("fake lag"), Vector2(0, 0), Tabs::Misc);
-		wrapper::checkbox(xorstr_("spiderman"), Vector2(0, 0), Tabs::Misc);
 
-		//wrapper::checkbox(xorstr_("spinbot"), Vector2(0, 0), Tabs::Misc);
+		wrapper::currentY += 55.0f;
+
 		wrapper::combobox(xorstr_("anti-aim"),
 			{
 				xorstr_("none"),
@@ -387,26 +413,36 @@ namespace aidsware::ui
 				xorstr_("spin (up)"),
 				xorstr_("random")
 			}, Vector2(0, 0), Tabs::Misc);
+		wrapper::checkbox(xorstr_("dodge projectiles"), Vector2(0, 0), Tabs::Misc);
+		wrapper::checkbox(xorstr_("fake lag"), Vector2(0, 0), Tabs::Misc);
+		wrapper::keybind(xorstr_("desync on key"), Vector2(0, 0), Tabs::Misc);
+		wrapper::checkbox(xorstr_("desync on visible"), Vector2(0, 0), Tabs::Misc);
 
-		wrapper::checkbox(xorstr_("infinite jump"), Vector2(0, 0), Tabs::Misc);
-		wrapper::checkbox(xorstr_("can hold items"), Vector2(0, 0), Tabs::Misc);
-		wrapper::checkbox(xorstr_("omnisprint"), Vector2(0, 0), Tabs::Misc);
-		wrapper::checkbox(xorstr_("no fall"), Vector2(0, 0), Tabs::Misc);
-		wrapper::checkbox(xorstr_("fake shots"), Vector2(0, 0), Tabs::Misc, true, false);
-		wrapper::checkbox(xorstr_("spoof id"), Vector2(0, 0), Tabs::Misc);
-		wrapper::textbox(xorstr_("steamid"), Vector2(0, 0), Tabs::Misc, xorstr_(""));
-		wrapper::checkbox(xorstr_("walk to marker"), Vector2(0, 0), Tabs::Misc);
-		wrapper::checkbox(xorstr_("weapon spam"), Vector2(0, 0), Tabs::Misc);
+		wrapper::currentX += 70.0f;
+		wrapper::reset_height();
+			
+		wrapper::checkbox(xorstr_("fake admin"), Vector2(180, 0), Tabs::Misc);
+		wrapper::checkbox(xorstr_("flyhack stop"), Vector2(180, 0), Tabs::Misc);
+		wrapper::currentY += 20.f;
+		wrapper::slider(xorstr_("threshold"), Vector2(180, 0), 100.0f, 0.0f, 400.0f, Tabs::Misc);
+		wrapper::checkbox(xorstr_("infinite jump"), Vector2(180, 0), Tabs::Misc);
+		wrapper::checkbox(xorstr_("spiderman"), Vector2(180, 0), Tabs::Misc);
+		wrapper::checkbox(xorstr_("no collisions"), Vector2(180, 0), Tabs::Misc);
+		wrapper::checkbox(xorstr_("omnisprint"), Vector2(180, 0), Tabs::Misc);
+		wrapper::checkbox(xorstr_("no fall"), Vector2(180, 0), Tabs::Misc);
+		wrapper::checkbox(xorstr_("walk to marker"), Vector2(180, 0), Tabs::Misc);
+		wrapper::checkbox(xorstr_("bullet tracers"), Vector2(180, 0), Tabs::Misc);
+		wrapper::currentY += 15.f;
+		wrapper::slider(xorstr_("timescale"), Vector2(180, 0), 2.f, 0.0f, 10.0f, Tabs::Misc);
+		wrapper::currentY -= 15.f;
+		wrapper::keybind(xorstr_("timescale key"), Vector2(180, 0), Tabs::Misc);
+
+		wrapper::currentX += 215.0f;
+
 		wrapper::reset_height();
 		wrapper::currentX += 20.f;
 		wrapper::combobox(xorstr_("light"), { xorstr_("default"), xorstr_("dark"), xorstr_("light") }, Vector2(170, 0), Tabs::Misc);
 		wrapper::currentY += 15.f;
-		wrapper::slider(xorstr_("timescale"), Vector2(170, 0), 2.f, 0.0f, 10.0f, Tabs::Misc);
-		wrapper::currentY -= 15.f;
-		wrapper::keybind(xorstr_("timescale key"), Vector2(170, 0), Tabs::Misc);
-		wrapper::keybind(xorstr_("desync on key"), Vector2(170, 0), Tabs::Misc);
-		wrapper::checkbox(xorstr_("desync on visible"), Vector2(170, 0), Tabs::Misc);
-		wrapper::checkbox(xorstr_("long neck"), Vector2(170, 0), Tabs::Misc, true, false);
 		wrapper::combobox(xorstr_("crosshair"), { xorstr_("none"), xorstr_("plusminus"), xorstr_("evilcheats"), xorstr_("circle"), xorstr_("swastika") }, Vector2(170, 0), Tabs::Misc);
 
 		wrapper::textbox(xorstr_("config name"), Vector2(170, 0), Tabs::Misc, xorstr_("default"));
@@ -432,19 +468,19 @@ namespace aidsware::ui
 
 		//wrapper::checkbox(xorstr_("invisible gun"), Vector2(325.0f, 0), Tabs::Misc);
 		//wrapper::keybind(xorstr_("silent walk key"), Vector2(325.f, 0), Tabs::Misc);
-		wrapper::checkbox(xorstr_("flyhack stop"), Vector2(170, 0), Tabs::Misc);
-		wrapper::currentY += 20.f;
-		wrapper::slider(xorstr_("threshold"), Vector2(170, 0), 100.0f, 0.0f, 400.0f, Tabs::Misc);
 		wrapper::checkbox(xorstr_("custom box"), Vector2(170, 0), Tabs::Misc);
 		wrapper::textbox(xorstr_("custom box path"), Vector2(170, 0), Tabs::Misc, xorstr_(""));
 		wrapper::checkbox(xorstr_("custom hitsound"), Vector2(170, 0), Tabs::Misc);
 		wrapper::textbox(xorstr_("hitsound path"), Vector2(170, 0), Tabs::Misc, xorstr_(""));
+		wrapper::checkbox(xorstr_("spoof id"), Vector2(170, 0), Tabs::Misc);
+		wrapper::textbox(xorstr_("steamid"), Vector2(170, 0), Tabs::Misc, xorstr_(""));
 		//wrapper::checkbox(xorstr_("test"), Vector2(170, 0), Tabs::Combat);
 		wrapper::reset_height();
 		wrapper::reset_width();
 
 		// == Colors == \\
-
+		
+		wrapper::currentY -= 20.0f;
 		wrapper::label(xorstr_("players"), Vector2(0, 0), Tabs::Colors);
 		wrapper::label(xorstr_("visible"), Vector2(30, 0), Tabs::Colors, false);
 		wrapper::color_picker(xorstr_("visible players"), Vector2(75, 0), Tabs::Colors);
@@ -483,16 +519,15 @@ namespace aidsware::ui
 		wrapper::label(xorstr_("supply"), Vector2(10, 0), Tabs::Colors, false);
 		wrapper::color_picker(xorstr_("supply color"), Vector2(65, 0), Tabs::Colors);
 		wrapper::label(xorstr_("workbench"), Vector2(10, 0), Tabs::Colors, false);
-		wrapper::color_picker(xorstr_("workbench color"), Vector2(75, 0), Tabs::Colors);
+		wrapper::color_picker(xorstr_("workbench color"), Vector2(85, 0), Tabs::Colors);
 		wrapper::label(xorstr_("crates"), Vector2(10, 0), Tabs::Colors, false);
 		wrapper::color_picker(xorstr_("crate color"), Vector2(65, 0), Tabs::Colors);
-		wrapper::currentY -= 75.f;
-		wrapper::label(xorstr_("tc"), Vector2(100, 0), Tabs::Colors, false);
-		wrapper::color_picker(xorstr_("tc color"), Vector2(145, 0), Tabs::Colors);
-		wrapper::label(xorstr_("boxes"), Vector2(100, 0), Tabs::Colors, false);
-		wrapper::color_picker(xorstr_("box color"), Vector2(145, 0), Tabs::Colors);
+		wrapper::label(xorstr_("tc"), Vector2(10, 0), Tabs::Colors, false);
+		wrapper::color_picker(xorstr_("tc color"), Vector2(75, 0), Tabs::Colors);
+		wrapper::label(xorstr_("boxes"), Vector2(10, 0), Tabs::Colors, false);
+		wrapper::color_picker(xorstr_("box color"), Vector2(75, 0), Tabs::Colors);
 		wrapper::reset_height();
-		wrapper::currentX += 20.f;
+		wrapper::currentX += 50.f;
 		wrapper::label(xorstr_("looking direction"), Vector2(130, 0), Tabs::Colors, false);
 		wrapper::color_picker(xorstr_("looking direction color"), Vector2(250, 0), Tabs::Colors);
 		wrapper::label(xorstr_("target fov"), Vector2(130, 0), Tabs::Colors, false);
@@ -513,9 +548,9 @@ namespace aidsware::ui
 		wrapper::label(xorstr_("ores"), Vector2(130, 0), Tabs::Colors, false);
 		wrapper::color_picker(xorstr_("ores color"), Vector2(170, 0), Tabs::Colors);
 		wrapper::label(xorstr_("stashes"), Vector2(130, 0), Tabs::Colors, false);
-		wrapper::color_picker(xorstr_("stashes color"), Vector2(180, 0), Tabs::Colors);
+		wrapper::color_picker(xorstr_("stashes color"), Vector2(190, 0), Tabs::Colors);
 		wrapper::label(xorstr_("corpses"), Vector2(130, 0), Tabs::Colors, false);
-		wrapper::color_picker(xorstr_("corpses color"), Vector2(180, 0), Tabs::Colors);
+		wrapper::color_picker(xorstr_("corpses color"), Vector2(190, 0), Tabs::Colors);
 		wrapper::label(xorstr_("traps"), Vector2(130, 0), Tabs::Colors, false);
 		wrapper::color_picker(xorstr_("traps color"), Vector2(170, 0), Tabs::Colors);
 		wrapper::label(xorstr_("hemp"), Vector2(130, 0), Tabs::Colors, false);

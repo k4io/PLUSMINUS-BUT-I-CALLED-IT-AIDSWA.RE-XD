@@ -85,6 +85,7 @@ namespace FGUI
 
     void CSlider::Geometry()
     {
+        m_dmSize.m_iWidth = 180.0f;
         FGUI::AREA arWidgetRegion = { GetAbsolutePosition().m_iX, GetAbsolutePosition().m_iY, m_dmSize.m_iWidth, m_dmSize.m_iHeight + 4 };
 
         FGUI::DIMENSION dmTitleTextSize = FGUI::RENDER.GetTextSize(m_anyFont, m_strTitle);

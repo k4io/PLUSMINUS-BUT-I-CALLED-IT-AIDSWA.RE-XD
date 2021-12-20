@@ -371,8 +371,12 @@ public:
 		Type* type = GetType(xorstr_("UnityEngine.Shader, UnityEngine.CoreModule"));
 		return type;
 	}
-	static Type* Projectile( ) {
+	static Type* Projectile() {
 		Type* type = GetType(xorstr_("Projectile, Assembly-CSharp"));
+		return type;
+	}
+	static Type* BaseProjectile() {
+		Type* type = GetType(xorstr_("BaseProjectile, Assembly-CSharp"));
 		return type;
 	}
 };
@@ -1283,6 +1287,7 @@ public:
 		return reinterpret_cast<int(__fastcall*)(String*)>(off)(String::New(name));
 	}
 };
+
 class Material {
 public:
 	void SetColor(int proper, Color value) {
@@ -2481,6 +2486,7 @@ public:
 	FIELD("Assembly-CSharp::Projectile::hitTest", hitTest, HitTest*);
 	FIELD("Assembly-CSharp::Projectile::currentVelocity", currentVelocity, Vector3);
 	FIELD("Assembly-CSharp::Projectile::gravityModifier", gravityModifier, float);
+	FIELD("Assembly-CSharp::Projectile::owner", owner, BasePlayer*);
 
 	static inline void(*Launch_)(Projectile*) = nullptr;
 	void Launch() {
@@ -3130,17 +3136,9 @@ void initialize_cheat( ) {
 	init_fields( );
 	init_methods( );
 
-	//std::string s = settings::data_dir + "\\aidsware.assets";
-	//SAPPHIRE_ICALL(load_from_file_fn, "UnityEngine.AssetBundle::LoadFromFile_Internal(System.String,System.UInt32,System.UInt64)", std::uintptr_t(*)(String*, std::uint32_t, std::uint64_t));
-
-	//if (!aw_assets) // todo; use UnityWebRequestAssetBundle.GetAssetBundle to stream bundle from the github repo.
-	//	aw_assets = load_from_file_fn(String::New("C:\\aidsware.assets"), 0, 0);
-	//aw_assets = AssetBundle::LoadFromFile(const_cast<char*>(s.c_str()));
-	aw_assets = AssetBundle::LoadFromFile(const_cast<char*>("C:\\sapphire\\assets.saph"));
-	//printf("aw_assets: 0x%p\n", aw_assets);
-
-	//ASSIGN_HOOK("Assembly-CSharp::EffectLibrary::CreateEffect(string, Effect): GameObject", EffectLibrary::CreateEffect_);
-
+	aw_assets = AssetBundle::LoadFromFile(const_cast<char*>("C:\\rust.assets"));
+	//chams = aw_assets->LoadAsset<Shader>(xorstr_("chams.shader"), Type::Shader());
+	
 	ASSIGN_HOOK("Assembly-CSharp::BasePlayer::ClientUpdate(): Void", BasePlayer::ClientUpdate_);
 	ASSIGN_HOOK("Assembly-CSharp::BasePlayer::ClientUpdate_Sleeping(): Void", BasePlayer::ClientUpdate_Sleeping_);
 	ASSIGN_HOOK("Assembly-CSharp::HitTest::BuildAttackMessage(): Attack", HitTest::BuildAttackMessage_);
