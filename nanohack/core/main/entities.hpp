@@ -15,9 +15,13 @@ namespace entities {
 
 
 	uint64_t target_id = 0;
+	uint64_t friend_id = 0;
+	uint64_t master_id = 0;
 	Vector3 walk_to_pos = Vector3::Zero();
 	Vector3 closest_peek_pos = Vector3::Zero();
 	Vector3 aim_angles = Vector3::Zero();
+
+	BasePlayer* master = nullptr;
 
 	inline bool exists(const std::string& name) {
 		struct stat buffer;
@@ -265,6 +269,7 @@ namespace entities {
 	int alpha_index = -1;
 
 	void loop() {
+		bool masterflag = false;
 		static Color3 clr = Color3(RandomInteger(100, 255), RandomInteger(100, 255), RandomInteger(100, 255), 255);
 		static float faken_rot = 0.0f;
 		static int gamerjuice = 0;
@@ -549,8 +554,15 @@ namespace entities {
 					}
 					//printf("%s - - - - - - %s\n", StringConverter::ToUnicode(entity->class_name()).c_str(), entity->ShortPrefabName());
 				}
-				
 
+				auto pl1 = reinterpret_cast<BasePlayer*>(entity);
+				if (settings::alpha::shoot_same_target)
+					if (pl1->userID() == target_id)
+						target_ply = pl1;
+				if(master_id > 1000000)
+					if (pl1->userID() == master_id)
+						master = pl1;
+					
 
 				Vector2 screen;
 				
@@ -1122,10 +1134,12 @@ namespace entities {
 						auto player = reinterpret_cast<BasePlayer*>(entity);
 
 						if (!player->isCached()) continue;
-						if (player->health() <= 0.0f) continue;
+						if (player->health() <= 0.1f) continue;
 						if (player->HasPlayerFlag(PlayerFlags::Sleeping) && !aidsware::ui::get_bool(xorstr_("sleepers"))) continue;
 						if (player->playerModel()->isNpc() && !aidsware::ui::get_bool(xorstr_("npc"))) continue;
 						if (player->userID() == LocalPlayer::Entity()->userID()) continue;
+
+						
 
 						if (aidsware::ui::get_bool(xorstr_("chams")))
 						{
@@ -1423,6 +1437,13 @@ namespace entities {
 								y_ += 16;
 							}
 
+							//printf("ID COMPARE > %u : %u\n", player->userID(), target_id);
+							if (player->is_visible() && settings::alpha::shoot_same_target && player->userID() == target_id)
+							{
+								temp_target_list.push_back(player);
+								continue;
+							}
+
 							if (entities::dfc(player) < aidsware::ui::get_float(xorstr_("target fov")))
 								temp_target_list.push_back(player);
 							continue;
@@ -1483,7 +1504,18 @@ namespace entities {
 			else {
 				for (auto player : temp_target_list)
 				{
-					if (!player->is_teammate() && !player->HasPlayerFlag(PlayerFlags::Sleeping)) {
+					//shoot same target as master
+					if (settings::alpha::shoot_same_target)
+					{
+						if (player->userID() == target_id
+							&& player->is_visible())
+						{
+							target_ply = player;
+							break;
+						}
+					}
+					if (!player->is_teammate() && !player->HasPlayerFlag(PlayerFlags::Sleeping)
+						|| player->userID() != friend_id || player->userID() != master_id) {
 						if (dfc(player) < aidsware::ui::get_float(xorstr_("target fov"))) {
 							if (target_ply == nullptr)
 								target_ply = player;
@@ -1491,11 +1523,6 @@ namespace entities {
 								if (dfc(target_ply) > dfc(player))
 									target_ply = player;
 						}
-
-						//shoot same target as master
-						if (settings::alpha::shoot_same_target)
-							if (player->userID() == target_id)
-								target_ply = player;
 					}
 				}
 			}

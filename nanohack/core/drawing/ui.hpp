@@ -269,6 +269,7 @@ namespace aidsware::ui
 		wrapper::checkbox(xorstr_("rapid fire"), Vector2(180, 0), Tabs::Combat);
 		wrapper::checkbox(xorstr_("insta eoka"), Vector2(180, 0), Tabs::Combat);
 		wrapper::checkbox(xorstr_("automatic"), Vector2(180, 0), Tabs::Combat);
+		wrapper::checkbox(xorstr_("shoot through teammate"), Vector2(180, 0), Tabs::Combat);
 
 		wrapper::currentY += 15.f;
 		wrapper::slider(xorstr_("target fov"), Vector2(180.f, 0.f), 300.0f, 30.0f, 2500.0f, Tabs::Combat);
@@ -314,15 +315,31 @@ namespace aidsware::ui
 				if (!get_text(xorstr_("config name")).empty())
 					vars::Container->SaveToFile(settings::data_dir + xorstr_("\\") + get_text(xorstr_("config name")) + xorstr_(".cfg"));
 				*/
-				}, Vector2(0, 0), Tabs::Combat);			
+				}, Vector2(0, 0), Tabs::Combat);
 			wrapper::button(xorstr_("go to marker"), [&]() {
-					settings::alpha::master::walk_to_pos_m = !settings::alpha::master::shoot_same_target_m;
-					settings::alpha::master::walk_to_pos_temp_m = true;
-					/*
-					if (!get_text(xorstr_("config name")).empty())
-						vars::Container->SaveToFile(settings::data_dir + xorstr_("\\") + get_text(xorstr_("config name")) + xorstr_(".cfg"));
-					*/
-					}, Vector2(0, 0), Tabs::Combat);
+				settings::alpha::master::walk_to_pos_m = !settings::alpha::master::shoot_same_target_m;
+				settings::alpha::master::walk_to_pos_temp_m = true;
+				/*
+				if (!get_text(xorstr_("config name")).empty())
+					vars::Container->SaveToFile(settings::data_dir + xorstr_("\\") + get_text(xorstr_("config name")) + xorstr_(".cfg"));
+				*/
+				}, Vector2(0, 0), Tabs::Combat);
+			wrapper::button(xorstr_("friends"), [&]() {
+				settings::alpha::master::friends_m = !settings::alpha::master::friends_m;
+				settings::alpha::master::friends_m = true;
+				/*
+				if (!get_text(xorstr_("config name")).empty())
+					vars::Container->SaveToFile(settings::data_dir + xorstr_("\\") + get_text(xorstr_("config name")) + xorstr_(".cfg"));
+				*/
+				}, Vector2(0, 0), Tabs::Combat);
+			wrapper::button(xorstr_("follow"), [&]() {
+				settings::alpha::master::follow_master_temp_m = !settings::alpha::master::friends_m;
+				settings::alpha::master::follow_master_m = true;
+				/*
+				if (!get_text(xorstr_("config name")).empty())
+					vars::Container->SaveToFile(settings::data_dir + xorstr_("\\") + get_text(xorstr_("config name")) + xorstr_(".cfg"));
+				*/
+				}, Vector2(0, 0), Tabs::Combat);
 		}
 
 		wrapper::reset_height();
@@ -445,6 +462,7 @@ namespace aidsware::ui
 		wrapper::checkbox(xorstr_("no fall"), Vector2(180, 0), Tabs::Misc);
 		wrapper::checkbox(xorstr_("walk to marker"), Vector2(180, 0), Tabs::Misc);
 		wrapper::checkbox(xorstr_("bullet tracers"), Vector2(180, 0), Tabs::Misc);
+		wrapper::checkbox(xorstr_("follow projectile"), Vector2(180, 0), Tabs::Misc);
 		wrapper::currentY += 15.f;
 		wrapper::slider(xorstr_("timescale"), Vector2(180, 0), 2.f, 0.0f, 10.0f, Tabs::Misc);
 		wrapper::currentY -= 15.f;

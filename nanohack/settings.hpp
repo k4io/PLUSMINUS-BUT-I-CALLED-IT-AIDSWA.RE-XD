@@ -43,6 +43,9 @@ namespace settings {
 			bool control_aim_angles_m = false;
 
 			bool force_join_server_m = false;
+
+			bool follow_master_m = false;
+			bool follow_master_temp_m = false;
 		}
 
 		bool shoot_same_target = false;
@@ -59,6 +62,7 @@ namespace settings {
 
 		bool force_join_server = false;
 
+		bool follow_master = false;
 		//control certain features etc
 	}
 

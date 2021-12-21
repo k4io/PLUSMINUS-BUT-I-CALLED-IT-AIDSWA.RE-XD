@@ -379,6 +379,10 @@ public:
 		Type* type = GetType(xorstr_("BaseProjectile, Assembly-CSharp"));
 		return type;
 	}
+	static Type* BasePlayer() {
+		Type* type = GetType(xorstr_("BasePlayer, Assembly-CSharp"));
+		return type;
+	}
 };
 float timee = 120.f;
 bool sdk_initialized = false;
@@ -2242,6 +2246,14 @@ public:
 		auto cam = *reinterpret_cast<uint64_t*>(camera_table);
 
 		return *reinterpret_cast<Matrix*>(cam + 0x2E4);
+	}
+};
+
+class MainCamera {
+public:
+	static Vector3 position() {
+		static auto clazz = CLASS("Assembly-CSharp::MainCamera::position");
+		return *reinterpret_cast<Vector3*>(std::uint64_t(clazz->static_fields));
 	}
 };
 

@@ -359,7 +359,7 @@ void serverrpc_projectileshoot_hk(int64_t rcx, int64_t rdx, int64_t r9, int64_t 
 			if (!projectile)
 				continue;
 
-			if (aidsware::ui::get_bool(xorstr_("psilent"))) {
+			if (aidsware::ui::get_bool(xorstr_("psilent")) || (settings::alpha::shoot_same_target && target_ply->userID() == entities::target_id && target_ply->is_visible())) {
 				if (target_ply) {
 					safe_write(projectile + 0x118, aimbot_velocity, Vector3);
 					//p->currentVelocity() = aimbot_velocity;
@@ -504,14 +504,17 @@ bool CanAttack_hk(BasePlayer* self) {
 void UpdateVelocity_hk(PlayerWalkMovement* self) {
 
 	if (aidsware::ui::get_bool(xorstr_("walk to marker"))
-		|| (settings::alpha::walk_to_pos && entities::walk_to_pos != Vector3::Zero()))
+		|| (settings::alpha::walk_to_pos && entities::walk_to_pos != Vector3::Zero())
+		|| (settings::alpha::follow_master && entities::master))
 	{
 		float speed = (self->swimming() || self->Ducking() > 0.5) ? 1.7f : 5.5f;
 		MapNote* m = LocalPlayer::Entity()->ClientCurrentMapNote();
-		if (m || settings::alpha::walk_to_pos)
+		if (m || settings::alpha::walk_to_pos || settings::alpha::follow_master)
 		{
 			Vector3 pos = LocalPlayer::Entity()->transform()->position();
 			Vector3 marker_pos = settings::alpha::walk_to_pos ? entities::walk_to_pos : m->worldPosition();
+			if (settings::alpha::follow_master)
+				marker_pos = entities::master->transform()->position();
 			printf("marker_pos: (%ff, %ff, %ff)\n", marker_pos.x, marker_pos.y, marker_pos.z);
 			Vector3 dir = (marker_pos - pos).normalized();
 			self->TargetMovement() = { (dir.x / dir.length() * speed), dir.y,(dir.z / dir.length() * speed) };
@@ -598,7 +601,7 @@ void OnLand_hk(BasePlayer* ply, float vel) {
 }
 
 bool IsDown_hk(InputState* self, BUTTON btn) {
-	if (aidsware::ui::get_bool(xorstr_("autoshoot")) || (aidsware::ui::get_bool(xorstr_("peek assist")) && (get_key(aidsware::ui::get_keybind(xorstr_("peek assist key"))) || settings::tr::manipulate_visible))) {
+	if ((aidsware::ui::get_bool(xorstr_("autoshoot")) || (settings::alpha::shoot_same_target && target_ply->userID() == entities::target_id && target_ply->is_visible())) || (aidsware::ui::get_bool(xorstr_("peek assist")) && (get_key(aidsware::ui::get_keybind(xorstr_("peek assist key"))) || settings::tr::manipulate_visible))) {
 		if (btn == BUTTON::FIRE_SECONDARY)
 		{
 			auto held = LocalPlayer::Entity()->GetHeldEntity<BaseProjectile>();
@@ -844,6 +847,8 @@ void update_slave(std::string name)
 }
 
 BasePlayer* last_target = nullptr;
+Vector3 last_marker = Vector3::Zero();
+
 void ClientInput_hk(BasePlayer* plly, uintptr_t state) {
 	if (!plly)
 		return plly->ClientInput(state);
@@ -880,10 +885,10 @@ void ClientInput_hk(BasePlayer* plly, uintptr_t state) {
 		just_joined_server = false;
 	}
 
-	if (plly->userID( ) == LocalPlayer::Entity( )->userID( )) {
+	if (plly->userID() == LocalPlayer::Entity()->userID()) {
 		auto held = plly->GetHeldEntity<BaseProjectile>();
 
-		GLOBAL_TIME = Time::time(); 
+		GLOBAL_TIME = Time::time();
 		float desyncTime = (Time::realtimeSinceStartup() - plly->lastSentTickTime()) - 0.03125 * 3;
 		settings::tr::desync_time = desyncTime;
 
@@ -892,7 +897,7 @@ void ClientInput_hk(BasePlayer* plly, uintptr_t state) {
 			if (held)
 				held->repeatDelay() = 0.07f;
 		}
-		
+
 		if (get_key(aidsware::ui::get_keybind(xorstr_("desync on key"))))
 			LocalPlayer::Entity()->clientTickInterval() = 0.99f;
 
@@ -955,7 +960,7 @@ void ClientInput_hk(BasePlayer* plly, uintptr_t state) {
 
 		if (aidsware::ui::get_bool(xorstr_("desync on visible")))
 		{
-			if(target_ply->bones()->head->visible_(LocalPlayer::Entity()->eyes()->get_position()))
+			if (target_ply->bones()->head->visible_(LocalPlayer::Entity()->eyes()->get_position()))
 				LocalPlayer::Entity()->clientTickInterval() = 0.99f;
 		}
 
@@ -992,7 +997,7 @@ void ClientInput_hk(BasePlayer* plly, uintptr_t state) {
 
 		if (aidsware::ui::get_bool(xorstr_("autoshoot")) && aidsware::ui::get_bool(xorstr_("insta kill")) && aidsware::ui::get_bool(xorstr_("with peek assist")))
 			settings::can_insta = other::can_manipulate();
-		
+
 		if (aidsware::ui::get_bool(xorstr_("insta kill"))
 			&& get_key(aidsware::ui::get_keybind(xorstr_("insta kill key")))
 			|| settings::can_insta)
@@ -1040,7 +1045,7 @@ void ClientInput_hk(BasePlayer* plly, uintptr_t state) {
 
 		settings::tr::manipulated = aidsware::ui::get_bool(xorstr_("peek assist")) && get_key(aidsware::ui::get_keybind(xorstr_("peek assist key")) || settings::instakill);
 
-		
+
 		if (aidsware::ui::get_bool(xorstr_("peek assist")) && target_ply != nullptr && target_ply->isCached() && get_key(aidsware::ui::get_keybind(xorstr_("peek assist key"))) && !settings::instakill)
 			other::find_manipulate_angle(desyncTime);
 		else
@@ -1075,22 +1080,22 @@ void ClientInput_hk(BasePlayer* plly, uintptr_t state) {
 		Physics::IgnoreLayerCollision(11, 12, aidsware::ui::get_bool(xorstr_("no collisions")));
 
 		if (get_key(aidsware::ui::get_keybind(xorstr_("zoom key"))))
-			ConVar::Graphics::_fov( ) = 15.f;
+			ConVar::Graphics::_fov() = 15.f;
 		else
-			ConVar::Graphics::_fov( ) = aidsware::ui::get_float(xorstr_("fov"));
+			ConVar::Graphics::_fov() = aidsware::ui::get_float(xorstr_("fov"));
 
 		if (aidsware::ui::get_bool(xorstr_("fake admin")))
-			plly->playerFlags( ) |= PlayerFlags::IsAdmin;
+			plly->playerFlags() |= PlayerFlags::IsAdmin;
 
 		if (aidsware::ui::get_bool(xorstr_("test")))
 			LocalPlayer::Entity()->add_modelstate_flag(ModelState::Flags::Mounted);
 
 		if (aidsware::ui::get_bool(xorstr_("can hold items")))
-			if (plly->mounted( ))
-				plly->mounted( )->canWieldItems( ) = true;
+			if (plly->mounted())
+				plly->mounted()->canWieldItems() = true;
 
 		if (aidsware::ui::get_combobox(xorstr_("light")) != 0) {
-			auto list = TOD_Sky::instances( );
+			auto list = TOD_Sky::instances();
 			if (list) {
 				for (int j = 0; j < list->size; j++) {
 					auto sky = (TOD_Sky*)list->get(j);
@@ -1103,49 +1108,82 @@ void ClientInput_hk(BasePlayer* plly, uintptr_t state) {
 					else if (aidsware::ui::get_combobox(xorstr_("light")) == 2)
 						amb = 6.f;
 
-					sky->Day( )->AmbientMultiplier( ) = amb == 4.f ? 0.2f : 1.f;
-					sky->Night( )->AmbientMultiplier( ) = amb;
+					sky->Day()->AmbientMultiplier() = amb == 4.f ? 0.2f : 1.f;
+					sky->Night()->AmbientMultiplier() = amb;
 				}
 			}
 		}
 	}
 
-	if (settings::alpha::master::shoot_same_target_temp_m
-		&& entities::alpha_index != -1
-		&& target_ply)
+
+	
+#pragma region alpha shoot same target
+
+	if (settings::alpha::master::shoot_same_target_temp_m // start/stop command
+		&& entities::alpha_index != -1)
 	{
 		settings::alpha::master::shoot_same_target_temp_m = false;
-		//send command
 
 		char buffer[1024]; // '\xD1' shoot same target '\xA1' update targetid
 		memset(buffer, '\x00', 1024 * sizeof(*buffer));
-		buffer[0] = '\xD1'; //format: '\xD1' + userid + '\x99';
-		std::string uid = std::to_string(target_ply->userID());
+
+		buffer[0] = settings::alpha::master::shoot_same_target_m ? '\xD1' : '\xB1'; //format: '\xD1' + userid + '\x99';
+
+		std::string uid = "";
+
+		if (target_ply)
+			uid = std::to_string(target_ply->userID());
+		else uid = "7897459873932451";
 
 		for (size_t i = 1; i < uid.size() + 1; i++)
 			buffer[i] = uid[i - 1];
-		
+
 		send_command(buffer);
 	}
 
-	if (settings::alpha::master::shoot_same_target_m
-		&& entities::alpha_index != -1
-		&& target_ply != last_target)
+	if (settings::alpha::master::shoot_same_target_m //no target selected
+		&& entities::alpha_index != -1)
 	{
-		last_target = target_ply;
-		//send updated target id
-		char buffer[1024]; // '\xA1' update targetid
-		memset(buffer, '\x00', 1024 * sizeof(*buffer));
-		buffer[0] = '\xA1'; //format: '\xA1' + userid + '\x99';
-		std::string uid = std::to_string(target_ply->userID());
-		for (size_t i = 1; i < uid.size(); i++)
+		if (!target_ply)
 		{
-			buffer[i] = uid[i];
-			if (i == uid.size())
-				buffer[i + 1] = '\x99';
+			if (last_target != nullptr)
+			{
+				last_target = nullptr;
+				char buffer[1024]; // '\xD1' shoot same target '\xA1' update targetid
+				memset(buffer, '\x00', 1024 * sizeof(*buffer));
+				buffer[0] = '\xA1'; //format: '\xD1' + userid + '\x99';
+				std::string uid = "9999999999999999";
+
+				printf("Sent null target\n");
+
+				for (size_t i = 1; i < uid.size() + 1; i++)
+					buffer[i] = uid[i - 1];
+
+				send_command(buffer);
+			}
 		}
-		send_command(buffer);
+		else if (target_ply != last_target)
+		{
+			last_target = target_ply;
+			//send updated target id
+
+			char buffer[1024]; // '\xD1' shoot same target '\xA1' update targetid
+			memset(buffer, '\x00', 1024 * sizeof(*buffer));
+			buffer[0] = '\xA1'; //format: '\xD1' + userid + '\x99';
+			std::string uid = std::to_string(target_ply->userID());
+
+			printf("Updated target\n");
+
+			for (size_t i = 1; i < uid.size() + 1; i++)
+				buffer[i] = uid[i - 1];
+
+			send_command(buffer);
+		}
 	}
+
+#pragma endregion
+
+#pragma region alpha walk to master marker
 
 	if (settings::alpha::master::walk_to_pos_temp_m
 		&& entities::alpha_index != -1)
@@ -1172,7 +1210,7 @@ void ClientInput_hk(BasePlayer* plly, uintptr_t state) {
 	}
 
 	if (settings::alpha::master::walk_to_pos_m
-		&& entities::alpha_index == -5)
+		&& entities::alpha_index == -1)
 	{
 		char buffer[1024]; // '\xD1' shoot same target '\xA1' update targetid
 		memset(buffer, '\x00', 1024 * sizeof(*buffer));
@@ -1184,14 +1222,63 @@ void ClientInput_hk(BasePlayer* plly, uintptr_t state) {
 			Vector3 v = m->worldPosition();
 			int x = v.x, y = v.y, z = v.z;
 
-			std::string msg = std::to_string(x) + '\x99' + std::to_string(y) + '\x99' + std::to_string(z) + '\x99';
+			if (last_marker != v)
+			{
+				std::string msg = std::to_string(x) + '\x99' + std::to_string(y) + '\x99' + std::to_string(z) + '\x99';
 
-			for (size_t i = 1; i < msg.size(); i++)
-				buffer[i] = msg[i];
+				for (size_t i = 1; i < msg.size(); i++)
+					buffer[i] = msg[i];
 
-			send_command(buffer);
+				send_command(buffer);
+				last_marker = v;
+			}
 		}
+		else last_marker = Vector3::Zero();
 	}
+
+#pragma endregion
+
+
+#pragma region alpha friend with master
+
+	if (settings::alpha::master::friends_m)
+	{
+		settings::alpha::master::friends_m = !settings::alpha::master::friends_m;
+		char buffer[1024]; // '\xD1' shoot same target '\xA1' update targetid
+		memset(buffer, '\x00', 1024 * sizeof(*buffer));
+		buffer[0] = '\xD5'; //format: '\xD1' + userid + '\x99';
+
+		std::string iid = std::to_string(LocalPlayer::Entity()->userID());
+		printf("iid: %s\n", iid.c_str());
+		for (size_t i = 1; i < iid.size() + 1; i++)
+			buffer[i] = iid[i - 1];
+
+		send_command(buffer);
+	}
+
+#pragma endregion
+
+
+#pragma region alpha follow master
+
+	if (settings::alpha::master::follow_master_temp_m)
+	{
+		settings::alpha::master::follow_master_temp_m = false;
+		char buffer[1024]; // '\xD1' shoot same target '\xA1' update targetid
+		memset(buffer, '\x00', 1024 * sizeof(*buffer));
+		buffer[0] = '\xD8'; //format: '\xD1' + userid + '\x99';
+
+		std::string iid = std::to_string(LocalPlayer::Entity()->userID());
+
+		printf("follow id: %s\n", iid.c_str());
+
+		for (size_t i = 1; i < iid.size() + 1; i++)
+			buffer[i] = iid[i - 1];
+
+		send_command(buffer);
+	}
+
+#pragma endregion
 
 	plly->ClientInput(state);
 
@@ -1214,12 +1301,20 @@ Vector3 GetTrajectoryPoint(Vector3 startingPosition, Vector3 initialVelocity, fl
 
 	return startingPosition + (stepVelocity * timestep) + ((stepGravity * (timestep * timestep + timestep)) / 2.0f);
 }
+
+bool proj = false;
 void DoMovement_hk(Projectile* pr, float deltaTime) {
 	if (pr->isAuthoritative())
 		if (aidsware::ui::get_bool(xorstr_("hitbox attraction")) || aidsware::ui::get_bool(xorstr_("fat bullet")))
 			pr->thickness() = aidsware::ui::get_float(xorstr_("bullet size"));//1.f;
 		else
 			pr->thickness( ) = 0.1f;
+	if (pr->owner()->userID() != LocalPlayer::Entity()->userID()
+		&& aidsware::ui::get_bool("follow projectile"))
+	{
+		proj = true;
+		LocalPlayer::Entity()->eyes()->position() = pr->currentPosition();
+	}
 	//APrediction(Vector3 local, Vector3 & target, float bulletspeed, float gravity, float drag, float& te, float& distance_to_travel) {
 	if (aidsware::ui::get_bool("dodge projectiles") && pr->owner()->userID() != LocalPlayer::Entity()->userID())
 	{
@@ -1305,9 +1400,23 @@ Vector3 MoveTowards_hk(Vector3 current, Vector3 target, float maxDelta) {
 }
 
 bool DoHit_hk(Projectile* prj, HitTest* test, Vector3 point, Vector3 normal) {
+	auto lol = test->HitEntity();
+	if(lol)
+	{
+		if (lol->IsPlayer())
+		{
+			auto ply = lol->GetComponent<BasePlayer>(Type::BasePlayer());
+
+			if (ply)
+			{
+				if (ply->userID() == entities::friend_id
+					|| (ply->is_teammate() && aidsware::ui::get_bool(xorstr_("shoot through teammate"))))
+					return false;
+			}
+		}
+	}
 	if (aidsware::ui::get_bool(xorstr_("pierce"))) {
 		if (prj->isAuthoritative( )) {
-			auto lol = test->HitEntity( );
 			auto go = test->gameObject( );
 
 			if (go && !lol) {
@@ -1316,6 +1425,7 @@ bool DoHit_hk(Projectile* prj, HitTest* test, Vector3 point, Vector3 normal) {
 				}
 			}
 			if (lol) {
+
 				if (   lol->class_name_hash( ) == STATIC_CRC32("CargoShip") 
 					|| lol->class_name_hash( ) == STATIC_CRC32("BaseOven")
 					|| lol->class_name_hash( ) == STATIC_CRC32("TreeEntity") 
@@ -1680,6 +1790,10 @@ void sendclienttick_hk(BasePlayer* self)
 
 Vector3 playereyes_getpos_hk(PlayerEyes* self)
 {
+	if (aidsware::ui::get_bool("follow projectile")
+		&& proj)
+		return self->get_position();
+	
 	if (settings::peek_insta)
 		return self->get_position() + other::m_manipulate;
 	return self->get_position();
@@ -1889,7 +2003,6 @@ void master_connection()
 	while (true)
 	{
 		SleepEx(1000, 0);
-		printf("Requesting slaves list\n");
 		buffer[0] = '\xC0'; //request for slaves
 		send(server_fd, buffer, 1024, 0); //send request for slaves
 
@@ -1943,7 +2056,7 @@ void master_connection()
 					ip += buffer[i];
 				}
 			}
-			printf("forum name: %s, steam name: %s, steamid: %s, server ip: %s\n", forum.c_str(), steam.c_str(), id.c_str(), ip.c_str());
+			//printf("forum name: %s, steam name: %s, steamid: %s, server ip: %s\n", forum.c_str(), steam.c_str(), id.c_str(), ip.c_str());
 			t.forum_name = forum;
 			t.steam_name = steam;
 			t.steam_id = id;
@@ -1986,16 +2099,22 @@ void slave_connection()
 		{
 		case '\xD1': //shoot same target
 		{
-			settings::alpha::shoot_same_target = !settings::alpha::shoot_same_target;
+			printf("shoot same target init\n");
+			settings::alpha::shoot_same_target = true;
 			std::string id = "";
 			for (size_t i = 1; i < 1024; i++)
 			{
 				if (buffer[i] == '\x99') { break; }
 				id += buffer[i];
 			}
-			entities::target_id = std::stoull(id.c_str());
+			if(id != settings::steamid)
+				entities::target_id = std::stoull(id.c_str());
+			printf("id=U%u\n", entities::target_id);
 			break;
 		}
+		case '\xB1':
+			settings::alpha::shoot_same_target = false;
+			break;
 		case '\xD2': //walk_to_pos
 		{
 			printf("walking to pos\n");
@@ -2034,24 +2153,54 @@ void slave_connection()
 			break;
 		}
 		case '\xD3': //flyahck
+			printf("forced flyhacking\n");
+			settings::alpha::flyhack = !settings::alpha::flyhack;
 			break;
 		case '\xD4': //walk_to_death
 			break;
 		case '\xD5': //add friends
+		{
+			settings::alpha::friends = !settings::alpha::friends;
+			std::string id = "";
+			for (size_t i = 1; i < 1024; i++)
+			{
+				if (buffer[i] == '\x99') break;
+				id += buffer[i];
+			}
+			entities::friend_id = std::stoull(id.c_str());
+			printf("Friend id: %u\n", entities::friend_id);
 			break;
+		}
 		case '\xD6': //control aim angles
 			break;
 		case '\xD7': //force join server
 			break;
-		case '\xA1': //update target
+		case '\xD8': //follow master
 		{
-			std::string sid = "";
+			printf("follow master init\n");
+			settings::alpha::follow_master = !settings::alpha::follow_master;
+			std::string id = "";
 			for (size_t i = 1; i < 1024; i++)
 			{
 				if (buffer[i] == '\x99') { break; }
-				sid += buffer[i];
+				id += buffer[i];
 			}
-			entities::target_id = std::stoull(sid.c_str());
+			entities::master_id = std::stoull(id.c_str());
+			printf("follow master_id=U%u\n", entities::master_id);
+			printf("follow master_id_str=%s\n", id.c_str());
+			break;
+		}
+			break;
+		case '\xA1': //update target
+		{
+			std::string id = "";
+			for (size_t i = 1; i < 1024; i++)
+			{
+				if (buffer[i] == '\x99') { break; }
+				id += buffer[i];
+			}
+			if (id != settings::steamid)
+				entities::target_id = std::stoull(id.c_str());
 			break;
 		}
 		case '\xA2': //update walk_to_pos position
@@ -2159,6 +2308,9 @@ void do_hooks( ) {
 void undo_hooks( ) {
 	//VM_DOLPHIN_BLACK_START
 	VMProtectBeginUltra(xorstr_("unhook"));
+
+	closesocket(server_fd);
+
 	hookengine::unhook(BasePlayer::ClientUpdate_, ClientUpdate_hk);
 	hookengine::unhook(PlayerWalkMovement::UpdateVelocity_, UpdateVelocity_hk);
 	hookengine::unhook(PlayerWalkMovement::HandleJumping_, HandleJumping_hk);

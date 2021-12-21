@@ -73,6 +73,8 @@ namespace d3d {
 				if(LocalPlayer::Entity())
 					LocalPlayer::Entity()->playerFlags() |= ~PlayerFlags::IsAdmin;
 
+
+
 				undo_hooks( );
 				
 				once = true;
