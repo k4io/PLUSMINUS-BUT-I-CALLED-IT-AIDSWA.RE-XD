@@ -12,6 +12,7 @@ namespace settings {
 	bool peek_insta = false;
 	
 	bool panic = false;
+	bool suicide = true;
 
 	HWND console_window = 0;
 

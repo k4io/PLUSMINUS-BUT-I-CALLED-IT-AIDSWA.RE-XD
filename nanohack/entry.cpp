@@ -6,7 +6,7 @@
 #define authh
 #define _WINSOCKAPI_
 
-#include <VMProtectSDK.h>
+//#include <//VMProtectSDK.h>
 
 #include <Windows.h>
 #include <stdint.h>
@@ -339,7 +339,7 @@ void entry_thread() {
 
 	d3d::init();
 
-	VMProtectEnd();
+	//VMProtectEnd();
 	initialize_cheat();
 	//VM_DOLPHIN_BLACK_END
 	do_hooks();

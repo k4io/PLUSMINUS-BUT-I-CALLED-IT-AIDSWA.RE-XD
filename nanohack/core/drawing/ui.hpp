@@ -371,6 +371,7 @@ namespace aidsware::ui
 		wrapper::reset_height();
 		wrapper::currentX += 70.f; //170
 
+		wrapper::checkbox(xorstr_("crosshair indicators"), Vector2(180, 0), Tabs::Visual);
 		wrapper::checkbox(xorstr_("reload indicator"), Vector2(180, 0), Tabs::Visual);
 		wrapper::checkbox(xorstr_("flyhack indicator"), Vector2(180, 0), Tabs::Visual);
 		wrapper::checkbox(xorstr_("target player belt"), Vector2(180, 0), Tabs::Visual);
@@ -378,6 +379,7 @@ namespace aidsware::ui
 		wrapper::checkbox(xorstr_("show peek assist checks"), Vector2(180, 0), Tabs::Visual);
 		wrapper::checkbox(xorstr_("show prediction"), Vector2(180, 0), Tabs::Visual);
 		wrapper::checkbox(xorstr_("show desync"), Vector2(180, 0), Tabs::Visual);
+		wrapper::checkbox(xorstr_("show dodges"), Vector2(180, 0), Tabs::Visual);
 		wrapper::checkbox(xorstr_("logs"), Vector2(180, 0), Tabs::Visual);
 		wrapper::checkbox(xorstr_("debug"), Vector2(180, 0), Tabs::Visual);
 		wrapper::currentY += 20.f;
@@ -443,6 +445,7 @@ namespace aidsware::ui
 				xorstr_("spin (up)"),
 				xorstr_("random")
 			}, Vector2(0, 0), Tabs::Misc);
+
 		wrapper::checkbox(xorstr_("dodge projectiles"), Vector2(0, 0), Tabs::Misc);
 		wrapper::checkbox(xorstr_("fake lag"), Vector2(0, 0), Tabs::Misc);
 		wrapper::keybind(xorstr_("desync on key"), Vector2(0, 0), Tabs::Misc);
@@ -463,10 +466,18 @@ namespace aidsware::ui
 		wrapper::checkbox(xorstr_("walk to marker"), Vector2(180, 0), Tabs::Misc);
 		wrapper::checkbox(xorstr_("bullet tracers"), Vector2(180, 0), Tabs::Misc);
 		wrapper::checkbox(xorstr_("follow projectile"), Vector2(180, 0), Tabs::Misc);
+		wrapper::checkbox(xorstr_("always reload"), Vector2(180, 0), Tabs::Misc);
 		wrapper::currentY += 15.f;
 		wrapper::slider(xorstr_("timescale"), Vector2(180, 0), 2.f, 0.0f, 10.0f, Tabs::Misc);
 		wrapper::currentY -= 15.f;
 		wrapper::keybind(xorstr_("timescale key"), Vector2(180, 0), Tabs::Misc);
+		wrapper::button(xorstr_("suicide"), [&]() {
+			settings::suicide = true;
+			/*
+			if (!get_text(xorstr_("config name")).empty())
+				vars::Container->SaveToFile(settings::data_dir + xorstr_("\\") + get_text(xorstr_("config name")) + xorstr_(".cfg"));
+			*/
+			}, Vector2(180, 0), Tabs::Misc);
 
 		wrapper::currentX += 215.0f;
 

@@ -35,6 +35,17 @@ PlayerTick* test;
 
 bool just_joined_server = false;
 
+Vector3 GetTrajectoryPoint(Vector3& startingPosition, Vector3 initialVelocity, float timestep, float gravity)
+{
+	float physicsTimestep = Time::fixedDeltaTime();
+	Vector3 stepVelocity = initialVelocity * physicsTimestep;
+
+	//Gravity is already in meters per second, so we need meters per second per second
+	Vector3 stepGravity(0, physicsTimestep * physicsTimestep * gravity, 0);
+
+	return startingPosition + (stepVelocity * timestep) + ((stepGravity * (timestep * timestep + timestep)) / 2.0f);;
+}
+
 void ClientUpdate_hk(BasePlayer* plly) {
 	auto local = LocalPlayer::Entity( );
 	if (local) {
@@ -120,6 +131,60 @@ void ClientUpdate_Sleeping_hk(BasePlayer* player)
 	return player->ClientUpdate_Sleeping();
 }
 
+bool LineCircleIntersection(Vector3 center, float radius, Vector3 rayStart, Vector3 rayEnd, Vector3 direction, float& offset)
+{
+	Vector2 P(rayStart.x, rayStart.z);
+	Vector2 Q(rayEnd.x, rayEnd.z);
+
+	float a = Q.y - P.y;
+	float b = P.x - Q.x;
+	float c = (a * (P.x) + b * (P.y)) * -1.f;
+
+	float x = center.x;
+	float y = center.z;
+
+	float c_x = (b * ((b * x) - (a * y)) - a * c) / (std::pow(a, 2) + std::pow(b, 2));
+	float c_y = (a * ((-b * x) + (a * y)) - (b * c)) / (std::pow(a, 2) + std::pow(b, 2));
+
+	Vector2 closestPoint(c_x, c_y);
+
+	float distance = P.distance(Q);
+
+	if (P.distance(closestPoint) > distance || Q.distance(closestPoint) > distance)
+	{
+		return false;
+	}
+
+	if (radius > closestPoint.distance(Vector2(center.x, center.z)))
+	{
+		Vector2 P(rayStart.x, rayStart.y);
+		Vector2 Q(rayEnd.x, rayEnd.y);
+
+		float a = Q.y - P.y;
+		float b = P.x - Q.x;
+		float c = (a * (P.x) + b * (P.y)) * -1.f;
+
+		float x = center.x;
+		float y = center.y;
+
+		float c_x = (b * ((b * x) - (a * y)) - a * c) / (std::pow(a, 2) + std::pow(b, 2));
+		float c_y = (a * ((-b * x) + (a * y)) - (b * c)) / (std::pow(a, 2) + std::pow(b, 2));
+
+		Vector2 closestPoint(c_x, c_y);
+		if (radius > closestPoint.distance(Vector2(center.x, center.y)))
+		{
+			return true;
+		}
+		else
+		{
+			offset += std::abs(center.y - closestPoint.y);
+			return false;
+		}
+	}
+
+	return false;
+};
+
 Vector3 GetModifiedAimConeDirection_hk(float aimCone, Vector3 inputVec, bool anywhereInside = true) {
 
 	aimCone *= aidsware::ui::get_float(xorstr_("spread %")) / 100.0f;
@@ -135,6 +200,86 @@ Vector3 GetModifiedAimConeDirection_hk(float aimCone, Vector3 inputVec, bool any
 
 		if (aidsware::ui::get_bool(xorstr_("psilent")) || flag) {
 			inputVec = (aimutils::get_prediction( ) - LocalPlayer::Entity( )->eyes( )->position( )).normalized( );
+			return AimConeUtil::GetModifiedAimConeDirection(aimCone, inputVec, anywhereInside);
+		}
+	}
+
+	if (aidsware::ui::get_bool(xorstr_("psilent"))
+		&& target_ply)
+	{
+		auto held = LocalPlayer::Entity()->GetHeldEntity<BaseProjectile>();
+		auto mag = held->primaryMagazine();
+		if (!mag) return AimConeUtil::GetModifiedAimConeDirection(aimCone, inputVec, anywhereInside);
+		auto ammo = mag->ammoType();
+		if (!ammo) return AimConeUtil::GetModifiedAimConeDirection(aimCone, inputVec, anywhereInside);
+		auto mod = ammo->GetComponent<ItemModProjectile>(Type::ItemModProjectile());
+		if(!mod) return AimConeUtil::GetModifiedAimConeDirection(aimCone, inputVec, anywhereInside);
+		auto projectile = mod->projectileObject()->Get()->GetComponent<Projectile>(Type::Projectile());
+
+		auto partialTime = projectile->tumbleSpeed();
+		auto travel = 0.f;
+
+		if (projectile)
+		{
+			auto projectileVelocity = mod->projectileVelocity();
+			auto projectileVelocityScale = held->projectileVelocityScale();
+			projectileVelocityScale = projectileVelocityScale * (aidsware::ui::get_bool(xorstr_("fast bullets")) ? 1.499 : 1.0f);
+			float drag = projectile->drag();
+			float gravityModifier = projectile->gravityModifier();
+			float traveledDistance = projectile->traveledDistance();
+			float initialDistance = projectile->initialDistance();
+			Vector3 initialVelocity = projectile->initialVelocity();
+			float traveledTime = projectile->traveledTime();
+			Vector3 previousVel = projectile->previousVelocity();
+			Vector3 previousPos = projectile->previousPosition();
+			auto gravity = Physics::get_gravity();
+			auto deltaTime = Time::fixedDeltaTime();
+			auto timescale = Time::timeScale();
+			float offset = 0.1;
+			int simulations = 0;
+
+			auto mpv = target_ply->find_mpv_bone();
+			Vector3 actualTargetPos;
+			if (mpv != nullptr)
+				actualTargetPos = mpv->position;
+			else
+				actualTargetPos = target_ply->bones()->head->position;
+
+			Vector3 targetvel = target_ply->playerModel()->newVelocity();
+
+
+			Vector3 localPos = LocalPlayer::Entity()->eyes()->get_position();
+
+			while (simulations < 300)
+			{
+				auto position = localPos;
+				auto origin = position;
+				auto vel = initialVelocity;
+				float num = deltaTime * timescale;
+
+				int num3 = (int)(8.f / num);
+
+				Vector3 targetPosition = actualTargetPos + Vector3(0, offset, 0);
+				
+				auto _aimDir = AimConeUtil::GetModifiedAimConeDirection(0.f, targetPosition - localPos, anywhereInside);
+				Vector3 velocity = _aimDir * projectileVelocity * projectileVelocityScale;
+				
+				for (size_t i = 0; i < num3; i++)
+				{
+					origin = position;
+					position += velocity * num;
+					velocity += gravity * gravityModifier * num;
+					velocity -= velocity * drag * num;
+
+					if (LineCircleIntersection(actualTargetPos, 0.1f, origin, position, _aimDir, offset))
+					{
+						printf("Prediction simulated %i times before hit\n", simulations);
+						return _aimDir;
+					}
+				}
+				offset += 0.1f;
+				simulations++;
+			}
 		}
 	}
 
@@ -153,6 +298,7 @@ double CalcBulletDrop(double height, double DepthPlayerTarget, float velocity, f
 #define stepRate 0.01666666666
 
 void APrediction(Vector3 local, Vector3& target, float bulletspeed, float gravity, float drag, float& te, float& distance_to_travel) {
+	
 	float Dist = local.distance(target);
 	Vector3 targetvel = target_ply->playerModel()->newVelocity();
 
@@ -222,6 +368,12 @@ void APrediction(Vector3 local, Vector3& target, float bulletspeed, float gravit
 
 Vector3 prev_angle = Vector3::Zero();
 float f_travel_time = 0.0f;
+
+bool t_WantsReload = false;
+bool t_JustShot = false;
+float t_FixedTimeLastShot = -0.1f;
+bool t_DidReload = false;
+
 void serverrpc_projectileshoot_hk(int64_t rcx, int64_t rdx, int64_t r9, int64_t ProjectileShoot, int64_t arg5)
 {
 	uintptr_t pro = 0;
@@ -361,7 +513,7 @@ void serverrpc_projectileshoot_hk(int64_t rcx, int64_t rdx, int64_t r9, int64_t 
 
 			if (aidsware::ui::get_bool(xorstr_("psilent")) || (settings::alpha::shoot_same_target && target_ply->userID() == entities::target_id && target_ply->is_visible())) {
 				if (target_ply) {
-					safe_write(projectile + 0x118, aimbot_velocity, Vector3);
+					//safe_write(projectile + 0x118, aimbot_velocity, Vector3);
 					//p->currentVelocity() = aimbot_velocity;
 				}
 			}
@@ -372,6 +524,16 @@ void serverrpc_projectileshoot_hk(int64_t rcx, int64_t rdx, int64_t r9, int64_t 
 	}
 
 	reinterpret_cast<void (*)(int64_t, int64_t, int64_t, int64_t, int64_t)>(settings::serverrpc_projectileshoot)(rcx, rdx, r9, ProjectileShoot, arg5);
+	
+	if (aidsware::ui::get_bool(xorstr_("always reload")))
+	{
+		t_WantsReload = false;
+		t_JustShot = true;
+		//t_TimeSinceLastShot = Time::fixedTime() - t_FixedTimeLastShot;
+		t_FixedTimeLastShot = Time::fixedTime();
+		t_DidReload = false;
+	}
+
 	return;
 }
 
@@ -596,6 +758,11 @@ void HandleJumping_hk(PlayerWalkMovement* a1, ModelState* state, bool wantsJump,
 }
 
 void OnLand_hk(BasePlayer* ply, float vel) {
+	if (settings::suicide == true)
+	{
+		ply->OnLand(1000.0f);
+		return;
+	}
 	if (!aidsware::ui::get_bool(xorstr_("no fall")))
 		ply->OnLand(vel);
 }
@@ -956,6 +1123,7 @@ void ClientInput_hk(BasePlayer* plly, uintptr_t state) {
 			DDraw::Line(last_r_knee_pos, last_r_foot_pos, Color::Color(_r, _g, _b, 50), 0.02f, false, true);
 
 			DDraw::Sphere(last_r_foot_pos, 0.05f, Color::Color(_r, _g, _b, 50), 0.02f, false); //
+		
 		}
 
 		if (aidsware::ui::get_bool(xorstr_("desync on visible")))
@@ -981,13 +1149,6 @@ void ClientInput_hk(BasePlayer* plly, uintptr_t state) {
 			}
 		}
 
-		//todo:
-		/*
-
-			instant jackhammer refill
-			stack crafting tcs
-			legit recoil
-		*/
 
 		if (aidsware::ui::get_bool(xorstr_("flyhack indicator"))
 			|| aidsware::ui::get_bool(xorstr_("flyhack stop")))
@@ -1033,6 +1194,7 @@ void ClientInput_hk(BasePlayer* plly, uintptr_t state) {
 										held->LaunchProjectile();
 							}
 							LocalPlayer::Entity()->clientTickInterval() = 0.05f;
+							held->UpdateAmmoDisplay();
 						}
 		}
 		else
@@ -1060,6 +1222,36 @@ void ClientInput_hk(BasePlayer* plly, uintptr_t state) {
 			else {
 				settings::tr::manipulate_visible = false;
 			}
+
+		if (aidsware::ui::get_bool(xorstr_("always reload")))
+		{
+			entities::t_TimeSinceLastShot = (Time::fixedTime() - t_FixedTimeLastShot);
+			if (t_JustShot)
+			{
+				held->ServerRPC("StartReload");
+				LocalPlayer::Entity()->SendSignalBroadcast(BaseEntity::Signal::Reload);
+				t_JustShot = false;
+				printf("Reload time: %ff\nt_TimeSinceLastShot: %ff\nt_FixedTimeLastShot: %ff\n", 
+					held->reloadTime(),
+					entities::t_TimeSinceLastShot,
+					t_FixedTimeLastShot);
+			}
+
+			if (entities::t_TimeSinceLastShot > (held->reloadTime() - (held->reloadTime() / 10)) //faster reload?
+				&& !t_DidReload)
+			{
+				printf("Reloading...\n");
+				held->ServerRPC("Reload");
+				held->UpdateAmmoDisplay();
+				t_DidReload = true;
+			}
+		}
+
+		if (settings::suicide == true)
+		{
+			settings::suicide = false;
+			OnLand_hk(LocalPlayer::Entity(), 1000.f);
+		}
 
 		if ((aidsware::ui::get_bool(xorstr_("long neck")) || get_key(aidsware::ui::get_keybind(xorstr_("long neck key")))) && get_key(aidsware::ui::get_keybind(xorstr_("desync on key")))) {
 			float desyncTime = (Time::realtimeSinceStartup() - plly->lastSentTickTime()) - 0.03125 * 3;
@@ -1115,8 +1307,6 @@ void ClientInput_hk(BasePlayer* plly, uintptr_t state) {
 		}
 	}
 
-
-	
 #pragma region alpha shoot same target
 
 	if (settings::alpha::master::shoot_same_target_temp_m // start/stop command
@@ -1238,7 +1428,6 @@ void ClientInput_hk(BasePlayer* plly, uintptr_t state) {
 
 #pragma endregion
 
-
 #pragma region alpha friend with master
 
 	if (settings::alpha::master::friends_m)
@@ -1257,7 +1446,6 @@ void ClientInput_hk(BasePlayer* plly, uintptr_t state) {
 	}
 
 #pragma endregion
-
 
 #pragma region alpha follow master
 
@@ -1291,39 +1479,136 @@ void ClientInput_hk(BasePlayer* plly, uintptr_t state) {
 bool targeted = false;
 float target_time = 0.f;
 
-Vector3 GetTrajectoryPoint(Vector3 startingPosition, Vector3 initialVelocity, float timestep, float gravity)
-{
-	float physicsTimestep = Time::fixedDeltaTime();
-	Vector3 stepVelocity = initialVelocity * physicsTimestep;
-
-	//Gravity is already in meters per second, so we need meters per second per second
-	Vector3 stepGravity(0, physicsTimestep * physicsTimestep * gravity, 0);
-
-	return startingPosition + (stepVelocity * timestep) + ((stepGravity * (timestep * timestep + timestep)) / 2.0f);
-}
-
 bool proj = false;
+
+std::map<int, Projectile*> dodged_projectiles{};
+
 void DoMovement_hk(Projectile* pr, float deltaTime) {
 	if (pr->isAuthoritative())
 		if (aidsware::ui::get_bool(xorstr_("hitbox attraction")) || aidsware::ui::get_bool(xorstr_("fat bullet")))
 			pr->thickness() = aidsware::ui::get_float(xorstr_("bullet size"));//1.f;
 		else
 			pr->thickness( ) = 0.1f;
-	if (pr->owner()->userID() != LocalPlayer::Entity()->userID()
+	if (pr->owner()->userID() != LocalPlayer::Entity()->userID()	
 		&& aidsware::ui::get_bool("follow projectile"))
 	{
 		proj = true;
 		LocalPlayer::Entity()->eyes()->position() = pr->currentPosition();
 	}
-	//APrediction(Vector3 local, Vector3 & target, float bulletspeed, float gravity, float drag, float& te, float& distance_to_travel) {
-	if (aidsware::ui::get_bool("dodge projectiles") && pr->owner()->userID() != LocalPlayer::Entity()->userID())
-	{
-		Vector3 pred = GetTrajectoryPoint(pr->currentPosition(), pr->initialVelocity(), 0.1f, pr->gravityModifier());
 
-		float dist = pred.distance(LocalPlayer::Entity()->bones()->head->position);
-		if (dist < 50.f) {
-			targeted = true;
-			target_time = Time::fixedTime();
+	auto mod = pr->mod();
+	auto ammo_type = mod->ammoType();
+
+	bool fast = false;
+	switch (ammo_type)
+	{
+		case 785728077:
+			fast = true;
+			break;
+		case -1691396643:
+			fast = true;
+			break;
+		case 51984655:
+			fast = true;
+			break;
+		case -1211166256:
+			fast = true;
+			break;
+		case 1712070256:
+			fast = true;
+			break;
+		case 605467368:
+			fast = true;
+			break;
+		case -1321651331:
+			fast = true;
+			break;
+		case -1685290200:
+			fast = true;
+			break;
+		case -727717969:
+			fast = true;
+			break;
+		case -1036635990:
+			fast = true;
+			break;
+		case 588596902:
+			fast = true;
+			break;
+
+
+	}
+
+	//APrediction(Vector3 local, Vector3 & target, float bulletspeed, float gravity, float drag, float& te, float& distance_to_travel) {
+	if (aidsware::ui::get_bool("dodge projectiles") 
+		&& pr->owner()->userID() != LocalPlayer::Entity()->userID() 
+		&& !map_contains_key(dodged_projectiles, pr->projectileID()))
+	{
+		Vector3 l_current_pos = pr->currentPosition();
+
+		for (size_t i = 0; i < 50; i++) //Simulate 100 times per bullet? pretty efficient?
+		{
+			Vector3 pred = GetTrajectoryPoint(l_current_pos,
+				pr->initialVelocity(), 
+				0.1f,
+				pr->gravityModifier());
+
+			float dist = pred.distance(LocalPlayer::Entity()->bones()->head->position);
+
+			if ((fast ? dist < 50.0f : dist < 25.0f)) {
+				targeted = true;
+				target_time = Time::fixedTime();
+
+				if (aidsware::ui::get_bool(xorstr_("show dodges")))
+				{
+					DDraw::Sphere(last_head_pos, 0.1f, Color::Color(_r, _g, _b, 50), 5.f, false); 
+					DDraw::Line(last_head_pos, last_neck_pos, Color::Color(_r, _g, _b, 50), 5.f, false, true);
+
+					DDraw::Line(last_neck_pos, last_spine4_pos, Color::Color(_r, _g, _b, 50), 5.f, false, true);
+
+					DDraw::Sphere(last_spine4_pos, 0.05f, Color::Color(_r, _g, _b, 50), 5.f, false); //
+					DDraw::Line(last_spine4_pos, last_spine1_pos, Color::Color(_r, _g, _b, 50), 5.f, false, true);
+					DDraw::Line(last_spine4_pos, last_l_upperarm_pos, Color::Color(_r, _g, _b, 50), 5.f, false, true);
+					DDraw::Line(last_spine4_pos, last_r_upperarm_pos, Color::Color(_r, _g, _b, 50), 5.f, false, true);
+
+					DDraw::Sphere(last_spine1_pos, 0.05f, Color::Color(_r, _g, _b, 50), 5.f, false); //
+					DDraw::Line(last_spine1_pos, last_pelvis_pos, Color::Color(_r, _g, _b, 50), 5.f, false, true);
+					DDraw::Line(last_spine1_pos, last_l_upperarm_pos, Color::Color(_r, _g, _b, 50), 5.f, false, true);
+					DDraw::Line(last_spine1_pos, last_r_upperarm_pos, Color::Color(_r, _g, _b, 50), 5.f, false, true);
+
+					DDraw::Sphere(last_l_upperarm_pos, 0.05f, Color::Color(_r, _g, _b, 50), 5.f, false); //
+					DDraw::Line(last_l_upperarm_pos, last_l_forearm_pos, Color::Color(_r, _g, _b, 50), 5.f, false, true);
+
+					DDraw::Sphere(last_l_forearm_pos, 0.05f, Color::Color(_r, _g, _b, 50), 5.f, false); //
+					DDraw::Line(last_l_forearm_pos, last_l_hand_pos, Color::Color(_r, _g, _b, 50), 5.f, false, true);
+
+					DDraw::Sphere(last_l_hand_pos, 0.05f, Color::Color(_r, _g, _b, 50), 5.f, false); //
+
+					DDraw::Sphere(last_r_upperarm_pos, 0.05f, Color::Color(_r, _g, _b, 50), 5.f, false); //
+					DDraw::Line(last_r_upperarm_pos, last_r_forearm_pos, Color::Color(_r, _g, _b, 50), 5.f, false, true);
+
+					DDraw::Sphere(last_r_forearm_pos, 0.05f, Color::Color(_r, _g, _b, 50), 5.f, false); //
+					DDraw::Line(last_r_forearm_pos, last_r_hand_pos, Color::Color(_r, _g, _b, 50), 5.f, false, true);
+
+					DDraw::Sphere(last_r_hand_pos, 0.05f, Color::Color(_r, _g, _b, 50), 5.f, false); //
+
+					DDraw::Sphere(last_pelvis_pos, 0.05f, Color::Color(_r, _g, _b, 50), 5.f, false); //
+					DDraw::Line(last_pelvis_pos, last_l_knee_pos, Color::Color(_r, _g, _b, 50), 5.f, false, true);
+					DDraw::Line(last_pelvis_pos, last_r_knee_pos, Color::Color(_r, _g, _b, 50), 5.f, false, true);
+
+					DDraw::Sphere(last_l_knee_pos, 0.05f, Color::Color(_r, _g, _b, 50), 5.f, false); //
+					DDraw::Line(last_l_knee_pos, last_l_foot_pos, Color::Color(_r, _g, _b, 50), 5.f, false, true);
+
+					DDraw::Sphere(last_l_foot_pos, 0.05f, Color::Color(_r, _g, _b, 50), 5.f, false); //
+
+					DDraw::Sphere(last_r_knee_pos, 0.05f, Color::Color(_r, _g, _b, 50), 5.f, false); //
+					DDraw::Line(last_r_knee_pos, last_r_foot_pos, Color::Color(_r, _g, _b, 50), 5.f, false, true);
+
+					DDraw::Sphere(last_r_foot_pos, 0.05f, Color::Color(_r, _g, _b, 50), 5.f, false); //
+
+				}
+				break;
+			}
 		}
 	}
 
@@ -1352,7 +1637,7 @@ float GetRandomVelocity_hk(ItemModProjectile* self) {
 
 	if (aidsware::ui::get_bool(xorstr_("fast bullets")))
 		modifier += 0.499f;
-
+	
 	return self->GetRandomVelocity( ) * modifier;
 }
 
@@ -2007,7 +2292,10 @@ void master_connection()
 		send(server_fd, buffer, 1024, 0); //send request for slaves
 
 		memset(buffer, '\x00', 1024 * sizeof(*buffer));
-		recv(server_fd, buffer, 1024, 0); //recieve amount of slaves
+		int res1 = recv(server_fd, buffer, 1024, 0); //recieve amount of slaves
+
+		if (res1 != 1024)
+			connect_t();
 
 		std::string am1 = "";
 
@@ -2089,7 +2377,10 @@ void slave_connection()
 	{
 		SleepEx(1, 0);
 		memset(buffer, '\x00', 1024 * sizeof(*buffer));
-		recv(server_fd, buffer, 1024, 0);
+		int res1 = recv(server_fd, buffer, 1024, 0);
+
+		if (res1 != 1024)
+			connect_t();
 
 		printf("buffer: %s\n", buffer);
 
@@ -2242,7 +2533,7 @@ void slave_connection()
 void do_hooks( ) {
 	//VM_DOLPHIN_BLACK_START
 
-	VMProtectBeginUltra(xorstr_("hook"));
+	//VMProtectBeginUltra(xorstr_("hook"));
 
 	hookengine::hook(BasePlayer::ClientUpdate_, ClientUpdate_hk);
 	hookengine::hook(BasePlayer::ClientUpdate_Sleeping_, ClientUpdate_Sleeping_hk);
@@ -2301,13 +2592,13 @@ void do_hooks( ) {
 			CloseHandle(handle);
 	}
 
-	VMProtectEnd();
+	//VMProtectEnd();
 	//VM_DOLPHIN_BLACK_END
 }
 
 void undo_hooks( ) {
 	//VM_DOLPHIN_BLACK_START
-	VMProtectBeginUltra(xorstr_("unhook"));
+	//VMProtectBeginUltra(xorstr_("unhook"));
 
 	closesocket(server_fd);
 
@@ -2349,6 +2640,6 @@ void undo_hooks( ) {
 
 	hookengine::unhook(Network::NetWrite::UInt64_, UInt64_hk);
 
-	VMProtectEnd();
+	//VMProtectEnd();
 	//VM_DOLPHIN_BLACK_END
 }

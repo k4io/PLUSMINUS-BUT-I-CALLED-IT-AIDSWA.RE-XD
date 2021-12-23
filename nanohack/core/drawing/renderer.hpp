@@ -279,13 +279,6 @@ namespace Renderer {
 		m_pCanvas->FillRoundedRectangle({ dre, rounding, rounding }, m_pSolidBrush);
 	}
 
-	void ProgressBar(const Vector2 start, Vector2 end, Color3 fgcolor, Color3 bgcolor, float value, float z)
-	{
-		rectangle_filled(start, { end.x - start.x, 10 }, bgcolor);
-		end.x = (start.x + (z * value));
-		rectangle_filled({ start.x, start.y + 2}, { end.x - start.x, 6 }, fgcolor);
-	}
-
 	Vector2 get_text_size(std::wstring text, float sz)	{
 		const auto str = text;
 		const auto str_len = static_cast<std::uint32_t>(str.length( ));
@@ -399,6 +392,15 @@ namespace Renderer {
 		m_pCanvas->DrawTextLayout(D2D1::Point2F(pos.x, pos.y), dwrite_layout, m_pSolidBrush);
 		dwrite_layout->Release();
 	}
+
+	void ProgressBar(const Vector2 start, Vector2 end, Color3 fgcolor, Color3 bgcolor, float value, float z)
+	{
+		rectangle_filled(start, { end.x - start.x, 6 }, bgcolor);
+		end.x = (start.x + (z * value));
+		rectangle_filled({ start.x + 1, start.y + 1 }, { end.x - start.x, 4 }, fgcolor);
+		text({ (start.x) + ((end.x - start.x) * (z / value)), start.y + 2 }, Color3(219, 219, 219), 14.f, true, true, wxorstr_(L"%d"), (int)ceil(z / value));
+	}
+
 	template <typename ...Args>
 		void icon(const Vector2 pos, const Color3 clr, const float sz, bool center, bool outline, const std::wstring_view text, Args&&... args) {
 		const auto size = static_cast<std::size_t>(std::swprintf(nullptr, 0, text.data(), std::forward<Args>(args)...) + 1);

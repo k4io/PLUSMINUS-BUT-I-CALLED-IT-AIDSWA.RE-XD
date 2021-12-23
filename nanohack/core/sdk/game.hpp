@@ -375,6 +375,10 @@ public:
 		Type* type = GetType(xorstr_("Projectile, Assembly-CSharp"));
 		return type;
 	}
+	static Type* ItemModProjectile() {
+		Type* type = GetType(xorstr_("ItemModProjectile, Assembly-CSharp"));
+		return type;
+	}
 	static Type* BaseProjectile() {
 		Type* type = GetType(xorstr_("BaseProjectile, Assembly-CSharp"));
 		return type;
@@ -1466,6 +1470,7 @@ public:
 	static void IgnoreLayerCollision(int layer1, int layer2, bool ignore) {
 		return reinterpret_cast<void(*)(int, int, bool)>(il2cpp_resolve_icall(xorstr_("UnityEngine.Physics::IgnoreLayerCollision")))(layer1, layer2, ignore);
 	}
+	STATIC_FUNCTION("UnityEngine.PhysicsModule::UnityEngine::Physics::get_gravity(): Vector3", get_gravity, Vector3());
 };
 class unk {
 public:
@@ -2491,14 +2496,18 @@ public:
 	FIELD("Assembly-CSharp::Projectile::projectileID", projectileID, int);
 	FIELD("Assembly-CSharp::Projectile::mod", mod, ItemModProjectile*);
 	FIELD("Assembly-CSharp::Projectile::traveledDistance", traveledDistance, float);
+	FIELD("Assembly-CSharp::Projectile::traveledTime", traveledTime, float);
 	FIELD("Assembly-CSharp::Projectile::initialDistance", initialDistance, float);
 	FIELD("Assembly-CSharp::Projectile::initialVelocity", initialVelocity, Vector3);
+	FIELD("Assembly-CSharp::Projectile::previousVelocity", previousVelocity, Vector3);
+	FIELD("Assembly-CSharp::Projectile::previousPosition", previousPosition, Vector3);
 	FIELD("Assembly-CSharp::Projectile::ricochetChance", ricochetChance, float);
 	FIELD("Assembly-CSharp::Projectile::currentPosition", currentPosition, Vector3);
 	FIELD("Assembly-CSharp::Projectile::hitTest", hitTest, HitTest*);
 	FIELD("Assembly-CSharp::Projectile::currentVelocity", currentVelocity, Vector3);
 	FIELD("Assembly-CSharp::Projectile::gravityModifier", gravityModifier, float);
 	FIELD("Assembly-CSharp::Projectile::owner", owner, BasePlayer*);
+	FIELD("Assembly-CSharp::Projectile::tumbleSpeed", tumbleSpeed, float);
 
 	static inline void(*Launch_)(Projectile*) = nullptr;
 	void Launch() {
@@ -2791,24 +2800,24 @@ struct weapon_stats_t {
 };
 
 enum ammo_types : int32_t {
-	shotgun = -1685290200,
-	shotgun_slug = -727717969,
-	shotgun_fire = -1036635990,
-	shotgun_handmade = 588596902,
+	shotgun				= -1685290200,
+	shotgun_slug		= -727717969,
+	shotgun_fire		= -1036635990,
+	shotgun_handmade	= 588596902,
 
-	rifle_556 = -1211166256,
-	rifle_556_hv = 1712070256,
-	rifle_556_fire = 605467368,
+	rifle_556			= -1211166256,
+	rifle_556_hv		= 1712070256,
+	rifle_556_fire		= 605467368,
 	rifle_556_explosive = -1321651331,
 
-	pistol = 785728077,
-	pistol_hv = -1691396643,
-	pistol_fire = 51984655,
+	pistol			= 785728077,
+	pistol_hv		= -1691396643,
+	pistol_fire		= 51984655,
 
-	arrow_wooden = -1234735557,
-	arrow_hv = -1023065463,
-	arrow_fire = 14241751,
-	arrow_bone = 215754713,
+	arrow_wooden	= -1234735557,
+	arrow_hv		= -1023065463,
+	arrow_fire		= 14241751,
+	arrow_bone		= 215754713,
 
 	nailgun_nails = -2097376851
 };
@@ -3138,17 +3147,16 @@ public:
 	}																														  
 };																															  
 																															  
-AssetBundle* aw_assets;																										  
-Shader* chams;																												  
+AssetBundle* aw_assets = nullptr;																										  
+Shader* chams = nullptr;																												  
 																															  
 void initialize_cheat( ) {																									  
 	////VM_DOLPHIN_BLACK_START																								  
-	VMProtectBeginUltra(xorstr_("init"));																				  
+	//VMProtectBeginUltra(xorstr_("init"));																				  
 	init_classes( );
 	init_fields( );
 	init_methods( );
 
-	aw_assets = AssetBundle::LoadFromFile(const_cast<char*>("C:\\rust.assets"));
 	//chams = aw_assets->LoadAsset<Shader>(xorstr_("chams.shader"), Type::Shader());
 	
 	ASSIGN_HOOK("Assembly-CSharp::BasePlayer::ClientUpdate(): Void", BasePlayer::ClientUpdate_);
@@ -3200,6 +3208,6 @@ void initialize_cheat( ) {
 
 	settings::cheat_init = true;
 
-	VMProtectEnd();
+	//VMProtectEnd();
 	////VM_DOLPHIN_BLACK_END
 }

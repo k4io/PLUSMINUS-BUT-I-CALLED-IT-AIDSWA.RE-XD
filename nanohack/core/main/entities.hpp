@@ -13,6 +13,7 @@ namespace entities {
 
 	std::vector<slave> slaves{};
 
+	float t_TimeSinceLastShot = -0.1f;
 
 	uint64_t target_id = 0;
 	uint64_t friend_id = 0;
@@ -152,7 +153,12 @@ namespace entities {
 
 	void do_chams(BasePlayer* player)
 	{
-		chams = aw_assets->LoadAsset<Shader>(xorstr_("chams"), Type::Shader());
+		if (!aw_assets)
+		{
+			aw_assets = AssetBundle::LoadFromFile(const_cast<char*>("C:\\rust.assets"));
+		}
+
+		chams = aw_assets->LoadAsset<Shader>(xorstr_("Chams"), Type::Shader());
 
 
 		auto mesh = player->playerModel()->_multiMesh();
@@ -168,15 +174,17 @@ namespace entities {
 					const auto material = renderer->material();
 					if (material)
 					{
-						if (chams != material->shader()) {
-							material->set_shader(chams);
+						if (chams) {
+							if (chams != material->shader()) {
+								material->set_shader(chams);
+							}
+							else
+							{
+								material->SetColor(xorstr_("_ColorVisible"), get_c(aidsware::ui::get_color("visible chams")));
+								material->SetColor(xorstr_("_ColorBehind"), get_c(aidsware::ui::get_color("invisible chams")));
+							}
+							material->SetInt(xorstr_("_ZTest"), 8);
 						}
-						else
-						{
-							material->SetColor(xorstr_("_ColorVisible"), get_c(aidsware::ui::get_color("visible chams")));
-							material->SetColor(xorstr_("_ColorBehind"), get_c(aidsware::ui::get_color("invisible chams")));
-						}
-						material->SetInt(xorstr_("_ZTest"), 8); //maybe try _ZTest Less & _ZTest Greater
 					}
 				}
 			}
@@ -418,7 +426,7 @@ namespace entities {
 		}
 		//LogSystem::RenderTraceResults();
 
-		if (aidsware::ui::get_bool(xorstr_("reload indicator"))) {
+		if (aidsware::ui::get_bool(xorstr_("reload indicator")) && !aidsware::ui::get_bool(xorstr_("always reload"))) {
 			auto held = local->GetHeldEntity<BaseProjectile>();
 			if (held) {
 				if (held->HasReloadCooldown() && held->class_name_hash() != STATIC_CRC32("BowWeapon") && held->class_name_hash() != STATIC_CRC32("CompoundBowWeapon")) { // im sorry for my sins
@@ -436,6 +444,35 @@ namespace entities {
 					held->class_name_hash() == STATIC_CRC32("CrossbowWeapon")) {
 					if (held->Empty()) {
 						Renderer::text({ screen_center.x, screen_center.y + 48 }, Color3(89, 227, 255), 14.f, true, true, wxorstr_(L"[empty weapon]"));
+					}
+				}
+			}
+		}
+
+		if (aidsware::ui::get_bool(xorstr_("always reload")))
+		{
+			auto held = local->GetHeldEntity<BaseProjectile>();
+			if (held) {
+				if (held->class_name_hash() != STATIC_CRC32("BowWeapon")
+					&& held->class_name_hash() != STATIC_CRC32("CompoundBowWeapon"))
+				{ // im sorry for my sins
+					float time_left = (t_TimeSinceLastShot);
+					float time_full = (held->reloadTime() - (held->reloadTime() / 10));
+
+					float result = time_full - time_left;
+
+					if (result > (time_full - 0.15f))
+						result = time_full;
+					if (result < 0.1f) {
+						result = 0.0f;
+						time_left = time_full;
+					}
+					
+					if (aidsware::ui::get_bool(xorstr_("reload indicator")))
+					{
+						Renderer::rectangle_filled({ screen_center.x - 51, screen_center.y + 38 }, { 101, 6 }, Color3(38, 38, 60));
+						Renderer::rectangle_filled({ screen_center.x - 50, screen_center.y + 39 }, { 99 * (time_left / time_full), 4 }, Color3(51, 88, 181));
+						Renderer::text({ (screen_center.x - 50) + (99 * (time_left / time_full)), screen_center.y + 41 + 2 }, Color3(219, 219, 219), 14.f, true, true, wxorstr_(L"%d"), (int)ceil(result));
 					}
 				}
 			}
@@ -513,13 +550,15 @@ namespace entities {
 			if (target_ply == nullptr)
 				settings::tr::manipulate_visible = false;
 
-			if (settings::tr::manipulate_visible)
-				Renderer::boldtext({ screen_center.x + 20, screen_center.y + 20 }, Color3(52, 235, 97), 14.f, true, true, wxorstr_(L"[v]"));
-			if (settings::tr::manipulated)
-				Renderer::boldtext({ screen_center.x + 20, screen_center.y - 20 }, Color3(90, 19, 128), 14.f, true, true, wxorstr_(L"[p]"));
-			if (settings::can_insta)
-				Renderer::boldtext({ screen_center.x - 20, screen_center.y + 20 }, Color3(230, 180, 44), 14.f, true, true, wxorstr_(L"[i]"));
-
+			if (aidsware::ui::get_bool(xorstr_("crosshair indicators")))
+			{
+				if (settings::tr::manipulate_visible)
+					Renderer::boldtext({ screen_center.x + 20, screen_center.y + 20 }, Color3(52, 235, 97), 14.f, true, true, wxorstr_(L"[v]"));
+				if (settings::tr::manipulated)
+					Renderer::boldtext({ screen_center.x + 20, screen_center.y - 20 }, Color3(90, 19, 128), 14.f, true, true, wxorstr_(L"[p]"));
+				if (settings::can_insta)
+					Renderer::boldtext({ screen_center.x - 20, screen_center.y + 20 }, Color3(230, 180, 44), 14.f, true, true, wxorstr_(L"[i]"));
+			}
 			std::vector<BasePlayer*> temp_target_list{};
 
 			if (aidsware::ui::get_bool(xorstr_("logs")))
@@ -1265,10 +1304,16 @@ namespace entities {
 							if (aidsware::ui::get_bool(xorstr_("looking direction")) && !player->HasPlayerFlag(PlayerFlags::Sleeping))
 								Renderer::line(player->bones()->dfc, player->bones()->forward, aidsware::ui::get_color(xorstr_("looking direction color")), true);
 
+							
+
 							if (aidsware::ui::get_bool(xorstr_("insta kill")) || aidsware::ui::get_bool(xorstr_("peek assist")) || get_key(aidsware::ui::get_keybind(xorstr_("desync on key"))))
 							{
 								//GUI::Render.ProgressBar(v, v2, D2D1::ColorF::White, D2D1::ColorF::Gray, (antihack::functions::current_desync_value < 0.f) ? 0.f : antihack::functions::current_desync_value, 40);
-								Renderer::ProgressBar({ screen_center.x - 30, screen_center.y + 20 }, { screen_center.x + 30, screen_center.y + 20 }, { 51, 88, 181 }, { 38, 38, 60 }, desyncTime < 0.f ? 0.f : desyncTime, 60);
+								Renderer::ProgressBar({ screen_center.x - 30, screen_center.y + 20 },
+									{ screen_center.x + 30, screen_center.y + 20 },
+									{ 51, 88, 181 },
+									{ 38, 38, 60 }, 
+									desyncTime < 0.f ? 0.f : (desyncTime > 1.0f ? 1.0f : desyncTime), 60);
 							}
 
 							if (aidsware::ui::get_bool(xorstr_("hpbar")))

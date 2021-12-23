@@ -7,7 +7,10 @@ namespace aimutils {
 		double y = (0.4905f * gravity * t * t);
 		return y * 10;
 	}
-	float SimulateTravelTime(Vector3& position, Vector3& velocity, float& partialTime, float travelTime, Vector3 gravity, float drag)
+
+	float max(float a, float b) { return a > b ? a : b; }
+
+	Vector3 SimulateProjectile(Vector3& position, Vector3& velocity, float& partialTime, float travelTime, Vector3 gravity, float drag)
 	{
 		//float timestep = 0.03125f;
 		float timestep = 0.015625f;
@@ -20,7 +23,7 @@ namespace aimutils {
 				origin = position;
 				position += velocity * travelTime;
 				partialTime += travelTime;
-				return partialTime;
+				return origin;
 			}
 			origin = position;
 			position += velocity * num2;
@@ -29,8 +32,7 @@ namespace aimutils {
 			travelTime -= num2;
 		}
 
-		float f = std::floor(travelTime / timestep);
-		int num3 = static_cast<float>(f);
+		int num3 = (int)std::floor(travelTime / timestep);
 
 		for (int i = 0; i < num3; i++)
 		{
@@ -38,6 +40,7 @@ namespace aimutils {
 			position += velocity * timestep;
 			velocity += gravity * timestep;
 			velocity -= velocity * drag * timestep;
+			DDraw::Sphere(position, 0.05f, Color::Color(180, 150, 210, 50), 1.0f, false); //head
 		}
 		partialTime = travelTime - timestep * (float)num3;
 		if (partialTime > 0)
@@ -45,11 +48,10 @@ namespace aimutils {
 			origin = position;
 			position += velocity * partialTime;
 		}
-		return partialTime;
-		//return origin;
-	}
+		
 
-	float max(float a, float b) { return a > b ? a : b; }
+		return origin;
+	}
 
 	Vector3 get_prediction() {
 		Vector3 target;
