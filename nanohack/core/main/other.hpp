@@ -3,6 +3,7 @@ namespace other {
 
 	bool ValidateEyePos(Vector3 position)
 	{
+		//protection > 3
 		bool flag = false;
 		auto loco = LocalPlayer::Entity();
 		float num = 1.5f;
@@ -26,6 +27,20 @@ namespace other {
 		{
 			flag = true; //EYE_ALTITUDE
 		}
+
+		//protection > 4
+		Vector3 position2 = LocalPlayer::Entity()->transform()->position();
+		Vector3 vector = position - Vector3(0.f, 1.5f, 0.f) - Vector3(0.f, -0.6f, 0.f);
+		
+		if (vector.distance(position2) > 0.01f
+			&& TestNoClipping(loco, position2, vector, true, 0.f))
+		{
+			printf("position: (%ff, %ff, %ff) caused eye_noclip!\n", 
+				position.x, position.y, position.z);
+
+			flag = true; //EYE_NOCLIP
+		}
+		
 		return flag;
 	}
 

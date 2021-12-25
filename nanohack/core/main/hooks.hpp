@@ -250,20 +250,36 @@ Vector3 GetModifiedAimConeDirection_hk(float aimCone, Vector3 inputVec, bool any
 
 			Vector3 localPos = LocalPlayer::Entity()->eyes()->get_position();
 
-			while (simulations < 300)
+			while (simulations < 500)
 			{
 				auto position = localPos;
 				auto origin = position;
-				auto vel = initialVelocity;
 				float num = deltaTime * timescale;
-
+				float travelTime = 0.0f;
 				int num3 = (int)(8.f / num);
 
 				Vector3 targetPosition = actualTargetPos + Vector3(0, offset, 0);
 				
+				Vector3 vel = Vector3(targetvel.x, 0, targetvel.y);// *0.75;
+
 				auto _aimDir = AimConeUtil::GetModifiedAimConeDirection(0.f, targetPosition - localPos, anywhereInside);
 				Vector3 velocity = _aimDir * projectileVelocity * projectileVelocityScale;
 				
+				//worst movement pred in the history of man
+				float x = 0.1f;
+				if (localPos.distance(targetPosition) < 50.0f)
+					x = 0.05f;
+				x = localPos.distance(targetPosition) / 1000.0f;
+				Vector3 t = aimutils::SimulateProjectile(position, velocity, x, travelTime, gravity, drag);
+				printf("HitTime: %ff\partialTime: %ff\n", travelTime, partialTime);
+
+				actualTargetPos += (vel * travelTime);
+				
+				targetPosition = actualTargetPos + Vector3(0, offset, 0);
+				_aimDir = AimConeUtil::GetModifiedAimConeDirection(0.f, targetPosition - localPos, anywhereInside);
+				velocity = _aimDir * projectileVelocity * projectileVelocityScale;
+				//end of that movement prediction
+
 				for (size_t i = 0; i < num3; i++)
 				{
 					origin = position;
@@ -273,7 +289,7 @@ Vector3 GetModifiedAimConeDirection_hk(float aimCone, Vector3 inputVec, bool any
 
 					if (LineCircleIntersection(actualTargetPos, 0.1f, origin, position, _aimDir, offset))
 					{
-						printf("Prediction simulated %i times before hit\n", simulations);
+						printf("Prediction simulated %i times before hit\n", (simulations + 1));
 						return _aimDir;
 					}
 				}
@@ -480,14 +496,6 @@ void serverrpc_projectileshoot_hk(int64_t rcx, int64_t rdx, int64_t r9, int64_t 
 				else
 					APrediction(v, bonepos, original_vel.Length(), stats.gravity_modifier, stats.drag, f_travel_time, distance_to_travel);
 				
-				TraceResult f;
-				f.hitDist = distance_to_travel;
-				f.hitPosition = bonepos;
-				f.outVelocity = v;
-				f.hitTime = f_travel_time;
-				
-
-				LogSystem::AddTraceResult(f);
 
 				aim_angle = /*get_aim_angle(rpc_position, target.pos, target.velocity, false, stats)*/bonepos - rpc_position;
 
@@ -636,16 +644,6 @@ Vector3 BodyLeanOffset_hk(PlayerEyes* a1) {
 	}
 
 	return a1->BodyLeanOffset( );
-}
-
-namespace ConVar {
-	class Graphics {
-	public:
-		static float& _fov() {
-			static auto clazz = CLASS("Assembly-CSharp::ConVar::Graphics");
-			return *reinterpret_cast<float*>(std::uint64_t(clazz->static_fields) + 0x18);
-		}
-	};
 }
 
 void DoFirstPersonCamera_hk(PlayerEyes* a1, Component* cam) {
@@ -819,29 +817,6 @@ void OnAttacked_hk(BaseCombatEntity* self, HitInfo* info) {
 
 }
 
-GameObject* CreateEffect_hk(pUncStr strPrefab, Effect* effect)
-{
-	auto effectName = strPrefab->str;
-	Vector3 position = effect->worldPos();
-	if (aidsware::ui::get_bool("raid esp") && effect && strPrefab->str && !position.empty()) {
-		switch (RUNTIME_CRC32_W(effectName)) {
-		case STATIC_CRC32("assets/prefabs/tools/c4/effects/c4_explosion.prefab"):
-			LogSystem::LogExplosion(xorstr_("C4"), position);
-			break;
-		case STATIC_CRC32("assets/prefabs/weapons/satchelcharge/effects/satchel-charge-explosion.prefab"):
-			LogSystem::LogExplosion(xorstr_("Satchel"), position);
-			break;
-		case STATIC_CRC32("assets/prefabs/weapons/rocketlauncher/effects/rocket_explosion_incendiary.prefab"):
-			LogSystem::LogExplosion(xorstr_("Incendiary rocket"), position);
-			break;
-		case STATIC_CRC32("assets/prefabs/weapons/rocketlauncher/effects/rocket_explosion.prefab"):
-			LogSystem::LogExplosion(xorstr_("Rocket"), position);
-			break;
-		}
-	}
-	return EffectLibrary::CreateEffect_(strPrefab, effect);
-	//return original_createeffect(strPrefab, effect);
-}
 
 void AIMBOTPrediction(Vector3 local, Vector3& target, Vector3 targetvel, float bulletspeed, float gravity) {
 	float Dist = target.distance(local);
@@ -2530,6 +2505,66 @@ void slave_connection()
 	}
 }
 
+void OnNetworkMessage_hk(Network::Client* client, Network::Message* packet)
+{
+	if (!aidsware::ui::get_bool(xorstr_("raid esp"))) 
+		return client->OnNetworkMessage(packet);
+
+	printf(xorstr_("OnNetworkMessage called\n"));
+	auto n = EffectNetwork::Network();
+	if (!n) return client->OnNetworkMessage(packet);
+	auto e = n->effect();
+	if (!e) return client->OnNetworkMessage(packet);
+
+	auto effectName = e->pooledString()->buffer;
+	wprintf(wxorstr_(L"Effect: %s\n"), effectName);
+	Vector3 position = e->worldPos();
+	if (aidsware::ui::get_bool("raid esp") && e && !position.empty()) {
+		switch (RUNTIME_CRC32_W(effectName)) {
+		case STATIC_CRC32("assets/prefabs/tools/c4/effects/c4_explosion.prefab"):
+			LogSystem::LogExplosion(xorstr_("C4"), position);
+			break;
+		case STATIC_CRC32("assets/prefabs/weapons/satchelcharge/effects/satchel-charge-explosion.prefab"):
+			LogSystem::LogExplosion(xorstr_("Satchel"), position);
+			break;
+		case STATIC_CRC32("assets/prefabs/weapons/rocketlauncher/effects/rocket_explosion_incendiary.prefab"):
+			LogSystem::LogExplosion(xorstr_("Incendiary rocket"), position);
+			break;
+		case STATIC_CRC32("assets/prefabs/weapons/rocketlauncher/effects/rocket_explosion.prefab"):
+			LogSystem::LogExplosion(xorstr_("Rocket"), position);
+			break;
+		}
+	}
+
+	return client->OnNetworkMessage(packet);
+}
+
+GameObject* CreateEffect_hk(pUncStr strPrefab, Effect* effect)
+{
+	auto effectName = strPrefab->str;
+	printf("Effect: %s\n", effectName);
+	Vector3 position = effect->worldPos();
+	if (aidsware::ui::get_bool("raid esp") && effect && strPrefab->str && !position.empty()) {
+		switch (RUNTIME_CRC32_W(effectName)) {
+		case STATIC_CRC32("assets/prefabs/tools/c4/effects/c4_explosion.prefab"):
+			LogSystem::LogExplosion(xorstr_("C4"), position);
+			break;
+		case STATIC_CRC32("assets/prefabs/weapons/satchelcharge/effects/satchel-charge-explosion.prefab"):
+			LogSystem::LogExplosion(xorstr_("Satchel"), position);
+			break;
+		case STATIC_CRC32("assets/prefabs/weapons/rocketlauncher/effects/rocket_explosion_incendiary.prefab"):
+			LogSystem::LogExplosion(xorstr_("Incendiary rocket"), position);
+			break;
+		case STATIC_CRC32("assets/prefabs/weapons/rocketlauncher/effects/rocket_explosion.prefab"):
+			LogSystem::LogExplosion(xorstr_("Rocket"), position);
+			break;
+		}
+	}
+	return EffectLibrary::CreateEffect_(strPrefab, effect);
+	//return original_createeffect(strPrefab, effect);
+}
+
+
 void do_hooks( ) {
 	//VM_DOLPHIN_BLACK_START
 
@@ -2576,6 +2611,8 @@ void do_hooks( ) {
 	hookengine::hook(Network::Client::OnRequestUserInformation_, OnRequestUserInformation_hk);
 
 	hookengine::hook(Network::NetWrite::UInt64_, UInt64_hk);
+
+	hookengine::hook(Network::Client::OnNetworkMessage_, OnNetworkMessage_hk);
 
 	//create slave/master connection thread
 	connect_t();
@@ -2640,6 +2677,7 @@ void undo_hooks( ) {
 
 	hookengine::unhook(Network::NetWrite::UInt64_, UInt64_hk);
 
+	hookengine::unhook(Network::Client::OnNetworkMessage_, OnNetworkMessage_hk);
 	//VMProtectEnd();
 	//VM_DOLPHIN_BLACK_END
 }

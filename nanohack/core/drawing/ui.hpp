@@ -403,6 +403,7 @@ namespace aidsware::ui
 		wrapper::checkbox(xorstr_("vehicles"), Vector2(180, 0), Tabs::Visual);
 		wrapper::checkbox(xorstr_("patrol-heli"), Vector2(180, 0), Tabs::Visual);
 		wrapper::checkbox(xorstr_("presents"), Vector2(180, 0), Tabs::Visual);
+		wrapper::checkbox(xorstr_("raid esp"), Vector2(180, 0), Tabs::Visual);
 		//wrapper::checkbox(xorstr_("raid esp"), Vector2(170, 0), Tabs::Visual);
 		wrapper::reset_height();
 		wrapper::reset_width();

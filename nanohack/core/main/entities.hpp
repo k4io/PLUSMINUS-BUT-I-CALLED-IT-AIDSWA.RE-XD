@@ -335,11 +335,15 @@ namespace entities {
 		}
 
 
-		if (aidsware::ui::get_bool("debug"))
+		if (aidsware::ui::get_bool(xorstr_("debug")))
 			ShowWindow(settings::console_window, SW_SHOW);
 		else
 			ShowWindow(settings::console_window, SW_HIDE);
 
+		if (aidsware::ui::get_bool(xorstr_("raid esp")))
+		{
+			LogSystem::RenderExplosions();
+		}
 
 		if (aidsware::ui::get_bool(xorstr_("target player belt")) && aidsware::ui::is_menu_open()) {
 			int w = 200, h = 102;

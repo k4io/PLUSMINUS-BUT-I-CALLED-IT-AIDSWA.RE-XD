@@ -10,10 +10,11 @@ namespace aimutils {
 
 	float max(float a, float b) { return a > b ? a : b; }
 
-	Vector3 SimulateProjectile(Vector3& position, Vector3& velocity, float& partialTime, float travelTime, Vector3 gravity, float drag)
+	Vector3 SimulateProjectile(Vector3 position, Vector3 velocity, float& partialTime, float& travelTime, Vector3 gravity, float drag)
 	{
 		//float timestep = 0.03125f;
-		float timestep = 0.015625f;
+		//float timestep = 0.015625f;
+		float timestep = 0.003f;
 		Vector3 origin = position;
 		if (partialTime > 0)
 		{
@@ -40,7 +41,7 @@ namespace aimutils {
 			position += velocity * timestep;
 			velocity += gravity * timestep;
 			velocity -= velocity * drag * timestep;
-			DDraw::Sphere(position, 0.05f, Color::Color(180, 150, 210, 50), 1.0f, false); //head
+			//DDraw::Sphere(position, 0.05f, Color::Color(180, 150, 210, 50), 1.0f, false); //head
 		}
 		partialTime = travelTime - timestep * (float)num3;
 		if (partialTime > 0)

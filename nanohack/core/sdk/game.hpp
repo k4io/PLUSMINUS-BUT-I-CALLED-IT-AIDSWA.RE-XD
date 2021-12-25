@@ -532,10 +532,36 @@ public:
 		return SafeExecution::Execute<T*>(off, nullptr, this, type);
 	}
 }; 
+
+namespace ConVar {
+	class Graphics {
+	public:
+		static float& _fov() {
+			static auto clazz = CLASS("Assembly-CSharp::ConVar::Graphics");
+			return *reinterpret_cast<float*>(std::uint64_t(clazz->static_fields) + 0x18);
+		}
+	};
+}
+
 class Effect {
 public:
 	//FIELD("Facepunch.Network::Network::Networkable::ID", ID, uint32_t);
 	FIELD("Assembly-CSharp::Effect::worldPos", worldPos, Vector3);
+	FIELD("Assembly-CSharp::Effect::reusableInstace", reusableInstace, Effect*);
+	FIELD("Assembly-CSharp::Effect::pooledString", pooledString, String*);
+};
+class EffectNetwork {
+public:
+	static EffectNetwork* Network() {
+		static auto c = CLASS("Assembly-CSharp::EffectNetwork");
+		return *reinterpret_cast<EffectNetwork**>(std::uint64_t(c->static_fields));
+	}
+
+	static Effect* effect() {
+		static auto c = CLASS("Assembly-CSharp::EffectNetwork::Effect");
+		return *reinterpret_cast<Effect**>(std::uint64_t(c->static_fields));
+	}
+
 };
 class EffectLibrary {
 public:
@@ -822,7 +848,6 @@ bool BaseEntity::HasFlag(BaseEntity::Flags f)
 {
 	return (this->flags() & f) == f;
 }
-/*
 class RaycastHit
 {
 
@@ -835,7 +860,6 @@ class Collider
 {
 
 };
-*/
 
 class GamePhysics {
 public:
@@ -844,8 +868,9 @@ public:
 		Ignore = 1,
 		Collide = 2,
 	};
+
 	STATIC_FUNCTION("Assembly-CSharp::GamePhysics::LineOfSight(Vector3,Vector3,Int32,Single): Boolean", LineOfSight, bool(Vector3, Vector3, int, float));
-	//STATIC_FUNCTION("Assembly-CSharp::GamePhysics::Verify(RaycastHit): Boolean", Verify, bool(RaycastHit*));
+	STATIC_FUNCTION("Assembly-CSharp::GamePhysics::Verify(RaycastHit): Boolean", Verify, bool(RaycastHit*));
 	STATIC_FUNCTION("Assembly-CSharp::GamePhysics::CheckCapsule(Vector3,Vector3,Single,Int32,QueryTriggerInteraction): Boolean", CheckCapsule, bool(Vector3, Vector3, float, int, QueryTriggerInteraction));
 	//STATIC_FUNCTION("Assembly-CSharp::GamePhysics::OverlapCapsule(Vector3,Vector3,Single,List<Collider>,Int32,QueryTriggerInteraction): int", OverlapCapsule, int(Vector3, Vector3, float, List<Collider*>, int, QueryTriggerInteraction));
 };
@@ -1471,6 +1496,8 @@ public:
 		return reinterpret_cast<void(*)(int, int, bool)>(il2cpp_resolve_icall(xorstr_("UnityEngine.Physics::IgnoreLayerCollision")))(layer1, layer2, ignore);
 	}
 	STATIC_FUNCTION("UnityEngine.PhysicsModule::UnityEngine::Physics::get_gravity(): Vector3", get_gravity, Vector3());
+	//STATIC_FUNCTION("UnityEngine.PhysicsModule::UnityEngine::Physics::Raycast(Ray,out RaycastHit,Single,Int32,QueryTriggerInteraction): bool", Raycast, bool(Ray, RaycastHit*, float, int, GamePhysics::QueryTriggerInteraction));
+	//STATIC_FUNCTION("UnityEngine.PhysicsModule::UnityEngine::Physics::SphereCast(Ray,Single,out RaycastHit,Single,Int32,QueryTriggerInteraction2): bool", SphereCast, bool(Ray, float, RaycastHit*, float, int, GamePhysics::QueryTriggerInteraction));
 };
 class unk {
 public:
@@ -2101,9 +2128,9 @@ public:
 	}
 };
 
-TraceResult traceProjectile(Vector3 position, Vector3 velocity, float drag, Vector3 gravity, Vector3 targetPoint) {
-	//constexpr float num = 0.03125f;
-	constexpr float num = 0.015625f;
+TraceResult traceProjectile(Vector3 position, Vector3 velocity, float drag, Vector3 gravity, Vector3 targetPoint) 
+{
+	constexpr float num = 0.003f;//0.015625f;
 	Vector3 prevPosition = position;
 	float prevDist = FLT_MAX;
 	Line resultLine = Line(position, position);
@@ -2120,7 +2147,7 @@ TraceResult traceProjectile(Vector3 position, Vector3 velocity, float drag, Vect
 		float dst = (nearest - targetPoint).Length();
 
 		if (dst > prevDist) {
-			//printf("dst > prevdist\n");
+			printf("dst > prevdist\n");
 			break;
 		}
 		prevDist = dst;
@@ -2133,14 +2160,12 @@ TraceResult traceProjectile(Vector3 position, Vector3 velocity, float drag, Vect
 
 	Vector3 hitPos = resultLine.ClosestPoint(targetPoint);
 
-	//printf("hitPos(%ff, %ff, %ff)\nhitTime: %ff\n", hitPos.x, hitPos.y, hitPos.z, travelTime - num);
-
 	result.hitDist = (hitPos - targetPoint).Length();
 	result.hitPosition = hitPos;
 	result.outVelocity = velocity;
 	result.hitTime = travelTime - num;
 	return result;
-}; 
+}
 class ProjectileShoot_Projectile
 {
 public:
@@ -2557,6 +2582,27 @@ public:
 		return reinterpret_cast<bool(__fastcall*)(Projectile*)>(off)(this);
 	}
 };
+
+bool TestNoClipping(BasePlayer* ply, Vector3 oldPos, Vector3 newPos, bool sphereCast, float deltaTime = 0.f)
+{
+	float nbacktrack = 0.01f;
+	float nmargin = 0.09f;
+	float radius = ply->GetRadius();
+	float height = ply->GetHeight();
+	Vector3 normalized = (newPos - oldPos).normalized();
+	float num2 = radius - nmargin;
+	Vector3 vector = oldPos + Vector3(0.f, height - radius, 0.f) - normalized * nbacktrack;
+	float magnitude = (newPos + Vector3(0.f, height - radius, 0.f) - vector).magnitude();
+	RaycastHit hitInfo;
+	//bool flag = Physics::Raycast(Ray(vector, normalized), &hitInfo, magnitude + num2, 429990145, GamePhysics::QueryTriggerInteraction::Ignore);
+	//if (!flag)
+	//{
+		//flag = Physics::SphereCast(Ray(vector, normalized), num2, &hitInfo, magnitude, 429990145, GamePhysics::QueryTriggerInteraction::Ignore);
+	//}
+	return false;
+	//return true && GamePhysics::Verify(&hitInfo);
+}
+
 void TestFlying() {
 	BasePlayer* loco = LocalPlayer::Entity();
 	if (!loco) return;
@@ -3112,6 +3158,11 @@ namespace Network {
 	};
 	class Client {
 	public:
+		static inline void(*OnNetworkMessage_)(Client*, Message*) = nullptr;
+		void OnNetworkMessage(Message* m) {
+			return OnNetworkMessage_(this, m);
+		}
+
 		AuthTicket* GetAuthTicket( ) {
 			if (!this) return nullptr;
 			static auto off = METHOD("Facepunch.Network::Network::Client::GetAuthTicket(): Auth.Ticket");
@@ -3190,18 +3241,14 @@ void initialize_cheat( ) {
 	ASSIGN_HOOK("Assembly-CSharp::AimConeUtil::GetModifiedAimConeDirection(Single,Vector3,Boolean): Vector3", AimConeUtil::GetModifiedAimConeDirection_);
 	ASSIGN_HOOK("Assembly-CSharp::HeldEntity::AddPunch(Vector3,Single): Void", HeldEntity::AddPunch_);
 	ASSIGN_HOOK("UnityEngine.CoreModule::UnityEngine::Vector3::MoveTowards(Vector3,Vector3,Single): Vector3", Vector3_::MoveTowards_);
-
 	ASSIGN_HOOK("Assembly-CSharp::BasePlayer::SendClientTick(): Void", BasePlayer::SendClientTick_);
-
 	ASSIGN_HOOK("Assembly-CSharp::Projectile::Launch(): Void", Projectile::Launch_);
-
-	ASSIGN_HOOK("Assembly-CSharp::EffectLibrary::CreateEffect(String,Effect): GameObject", EffectLibrary::CreateEffect_);
-
+	//ASSIGN_HOOK("Assembly-CSharp::EffectLibrary::CreateEffect(String,Effect): GameObject", EffectLibrary::CreateEffect_);
 	ASSIGN_HOOK("Assembly-CSharp::BaseCombatEntity::DoHitNotify(HitInfo): Void", BaseCombatEntity::DoHitNotify_);
-
-	//ASSIGN_HOOK("Assembly-CSharp::Client::OnRequestUserInformation(Message): Void", Network::Client::OnRequestUserInformation_	);
 	ASSIGN_HOOK("Facepunch.Network::Network::NetWrite::UInt64(UInt64): Void", Network::NetWrite::UInt64_);
-	//il2cpp::hook(DDraw::OnGui_, xorstr_("OnGUI"), xorstr_("DDraw"), xorstr_("UnityEngine"));
+	
+	ASSIGN_HOOK("Assembly-CSharp::Client::OnNetworkMessage(Message): Void", Network::Client::OnNetworkMessage_);
+
 
 	settings::il_init_methods = find(xorstr_("GameAssembly.dll"), "48 83 EC 48 48 8B 05 ? ? ? ? 48 63 90 ? ? ? ?");
 	settings::serverrpc_projectileshoot = find_rel(xorstr_("GameAssembly.dll"), xorstr_("4C 8B 0D ? ? ? ? 48 8B 75 28"));
