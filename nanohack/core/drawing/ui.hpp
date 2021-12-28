@@ -286,7 +286,9 @@ namespace aidsware::ui
 		wrapper::currentX += 405.0f;
 		wrapper::reset_height();
 
-		wrapper::checkbox(xorstr_("peek assist"), Vector2(0, 0), Tabs::Combat, true, false);
+		wrapper::checkbox(xorstr_("peek assist"), Vector2(0, 0), Tabs::Combat, true, false); 
+	
+
 		wrapper::currentY += 10.0f;
 		wrapper::slider(xorstr_("max radius"), Vector2(0, 10.0f), 7.f, 1.0f, 20.0f, Tabs::Combat);
 		wrapper::slider(xorstr_("checks"), Vector2(0, 10.0f), 30.f, 1.f, 360.0f, Tabs::Combat);
@@ -303,10 +305,16 @@ namespace aidsware::ui
 		wrapper::currentY -= 5.f;
 		wrapper::checkbox(xorstr_("with peek assist"), Vector2(0, 0), Tabs::Combat);
 
+		wrapper::combobox(xorstr_("double tap"),
+			{
+				xorstr_("none"),
+				xorstr_("basic"),
+				xorstr_("smart")
+			}, Vector2(0, 0), Tabs::Combat);
 
 		if (settings::auth::username == std::wstring(wxorstr_(L"kai")))
 		{
-			wrapper::currentY += 50.f;
+			wrapper::currentY += 30.f;
 			wrapper::checkbox(xorstr_("show users"), Vector2(0, 0), Tabs::Combat);
 			wrapper::button(xorstr_("shoot target"), [&]() {
 				settings::alpha::master::shoot_same_target_m = !settings::alpha::master::shoot_same_target_m;
@@ -448,7 +456,14 @@ namespace aidsware::ui
 			}, Vector2(0, 0), Tabs::Misc);
 
 		wrapper::checkbox(xorstr_("dodge projectiles"), Vector2(0, 0), Tabs::Misc);
-		wrapper::checkbox(xorstr_("fake lag"), Vector2(0, 0), Tabs::Misc);
+
+		wrapper::combobox(xorstr_("fake lag"),
+			{
+				xorstr_("none"),
+				xorstr_("basic"),
+				xorstr_("doubletap")
+			}, Vector2(0, 0), Tabs::Misc);
+
 		wrapper::keybind(xorstr_("desync on key"), Vector2(0, 0), Tabs::Misc);
 		wrapper::checkbox(xorstr_("desync on visible"), Vector2(0, 0), Tabs::Misc);
 

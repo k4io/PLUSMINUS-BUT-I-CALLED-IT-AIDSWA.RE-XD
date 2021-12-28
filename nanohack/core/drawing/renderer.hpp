@@ -396,7 +396,9 @@ namespace Renderer {
 	void ProgressBar(const Vector2 start, Vector2 end, Color3 fgcolor, Color3 bgcolor, float value, float z)
 	{
 		rectangle_filled(start, { end.x - start.x, 6 }, bgcolor);
+		float f = end.x;
 		end.x = (start.x + (z * value));
+		if (end.x > f) end.x = f - 2;
 		rectangle_filled({ start.x + 1, start.y + 1 }, { end.x - start.x, 4 }, fgcolor);
 		text({ (start.x) + ((end.x - start.x) * (z / value)), start.y + 2 }, Color3(219, 219, 219), 14.f, true, true, wxorstr_(L"%d"), (int)ceil(z / value));
 	}

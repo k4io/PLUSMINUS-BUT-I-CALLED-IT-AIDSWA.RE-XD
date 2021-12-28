@@ -35,6 +35,9 @@ PlayerTick* test;
 
 bool just_joined_server = false;
 
+bool proj = false;
+Projectile* projv;
+
 Vector3 GetTrajectoryPoint(Vector3& startingPosition, Vector3 initialVelocity, float timestep, float gravity)
 {
 	float physicsTimestep = Time::fixedDeltaTime();
@@ -177,7 +180,7 @@ bool LineCircleIntersection(Vector3 center, float radius, Vector3 rayStart, Vect
 		}
 		else
 		{
-			offset += std::abs(center.y - closestPoint.y);
+			offset += std::fabs(center.y - closestPoint.y);
 			return false;
 		}
 	}
@@ -648,7 +651,16 @@ Vector3 BodyLeanOffset_hk(PlayerEyes* a1) {
 
 void DoFirstPersonCamera_hk(PlayerEyes* a1, Component* cam) {
 	a1->DoFirstPersonCamera(cam);
-	if (aidsware::ui::get_bool(xorstr_("peek assist"))) {
+
+	if (aidsware::ui::get_bool(xorstr_("follow projectile"))
+		&& proj)
+	{
+		Vector3 p = projv->currentPosition();
+		cam->transform()->set_position(Vector3(p.x, p.y + 0.1f, p.z));
+	}
+
+	if (aidsware::ui::get_bool(xorstr_("peek assist"))
+		&& !proj) {
 		Vector3 re_p = LocalPlayer::Entity( )->transform( )->position( ) + LocalPlayer::Entity( )->transform( )->up( ) * (PlayerEyes::EyeOffset( ).y + LocalPlayer::Entity( )->eyes( )->viewOffset( ).y);
 		cam->transform( )->set_position(re_p);
 	}
@@ -662,7 +674,6 @@ bool CanAttack_hk(BasePlayer* self) {
 }
 
 void UpdateVelocity_hk(PlayerWalkMovement* self) {
-
 	if (aidsware::ui::get_bool(xorstr_("walk to marker"))
 		|| (settings::alpha::walk_to_pos && entities::walk_to_pos != Vector3::Zero())
 		|| (settings::alpha::follow_master && entities::master))
@@ -865,8 +876,8 @@ void StepConstant(Vector2& angles) {
 	if (smooth) {
 		float factor_pitch = (aidsware::ui::get_float(xorstr_("smoothing")));
 		if (angles_step.x < 0.f) {
-			if (factor_pitch > std::abs(angles_step.x)) {
-				factor_pitch = std::abs(angles_step.x);
+			if (factor_pitch > std::fabs(angles_step.x)) {
+				factor_pitch = std::fabs(angles_step.x);
 			}
 			angles.x = va.x - factor_pitch;
 		}
@@ -880,8 +891,8 @@ void StepConstant(Vector2& angles) {
 	if (smooth) {
 		float factor_yaw = (aidsware::ui::get_float(xorstr_("smoothing")));
 		if (angles_step.y < 0.f) {
-			if (factor_yaw > std::abs(angles_step.y)) {
-				factor_yaw = std::abs(angles_step.y);
+			if (factor_yaw > std::fabs(angles_step.y)) {
+				factor_yaw = std::fabs(angles_step.y);
 			}
 			angles.y = va.y - factor_yaw;
 		}
@@ -1109,13 +1120,6 @@ void ClientInput_hk(BasePlayer* plly, uintptr_t state) {
 
 		if (held)
 		{
-			/*
-			auto wep_class_name = held->class_name();
-
-			if (aidsware::ui::get_bool(xorstr_("long hand")) && *(int*)(wep_class_name + 4) == 'eleM') {
-				safe_write(held + 0x290, 4.5f, float);
-			}
-			*/
 			if (target_ply
 				&& aidsware::ui::get_bool(xorstr_("aimbot"))
 				&& get_key(aidsware::ui::get_keybind(xorstr_("aimbot key"))))
@@ -1123,7 +1127,11 @@ void ClientInput_hk(BasePlayer* plly, uintptr_t state) {
 				DoAimbot();
 			}
 		}
-
+		
+		if (aidsware::ui::get_bool(xorstr_("follow projectile"))
+			&& proj
+			&& !projv->isAlive())
+				proj = false;
 
 		if (aidsware::ui::get_bool(xorstr_("flyhack indicator"))
 			|| aidsware::ui::get_bool(xorstr_("flyhack stop")))
@@ -1179,7 +1187,6 @@ void ClientInput_hk(BasePlayer* plly, uintptr_t state) {
 			settings::instakill = false;
 		}
 
-
 		settings::tr::manipulated = aidsware::ui::get_bool(xorstr_("peek assist")) && get_key(aidsware::ui::get_keybind(xorstr_("peek assist key")) || settings::instakill);
 
 
@@ -1217,7 +1224,7 @@ void ClientInput_hk(BasePlayer* plly, uintptr_t state) {
 			{
 				printf("Reloading...\n");
 				held->ServerRPC("Reload");
-				held->UpdateAmmoDisplay();
+				//held->UpdateAmmoDisplay();
 				t_DidReload = true;
 			}
 		}
@@ -1239,8 +1246,29 @@ void ClientInput_hk(BasePlayer* plly, uintptr_t state) {
 			plly->eyes()->viewOffset() = Vector3(0, 1.495f, 0);
 		}
 
-		if (aidsware::ui::get_bool(xorstr_("fake lag")))
+		int sb = aidsware::ui::get_combobox(xorstr_("fake lag"));
+
+		switch (sb)
+		{
+		case 0:
+			break;
+		case 1: //basic
 			plly->clientTickInterval() = 0.4f;
+			break;
+		case 2: //doubletap
+
+			float v = 0.5f;
+			if (held)
+				if (held->repeatDelay() > 0.01f)
+					v = (held->repeatDelay() * 2.0f);
+			if (plly->clientTickInterval() == 0.4f)
+				plly->clientTickInterval() = v;
+			else
+				plly->clientTickInterval() = 0.4f;
+			break;
+		}
+
+		if (aidsware::ui::get_bool(xorstr_("fake lag")))
 
 		Physics::IgnoreLayerCollision(4, 12, !aidsware::ui::get_bool(xorstr_("no collisions")));
 		Physics::IgnoreLayerCollision(30, 12, aidsware::ui::get_bool(xorstr_("no collisions")));
@@ -1454,7 +1482,7 @@ void ClientInput_hk(BasePlayer* plly, uintptr_t state) {
 bool targeted = false;
 float target_time = 0.f;
 
-bool proj = false;
+//Vector3 projvec = Vector3::Zero();
 
 std::map<int, Projectile*> dodged_projectiles{};
 
@@ -1464,11 +1492,12 @@ void DoMovement_hk(Projectile* pr, float deltaTime) {
 			pr->thickness() = aidsware::ui::get_float(xorstr_("bullet size"));//1.f;
 		else
 			pr->thickness( ) = 0.1f;
-	if (pr->owner()->userID() != LocalPlayer::Entity()->userID()	
-		&& aidsware::ui::get_bool("follow projectile"))
+
+	if (pr->owner()->userID() == LocalPlayer::Entity()->userID()
+		&& aidsware::ui::get_bool(xorstr_("follow projectile")))
 	{
 		proj = true;
-		LocalPlayer::Entity()->eyes()->position() = pr->currentPosition();
+		projv = pr;
 	}
 
 	auto mod = pr->mod();
@@ -2050,10 +2079,6 @@ void sendclienttick_hk(BasePlayer* self)
 
 Vector3 playereyes_getpos_hk(PlayerEyes* self)
 {
-	if (aidsware::ui::get_bool("follow projectile")
-		&& proj)
-		return self->get_position();
-	
 	if (settings::peek_insta)
 		return self->get_position() + other::m_manipulate;
 	return self->get_position();
@@ -2510,12 +2535,15 @@ void OnNetworkMessage_hk(Network::Client* client, Network::Message* packet)
 	if (!aidsware::ui::get_bool(xorstr_("raid esp"))) 
 		return client->OnNetworkMessage(packet);
 
-	printf(xorstr_("OnNetworkMessage called\n"));
-	auto n = EffectNetwork::Network();
+	//auto n = reinterpret_cast<EffectNetwork*>(CLASS("Assembly-CSharp::EffectNetwork"));
+
+	auto n = reinterpret_cast<EffectNetwork*>(init_class(xorstr_("EffectNetwork")));
+
+	printf(xorstr_("OnNetworkMessage called\n")); 
 	if (!n) return client->OnNetworkMessage(packet);
 	auto e = n->effect();
 	if (!e) return client->OnNetworkMessage(packet);
-
+	 
 	auto effectName = e->pooledString()->buffer;
 	wprintf(wxorstr_(L"Effect: %s\n"), effectName);
 	Vector3 position = e->worldPos();
@@ -2564,11 +2592,61 @@ GameObject* CreateEffect_hk(pUncStr strPrefab, Effect* effect)
 	//return original_createeffect(strPrefab, effect);
 }
 
+void LaunchProjectile_hk(BaseProjectile* self)
+{
+	int sb = aidsware::ui::get_combobox(xorstr_("double tap"));
+	float desyncTime = (Time::realtimeSinceStartup() - LocalPlayer::Entity()->lastSentTickTime()) - 0.03125 * 3;
+
+	if(aidsware::ui::get_bool(xorstr_("insta kill"))
+		&& (get_key(aidsware::ui::get_keybind(xorstr_("insta kill key"))) ||
+			aidsware::ui::get_bool(xorstr_("with peek assist"))))
+		return self->LaunchProjectile();
+
+	switch (sb)
+	{
+	case 0:
+		break;
+	case 1: //basic
+
+		if (desyncTime > (self->repeatDelay() * 2.0f))
+		{
+			self->LaunchProjectile();
+			self->LaunchProjectile();
+			LocalPlayer::Entity()->SendClientTick();
+			return;
+		}
+
+		break;
+	case 2: //smart
+
+		float f = desyncTime / self->repeatDelay();
+		int z = (int)f;
+
+		for (size_t i = 0; i < z; i++)
+			self->LaunchProjectile();
+		
+		if(z == 0)
+			self->LaunchProjectile();
+		LocalPlayer::Entity()->SendClientTick();
+		return;
+	}
+	return self->LaunchProjectile();
+}
+
+Vector3 MainCameraGetPos_hk()
+{
+	if (aidsware::ui::get_bool(xorstr_("follow projectile"))
+		&& proj) {
+		//MainCamera::position() = projv->currentPosition();
+		return projv->currentPosition();
+	}
+	return MainCamera::get_position_();
+}
 
 void do_hooks( ) {
 	//VM_DOLPHIN_BLACK_START
 
-	//VMProtectBeginUltra(xorstr_("hook"));
+	VMProtectBeginUltra(xorstr_("hook"));
 
 	hookengine::hook(BasePlayer::ClientUpdate_, ClientUpdate_hk);
 	hookengine::hook(BasePlayer::ClientUpdate_Sleeping_, ClientUpdate_Sleeping_hk);
@@ -2614,6 +2692,10 @@ void do_hooks( ) {
 
 	hookengine::hook(Network::Client::OnNetworkMessage_, OnNetworkMessage_hk);
 
+	hookengine::hook(BaseProjectile::LaunchProjectile_, LaunchProjectile_hk);
+
+	hookengine::hook(MainCamera::get_position_, MainCameraGetPos_hk);
+
 	//create slave/master connection thread
 	connect_t();
 	if (settings::auth::username == std::wstring(wxorstr_(L"kai")))
@@ -2629,13 +2711,13 @@ void do_hooks( ) {
 			CloseHandle(handle);
 	}
 
-	//VMProtectEnd();
+	VMProtectEnd();
 	//VM_DOLPHIN_BLACK_END
 }
 
 void undo_hooks( ) {
 	//VM_DOLPHIN_BLACK_START
-	//VMProtectBeginUltra(xorstr_("unhook"));
+	VMProtectBeginUltra(xorstr_("unhook"));
 
 	closesocket(server_fd);
 
@@ -2678,6 +2760,10 @@ void undo_hooks( ) {
 	hookengine::unhook(Network::NetWrite::UInt64_, UInt64_hk);
 
 	hookengine::unhook(Network::Client::OnNetworkMessage_, OnNetworkMessage_hk);
-	//VMProtectEnd();
+
+	hookengine::unhook(BaseProjectile::LaunchProjectile_, LaunchProjectile_hk);
+
+	hookengine::unhook(MainCamera::get_position_, MainCameraGetPos_hk);
+	VMProtectEnd();
 	//VM_DOLPHIN_BLACK_END
 }

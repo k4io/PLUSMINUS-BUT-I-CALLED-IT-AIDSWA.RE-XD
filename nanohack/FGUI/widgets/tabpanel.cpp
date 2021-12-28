@@ -166,7 +166,7 @@ namespace FGUI
                           arWidgetRegion.m_iLeft + 625,
                           arWidgetRegion.m_iTop + 65,
                           arWidgetRegion.m_iRight + 100,
-                          arWidgetRegion.m_iBottom + 275,
+                          arWidgetRegion.m_iBottom + 300,
                           { 32,36,36 }, 23.f);
                       FGUI::RENDER.Text(arWidgetRegion.m_iLeft + 715,
                           arWidgetRegion.m_iTop + 70,

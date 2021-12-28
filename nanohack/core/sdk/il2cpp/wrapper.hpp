@@ -161,9 +161,8 @@ public:
 
 	}
 
-	Il2CppAssembly** assemblies( ) {
+	Il2CppAssembly** assemblies() {
 		size_t size = 0;
-
 		return call<Il2CppAssembly**, Il2CppDomain*, void*>(xorstr_("il2cpp_domain_get_assemblies"), this, &size);
 	}
 };
@@ -178,4 +177,22 @@ void* il2cpp_runtime_invoke(void* method_ptr, void* obj, void** param, void** ex
 
 void* il2cpp_object_get_virtual_method(void* obj, void* method) {
 	return call<void*, void*, void*>("il2cpp_object_get_virtual_method", obj, method);
+}
+
+Il2CppClass* init_class(const char* name, const char* name_space = xorstr_("")) {
+
+	auto domain = il2cpp_domain_get();
+
+	size_t size = 0;
+	auto assemblies = call<Il2CppAssembly**, Il2CppDomain*, void*>(xorstr_("il2cpp_domain_get_assemblies"), domain, &size);
+
+	for (int i = 0; i < size; i++) {
+		Il2CppImage* image = *reinterpret_cast<Il2CppImage**>(*reinterpret_cast<uint64_t*>(std::uint64_t(assemblies) + (0x8 * i)));
+
+		auto kl = image->get_class(i);
+		if (!kl) continue;
+
+		return kl;
+	}
+	return 0;
 }

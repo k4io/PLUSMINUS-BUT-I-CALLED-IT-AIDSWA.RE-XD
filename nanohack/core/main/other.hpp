@@ -1,6 +1,29 @@
 namespace other {
 	Vector3 m_manipulate = Vector3::Zero( );
 
+	bool TestNoClipping(BasePlayer* ply, Vector3 oldPos, Vector3 newPos, bool sphereCast, float deltaTime = 0.f)
+	{
+		float nbacktrack = 0.01f;
+		float nmargin = 0.09f;
+		float radius = ply->GetRadius();
+		float height = ply->GetHeight();
+		Vector3 normalized = (newPos - oldPos).normalized();
+		float num2 = radius - nmargin;
+		Vector3 vector = oldPos + Vector3(0.f, height - radius, 0.f) - normalized * nbacktrack;
+		float magnitude = (newPos + Vector3(0.f, height - radius, 0.f) - vector).magnitude();
+		RaycastHit hitInfo;
+
+		Ray z = Ray(vector, normalized);
+
+		bool flag = Physics::Raycast(z, magnitude + num2, 429990145);
+		if (!flag)
+		{
+			flag = Physics::SphereCast(z, num2, magnitude, 429990145);
+		}
+		//return false;g
+		return flag;//&& GamePhysics::Verify(&hitInfo);
+	}
+
 	bool ValidateEyePos(Vector3 position)
 	{
 		//protection > 3
@@ -19,12 +42,15 @@ namespace other {
 		float num6 = loco->BoundsPadding() + num4 * num5;
 		float num7 = loco->eyes()->position().distance(position);
 
-		float num8 = std::abs(loco->GetParentVelocity().y);
+		float num8 = std::fabs(loco->GetParentVelocity().y);
 		float num9 = loco->BoundsPadding() + num4 + num8 + loco->GetJumpHeight();
-		float num10 = std::abs(loco->eyes()->get_position().y - position.y);
+		float num10 = std::fabs(loco->eyes()->get_position().y - position.y);
 
 		if (num10 > num9)
 		{
+			if (aidsware::ui::get_bool(xorstr_("debug")))
+				printf("position: (%ff, %ff, %ff) caused eye_altitude!\n",
+					position.x, position.y, position.z);
 			flag = true; //EYE_ALTITUDE
 		}
 
@@ -35,8 +61,9 @@ namespace other {
 		if (vector.distance(position2) > 0.01f
 			&& TestNoClipping(loco, position2, vector, true, 0.f))
 		{
-			printf("position: (%ff, %ff, %ff) caused eye_noclip!\n", 
-				position.x, position.y, position.z);
+			if (aidsware::ui::get_bool(xorstr_("debug")))
+				printf("position: (%ff, %ff, %ff) caused eye_noclip!\n",
+					position.x, position.y, position.z);
 
 			flag = true; //EYE_NOCLIP
 		}

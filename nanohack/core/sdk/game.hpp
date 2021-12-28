@@ -552,16 +552,10 @@ public:
 };
 class EffectNetwork {
 public:
-	static EffectNetwork* Network() {
-		static auto c = CLASS("Assembly-CSharp::EffectNetwork");
-		return *reinterpret_cast<EffectNetwork**>(std::uint64_t(c->static_fields));
-	}
-
 	static Effect* effect() {
-		static auto c = CLASS("Assembly-CSharp::EffectNetwork::Effect");
+		static auto c = CLASS("Assembly-CSharp::EffectNetwork");
 		return *reinterpret_cast<Effect**>(std::uint64_t(c->static_fields));
 	}
-
 };
 class EffectLibrary {
 public:
@@ -1495,6 +1489,20 @@ public:
 	static void IgnoreLayerCollision(int layer1, int layer2, bool ignore) {
 		return reinterpret_cast<void(*)(int, int, bool)>(il2cpp_resolve_icall(xorstr_("UnityEngine.Physics::IgnoreLayerCollision")))(layer1, layer2, ignore);
 	}
+
+	STATIC_FUNCTION("UnityEngine.PhysicsModule::UnityEngine::Physics::Raycast(Ray,Single,Int32): Boolean", 
+		Raycast, 
+		bool(Ray, 
+			float, 
+			int));
+
+	STATIC_FUNCTION("UnityEngine.PhysicsModule::UnityEngine::Physics::SphereCast(Ray,Single,Single,Int32): Boolean", 
+		SphereCast, 
+		bool(Ray, 
+			float, 
+			float, 
+			int));
+
 	STATIC_FUNCTION("UnityEngine.PhysicsModule::UnityEngine::Physics::get_gravity(): Vector3", get_gravity, Vector3());
 	//STATIC_FUNCTION("UnityEngine.PhysicsModule::UnityEngine::Physics::Raycast(Ray,out RaycastHit,Single,Int32,QueryTriggerInteraction): bool", Raycast, bool(Ray, RaycastHit*, float, int, GamePhysics::QueryTriggerInteraction));
 	//STATIC_FUNCTION("UnityEngine.PhysicsModule::UnityEngine::Physics::SphereCast(Ray,Single,out RaycastHit,Single,Int32,QueryTriggerInteraction2): bool", SphereCast, bool(Ray, float, RaycastHit*, float, int, GamePhysics::QueryTriggerInteraction));
@@ -2281,9 +2289,13 @@ public:
 
 class MainCamera {
 public:
+	static inline Vector3(*get_position_)() = nullptr;
+	Vector3 get_position() {
+		return get_position_();
+	}
 	static Vector3 position() {
-		static auto clazz = CLASS("Assembly-CSharp::MainCamera::position");
-		return *reinterpret_cast<Vector3*>(std::uint64_t(clazz->static_fields));
+		static auto c = CLASS("Assembly-CSharp::MainCamera::position");
+		return *reinterpret_cast<Vector3*>(std::uint64_t(c->static_fields));
 	}
 };
 
@@ -2583,26 +2595,6 @@ public:
 	}
 };
 
-bool TestNoClipping(BasePlayer* ply, Vector3 oldPos, Vector3 newPos, bool sphereCast, float deltaTime = 0.f)
-{
-	float nbacktrack = 0.01f;
-	float nmargin = 0.09f;
-	float radius = ply->GetRadius();
-	float height = ply->GetHeight();
-	Vector3 normalized = (newPos - oldPos).normalized();
-	float num2 = radius - nmargin;
-	Vector3 vector = oldPos + Vector3(0.f, height - radius, 0.f) - normalized * nbacktrack;
-	float magnitude = (newPos + Vector3(0.f, height - radius, 0.f) - vector).magnitude();
-	RaycastHit hitInfo;
-	//bool flag = Physics::Raycast(Ray(vector, normalized), &hitInfo, magnitude + num2, 429990145, GamePhysics::QueryTriggerInteraction::Ignore);
-	//if (!flag)
-	//{
-		//flag = Physics::SphereCast(Ray(vector, normalized), num2, &hitInfo, magnitude, 429990145, GamePhysics::QueryTriggerInteraction::Ignore);
-	//}
-	return false;
-	//return true && GamePhysics::Verify(&hitInfo);
-}
-
 void TestFlying() {
 	BasePlayer* loco = LocalPlayer::Entity();
 	if (!loco) return;
@@ -2620,7 +2612,7 @@ void TestFlying() {
 	if (inAir) {
 		bool flag = false;
 		Vector3 vector4 = LocalPlayer::Entity()->eyes()->transform()->position() - cLastTickPos; //idk about this lasttickpos stuff
-		float num3 = std::abs(vector4.y);
+		float num3 = std::fabs(vector4.y);
 		float num4 = vector4.magnitude2d();
 		if (vector4.y >= 0.f) {
 			flyhackDistanceVertical += vector4.y;
@@ -2692,6 +2684,10 @@ public:
 	Projectile* CreateProjectile(String* prefabPath, Vector3 pos, Vector3 forward, Vector3 velocity) {
 		return CreateProjectile_(this, prefabPath, pos, forward, velocity);
 	}
+	static inline void (*LaunchProjectile_)(BaseProjectile*) = nullptr;
+	void LaunchProjectile() {
+		return LaunchProjectile_(this);
+	}
 	FIELD("Assembly-CSharp::BaseProjectile::primaryMagazine", primaryMagazine, Magazine*);
 	FIELD("Assembly-CSharp::BaseProjectile::projectileVelocityScale", projectileVelocityScale, float);
 	FIELD("Assembly-CSharp::BaseProjectile::aimCone", aimCone, float);
@@ -2703,13 +2699,13 @@ public:
 	FIELD("Assembly-CSharp::BaseProjectile::aimSwaySpeed", aimSwaySpeed, float);
 
 
-
+	/*
 	void LaunchProjectile()
 	{
 		if (!this) return;
 		static auto off = METHOD("Assembly-CSharp::BaseProjectile::LaunchProjectile(): Void");
 		return reinterpret_cast<void(__fastcall*)(BaseProjectile*)>(off)(this);
-	}
+	}*/
 	void UpdateAmmoDisplay()
 	{
 		if (!this) return;
@@ -3203,7 +3199,7 @@ Shader* chams = nullptr;
 																															  
 void initialize_cheat( ) {																									  
 	////VM_DOLPHIN_BLACK_START																								  
-	//VMProtectBeginUltra(xorstr_("init"));																				  
+	VMProtectBeginUltra(xorstr_("init"));																				  
 	init_classes( );
 	init_fields( );
 	init_methods( );
@@ -3243,11 +3239,14 @@ void initialize_cheat( ) {
 	ASSIGN_HOOK("UnityEngine.CoreModule::UnityEngine::Vector3::MoveTowards(Vector3,Vector3,Single): Vector3", Vector3_::MoveTowards_);
 	ASSIGN_HOOK("Assembly-CSharp::BasePlayer::SendClientTick(): Void", BasePlayer::SendClientTick_);
 	ASSIGN_HOOK("Assembly-CSharp::Projectile::Launch(): Void", Projectile::Launch_);
+	ASSIGN_HOOK("Assembly-CSharp::BaseProjectile::LaunchProjectile(): Void", BaseProjectile::LaunchProjectile_);
 	//ASSIGN_HOOK("Assembly-CSharp::EffectLibrary::CreateEffect(String,Effect): GameObject", EffectLibrary::CreateEffect_);
 	ASSIGN_HOOK("Assembly-CSharp::BaseCombatEntity::DoHitNotify(HitInfo): Void", BaseCombatEntity::DoHitNotify_);
 	ASSIGN_HOOK("Facepunch.Network::Network::NetWrite::UInt64(UInt64): Void", Network::NetWrite::UInt64_);
 	
 	ASSIGN_HOOK("Assembly-CSharp::Client::OnNetworkMessage(Message): Void", Network::Client::OnNetworkMessage_);
+
+	ASSIGN_HOOK("Assembly-CSharp::MainCamera::get_position(): Vector3", MainCamera::get_position_);
 
 
 	settings::il_init_methods = find(xorstr_("GameAssembly.dll"), "48 83 EC 48 48 8B 05 ? ? ? ? 48 63 90 ? ? ? ?");
@@ -3255,6 +3254,6 @@ void initialize_cheat( ) {
 
 	settings::cheat_init = true;
 
-	//VMProtectEnd();
+	VMProtectEnd();
 	////VM_DOLPHIN_BLACK_END
 }

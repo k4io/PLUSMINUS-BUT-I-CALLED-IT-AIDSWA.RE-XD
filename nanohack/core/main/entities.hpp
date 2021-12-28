@@ -409,18 +409,33 @@ namespace entities {
 			if (settings::flyhack * 100.f >= threshold)
 			{
 
-				Renderer::ProgressBar({ screen_center.x - 300, screen_center.y - 500 }, { screen_center.x + 300, screen_center.y - 500 }, { 51, 88, 181 }, { 38, 38, 60 }, threshold, 600);
+				Renderer::ProgressBar({ screen_center.x - 300, screen_center.y - 500 },
+					{ screen_center.x + 300, screen_center.y - 500 }, 
+					{ 51, 88, 181 }, { 38, 38, 60 }, 
+					threshold, 
+					600);
 			}
 			else
-				Renderer::ProgressBar({ screen_center.x - 300, screen_center.y - 500 }, { screen_center.x + 300, screen_center.y - 500 }, { 51, 88, 181 }, { 38, 38, 60 }, (settings::flyhack * 100.f), 600);
+				Renderer::ProgressBar({ screen_center.x - 300, screen_center.y - 500 }, 
+					{ screen_center.x + 300, screen_center.y - 500 }, 
+					{ 51, 88, 181 }, { 38, 38, 60 }, 
+					(settings::flyhack * 100.f), 
+					600);
 			
 			if (settings::hor_flyhack * 100.f >= threshold)
 			{
-
-				Renderer::ProgressBar({ screen_center.x - 300, screen_center.y - 480 }, { screen_center.x + 300, screen_center.y - 480 }, { 51, 88, 181 }, { 38, 38, 60 }, threshold, 600);
+				Renderer::ProgressBar({ screen_center.x - 300, screen_center.y - 480 }, 
+					{ screen_center.x + 300, screen_center.y - 480 },
+					{ 51, 88, 181 }, { 38, 38, 60 }, 
+					threshold, 
+					600);
 			}
 			else
-				Renderer::ProgressBar({ screen_center.x - 300, screen_center.y - 480 }, { screen_center.x + 300, screen_center.y - 480 }, { 51, 88, 181 }, { 38, 38, 60 }, (settings::hor_flyhack * 100.f), 600);
+				Renderer::ProgressBar({ screen_center.x - 300, screen_center.y - 480 },
+					{ screen_center.x + 300, screen_center.y - 480 },
+					{ 51, 88, 181 }, { 38, 38, 60 }, 
+					(settings::hor_flyhack * 100.f),
+					600);
 		}
 
 		auto local = LocalPlayer::Entity();
@@ -430,8 +445,8 @@ namespace entities {
 		}
 		//LogSystem::RenderTraceResults();
 
+		auto held = local->GetHeldEntity<BaseProjectile>();
 		if (aidsware::ui::get_bool(xorstr_("reload indicator")) && !aidsware::ui::get_bool(xorstr_("always reload"))) {
-			auto held = local->GetHeldEntity<BaseProjectile>();
 			if (held) {
 				if (held->HasReloadCooldown() && held->class_name_hash() != STATIC_CRC32("BowWeapon") && held->class_name_hash() != STATIC_CRC32("CompoundBowWeapon")) { // im sorry for my sins
 					float time_left = held->nextReloadTime() - GLOBAL_TIME;
@@ -453,9 +468,9 @@ namespace entities {
 			}
 		}
 
-		if (aidsware::ui::get_bool(xorstr_("always reload")))
+		if (aidsware::ui::get_bool(xorstr_("always reload"))
+			&& t_TimeSinceLastShot < held->reloadTime())
 		{
-			auto held = local->GetHeldEntity<BaseProjectile>();
 			if (held) {
 				if (held->class_name_hash() != STATIC_CRC32("BowWeapon")
 					&& held->class_name_hash() != STATIC_CRC32("CompoundBowWeapon"))
@@ -526,6 +541,8 @@ namespace entities {
 							Renderer::rectangle_filled({ belt::pos.x, belt::pos.y - 20.0f }, Vector2(w, 20), Color3(25, 25, 25));
 							Renderer::rectangle_filled(Vector2(belt::pos.x, belt::pos.y), Vector2(w, h), Color3(45, 83, 122));
 							Renderer::rectangle_filled(Vector2(belt::pos.x + 5.0f, belt::pos.y + 5.0f), Vector2(w - 10, h - 10), Color3(25, 25, 25));
+
+
 
 							Renderer::text({ belt::pos.x + 7.0f, belt::pos.y - 16.0f }, Color3(219, 219, 219), 14.f, false, false, target_ply->_displayName());
 
