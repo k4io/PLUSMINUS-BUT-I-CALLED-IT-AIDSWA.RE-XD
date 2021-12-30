@@ -393,14 +393,23 @@ namespace Renderer {
 		dwrite_layout->Release();
 	}
 
-	void ProgressBar(const Vector2 start, Vector2 end, Color3 fgcolor, Color3 bgcolor, float value, float z)
+	void ProgressBar(const Vector2 start, 
+		Vector2 end,
+		Color3 fgcolor,
+		Color3 bgcolor, 
+		float value,
+		float z,
+		float actual = 0.0f)
 	{
 		rectangle_filled(start, { end.x - start.x, 6 }, bgcolor);
 		float f = end.x;
 		end.x = (start.x + (z * value));
 		if (end.x > f) end.x = f - 2;
-		rectangle_filled({ start.x + 1, start.y + 1 }, { end.x - start.x, 4 }, fgcolor);
-		text({ (start.x) + ((end.x - start.x) * (z / value)), start.y + 2 }, Color3(219, 219, 219), 14.f, true, true, wxorstr_(L"%d"), (int)ceil(z / value));
+		rectangle_filled({ start.x + 1, start.y + 1 }, { (end.x - start.x) * (z / value), 4}, fgcolor);
+		if(actual == 0.0f)
+			text({ (start.x) + ((end.x - start.x) * (z / value)), start.y + 2 }, Color3(219, 219, 219), 14.f, true, true, wxorstr_(L"%.2f"), (float)(z / value));
+		else 
+			text({ (start.x) + ((end.x - start.x) * (z / value)), start.y + 2 }, Color3(219, 219, 219), 14.f, true, true, wxorstr_(L"%.2f"), (float)(z / value));
 	}
 
 	template <typename ...Args>

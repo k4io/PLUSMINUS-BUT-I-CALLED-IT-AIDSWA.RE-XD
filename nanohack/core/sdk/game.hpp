@@ -388,6 +388,7 @@ public:
 		return type;
 	}
 };
+TickInterpolator ticks;
 float timee = 120.f;
 bool sdk_initialized = false;
 bool timer_initialized = false;
@@ -1067,8 +1068,49 @@ public:
 		return (*reinterpret_cast<String**>(this + off))->buffer;
 	}
 };
+
+class Rect {
+public:
+	float x; // 0x10
+	float y; // 0x14
+	float wid; // 0x18
+	float hei; // 0x1C
+	Rect(float x, float y/*top left*/, float width, float height) {
+		this->x = x;
+		this->y = y;
+		wid = width;
+		hei = height;
+	}
+	Rect() {
+		this->x = 0;
+		this->y = 0;
+		wid = 0;
+		hei = 0;
+	}
+	bool Contains(Vector2 point)
+	{
+		return point.x >= x && point.x < (x + wid) && point.y >= y && point.y < (y + hei);
+	}
+};
+
+class Texture {
+
+};
+
+class Texture2D : public Texture {
+public:
+	STATIC_FUNCTION("UnityEngine.CoreModule::UnityEngine::Texture2D::get_whiteTexture(): Texture2D", white, Texture2D*());
+};
+
+class Sprite {
+public:
+	FIELD("UnityEngine.CoreModule::UnityEngine::Sprite::texture", texture, Texture2D*);
+	FIELD("UnityEngine.CoreModule::UnityEngine::Sprite::textureRect", textureRect, Rect);
+};
+
 class Item {
 public:
+	FIELD("Assembly-CSharp::Item::iconSprite", iconSprite, Sprite*);
 	FIELD("Assembly-CSharp::Item::uid", uid, uint32_t);
 	FIELD("Assembly-CSharp::Item::amount", amount, int);
 	FIELD("Assembly-CSharp::Item::info", info, ItemDefinition*);
@@ -1606,6 +1648,9 @@ public:
 		static auto off = OFFSET("Assembly-CSharp::PlayerModel::<IsNpc>k__BackingField");
 		return *reinterpret_cast<bool*>(this + off);
 	}
+	
+	STATIC_FUNCTION("Assembly-CSharp::PlayerModel::RebuildAll(): Void", RebuildAll, void());
+
 	FIELD("Assembly-CSharp::PlayerModel::_multiMesh", _multiMesh, SkinnedMultiMesh*);
 	FIELD("Assembly-CSharp::PlayerModel::MaleSkin", MaleSkin, SkinSetCollection*);
 	FIELD("Assembly-CSharp::PlayerModel::FemaleSkin", FemaleSkin, SkinSetCollection*);
@@ -1813,7 +1858,7 @@ float MAX(const float& A, const float& B) { return (A > B ? A : B); }
 
 float flyhackDistanceVertical = 0.f;
 float flyhackDistanceHorizontal = 0.f;
-float flyhackPauseTime;
+float flyhackPauseTime = 0.f;
 Vector3 cLastTickPos{};
 class BasePlayer;
 
@@ -2595,80 +2640,76 @@ public:
 	}
 };
 
-void TestFlying() {
-	BasePlayer* loco = LocalPlayer::Entity();
-	if (!loco) return;
-	flyhackPauseTime = MAX(0.f, flyhackPauseTime - Time::deltaTime());
-	bool inAir = false;
-	float radius = LocalPlayer::Entity()->GetHeight();
-	float height = LocalPlayer::Entity()->GetRadius();
-	Vector3 vector = (cLastTickPos + LocalPlayer::Entity()->eyes()->transform()->position()) * 0.5f;
-	Vector3 vector2 = vector + Vector3(0.f, radius - 2.f, 0.f);
-	Vector3 vector3 = vector + Vector3(0.f, height - radius, 0.f);
-	float radius2 = radius - 0.05f;
-	bool a = GamePhysics::CheckCapsule(vector2, vector3, radius2, 1503731969, GamePhysics::QueryTriggerInteraction::Ignore);
-	inAir = !a;
-	
-	if (inAir) {
-		bool flag = false;
-		Vector3 vector4 = LocalPlayer::Entity()->eyes()->transform()->position() - cLastTickPos; //idk about this lasttickpos stuff
-		float num3 = std::fabs(vector4.y);
-		float num4 = vector4.magnitude2d();
-		if (vector4.y >= 0.f) {
-			flyhackDistanceVertical += vector4.y;
-			flag = true;
-		}
-		if (num3 < num4) {
-			flyhackDistanceHorizontal += num4;
-			flag = true;
-		}
-
-		if (flag) {
-			float num5 = MAX((flyhackPauseTime > 0.f) ? 10 : 1.5, 0.f);
-			float num6 = LocalPlayer::Entity()->GetJumpHeight() + num5;
-			if (flyhackDistanceVertical > num6) {
-				//printf("$ flying vertical\n");
-				//return true;
-			}
-			float num7 = MAX((flyhackPauseTime > 0.f) ? 10 : 1.5, 0.f);
-			float num8 = 5.f + num7;
-			if (flyhackDistanceHorizontal > num8) {
-				//printf("$ flying horizontal\n");
-				//return true;
-			}
-		}
-	}
-	else {
-		flyhackDistanceHorizontal = 0.f;
-		flyhackDistanceVertical = 0.f;
-	}
-}
-void CheckFlyhack() {
-	TestFlying();
-	float num5 = MAX((flyhackPauseTime > 0.f) ? 10 : 1.5, 0.f);
-	float num6 = LocalPlayer::Entity()->GetJumpHeight() + num5;
-	settings::max_flyhack = num6;
-	if (flyhackDistanceVertical <= num6) {
-		settings::flyhack = flyhackDistanceVertical;
-	}
-
-	float num7 = MAX((flyhackPauseTime > 0.f) ? 10 : 1.5, 0.f);
-	float num8 = 5.f + num7;
-	settings::max_hor_flyhack = num8;
-	if (flyhackDistanceHorizontal <= num8) {
-		settings::hor_flyhack = flyhackDistanceHorizontal;
-	}
-}
-
-
 bool isInAir = false;
-//bool isOnPlayer = false;
+bool isOnPlayer = false;
 float desyncTimeRaw = 0.f;
 float desyncTimeClamped = 0.f;
 float tickDeltaTime = 0.f;
 //int tickHistoryCapacity;
 
-TickInterpolator tickInterpolator;
+bool TestFlying2(BasePlayer* ply = LocalPlayer::Entity(),
+					Vector3 oldPos = Vector3::Zero(),
+					Vector3 newPos = Vector3::Zero(),
+					bool verifyGrounded = true)
+{
+	if (verifyGrounded)
+	{
+		auto extrusion = 2.f;
+		Vector3 vec = (oldPos + newPos) * 0.5f;
+		auto margin = 0.05f;
+		float radius = ply->GetRadius();
+		float height = ply->GetHeight();
+		Vector3 vec2 = vec + Vector3(0.f, radius - extrusion, 0.f);
+		Vector3 vec3 = vec + Vector3(0.f, height - radius, 0.f);
+		float radius2 = radius - margin;
+		isInAir = !GamePhysics::CheckCapsule(vec2, vec3, radius2, 1503731969, GamePhysics::QueryTriggerInteraction::Ignore);
+	
+		if (isInAir)
+		{
+			bool flag = false;
+			Vector3 vec4 = newPos - oldPos;
+			float num2 = std::fabs(vec4.y);
+			float num3 = vec4.magnitude2d();
+
+			if (vec4.y >= 0.f)
+			{
+				flag = true;
+				flyhackDistanceVertical += vec4.y;
+			}
+
+			if (num2 < num3)
+			{
+				flag = true;
+				flyhackDistanceHorizontal += num3;
+			}
+
+			if (flag)
+			{
+				float num4 = MAX((flyhackPauseTime > 0.f ? 10.f : 1.5f), 0.f);
+				float num5 = ply->GetJumpHeight() + num4;
+				if (flyhackDistanceVertical > num5)
+				{
+					printf("BAD VERT\n");
+					return true;
+				}
+
+				float num6 = num4;
+				float num7 = 5.f + num6;
+				if (flyhackDistanceHorizontal > num7)
+				{
+					printf("BAD HORI\n");
+					return true;
+				}
+			}
+		}
+		else
+		{
+			flyhackDistanceVertical = 0.0f;
+			flyhackDistanceHorizontal = 0.0f;
+		}
+	}
+	return false;
+}
 
 /*
 these dumbass niggas all know its +- source with better features but people would rather have that than an exit scammer ;/
@@ -2757,6 +2798,7 @@ public:
 	}
 };
 
+
 class Vector3_ {
 public:
 	static inline Vector3(*MoveTowards_)(Vector3, Vector3, float) = nullptr;
@@ -2765,10 +2807,22 @@ public:
 		return MoveTowards_(current, target, maxDistanceDelta);
 	}
 };
+
+
 class DDraw {
 public:
 	STATIC_FUNCTION("Assembly-CSharp::UnityEngine::DDraw::Line(Vector3,Vector3,Color,Single,Boolean,Boolean): Void", Line, void(Vector3, Vector3, Color, float, bool, bool));
 	STATIC_FUNCTION("Assembly-CSharp::UnityEngine::DDraw::Sphere(Vector3,Single,Color,Single,Boolean): Void", Sphere, void(Vector3, float, Color, float, bool));
+	
+	STATIC_FUNCTION("UnityEngine.IMGUIModule::UnityEngine::GUI::get_color(): Color", get_color, Color());
+	STATIC_FUNCTION("UnityEngine.IMGUIModule::UnityEngine::GUI::set_color(Color): Void", set_color, void(Color));
+	
+	static void DrawTexture(Rect r, Texture* t) {
+		//static auto off = METHOD("UnityEngine.IMGUIModule::UnityEngine::GUI::DrawTexture(Rect,Texture): Void");
+		static auto off = METHOD("UnityEngine.CoreModule::UnityEngine::Graphics::DrawTexture(Rect,Texture,Material,Int32): Void");
+		return reinterpret_cast<void(__fastcall*)(Rect, Texture*)>(off)(r, t);
+	}
+
 
 	static inline void(*OnGui_)(DDraw*) = nullptr;
 	void OnGui() {
@@ -2817,11 +2871,11 @@ public:
 		static auto off = METHOD("UnityEngine.AssetBundleModule::UnityEngine::AssetBundle::GetAllAssetNames(): String[]");
 		return reinterpret_cast<Array<String*>*(*)(AssetBundle*)>(off)(this);
 	}
-	template<typename T = Object>
+	template<typename T = Object>	
 	T * LoadAsset(char* name, Type* type) {
 		//static auto ptr = METHOD("Assembly-CSharp::GameManifest::GUIDToObject(String): Object");
 		if (!this) return {};
-		static auto off = METHOD("UnityEngine.AssetBundleModule::UnityEngine::AssetBundle::LoadAsset(String,Type): Object");
+		static auto off = METHOD("UnityEngine.AssetBundleModule::UnityEngine::AssetBundle::LoadAsset_Internal(String,Type): Object");
 		return reinterpret_cast<T * (*)(AssetBundle*, String*, Type*)>(off)(this, String::New(name), type);
 	}
 	static AssetBundle* LoadFromFile(char* path) {

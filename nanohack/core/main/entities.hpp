@@ -151,14 +151,62 @@ namespace entities {
 	Color get_c(Color3 c) { return Color(c.r / 255.f, c.g / 255.f, c.b / 255.f, c.a / 255.f); }
 	//Color get_c(Color3 c) { return Color(c.r, c.g, c.b, c.a); }
 
+	float lastChamsUpdate = 0.0f;
+
+	Color chams_col(int c)
+	{
+		switch (c)
+		{
+		case 0:
+			return get_c(aidsware::ui::get_color("visible chams"));
+		case 1:
+			return get_c(aidsware::ui::get_color("invisible chams"));
+		}
+	}
+
+	void func(Material* s, Shader* c)
+	{
+		ULONG ExceptionCode = 0;
+		PEXCEPTION_POINTERS ExceptionPointers = 0;
+		__try
+		{
+			if (s)
+			{
+				if (c) {
+					if (c != s->shader()) {
+						s->set_shader(c);
+					}
+					else
+					{
+						//Color c1 = get_c(Color3(190, 190, 210));
+						Color c1 = chams_col(0);
+						Color c2 = chams_col(1);
+						s->SetColor(xorstr_("_ColorVisible"), c1);
+						s->SetColor(xorstr_("_ColorBehind"), c2);
+					}
+					s->SetInt(xorstr_("_ZTest"), 8);
+				}
+			}
+		}
+		__except (
+			ExceptionCode = GetExceptionCode(),
+			ExceptionPointers = GetExceptionInformation(),
+			EXCEPTION_EXECUTE_HANDLER
+			) {
+			if (ExceptionPointers)
+			{
+				printf("Exception (%lx) caught in %s @ (%p)",
+					ExceptionCode, __FUNCTION__,
+					ExceptionPointers->ExceptionRecord->ExceptionAddress
+				);
+			}
+		}
+	}
+
 	void do_chams(BasePlayer* player)
 	{
-		if (!aw_assets)
-		{
-			aw_assets = AssetBundle::LoadFromFile(const_cast<char*>("C:\\rust.assets"));
-		}
-
-		chams = aw_assets->LoadAsset<Shader>(xorstr_("Chams"), Type::Shader());
+		auto shader = aw_assets->LoadAsset<Shader>(xorstr_("Chams"), Type::Shader());
+		//chams = aw_assets->LoadAsset<Shader>(xorstr_("Chams"), Type::Shader());
 
 
 		auto mesh = player->playerModel()->_multiMesh();
@@ -174,14 +222,18 @@ namespace entities {
 					const auto material = renderer->material();
 					if (material)
 					{
-						if (chams) {
-							if (chams != material->shader()) {
-								material->set_shader(chams);
+						if (shader) {
+							material->set_shader(shader);
+							printf("Set shader %i\n", i);
+							if (shader != material->shader()) {
 							}
 							else
 							{
-								material->SetColor(xorstr_("_ColorVisible"), get_c(aidsware::ui::get_color("visible chams")));
-								material->SetColor(xorstr_("_ColorBehind"), get_c(aidsware::ui::get_color("invisible chams")));
+								//Color c1 = get_c(Color3(190, 190, 210));
+								Color c1 = chams_col(0);
+								Color c2 = chams_col(1);
+								material->SetColor(xorstr_("_ColorVisible"), c1);
+								material->SetColor(xorstr_("_ColorBehind"), c2);
 							}
 							material->SetInt(xorstr_("_ZTest"), 8);
 						}
@@ -199,37 +251,6 @@ namespace entities {
 				if (_renderer)
 				{
 					const auto material = _renderer->material();
-
-					if (material)
-					{
-						if (chams != material->shader())
-						{
-							printf("set chams shader on material %i\n", i);
-							material->set_shader(chams);
-						}
-
-						if (chams)
-						{
-							if (player->playerModel()->isNpc())
-							{
-								material->SetColor(xorstr_("_ColorVisible"), get_c(aidsware::ui::get_color("visible npc chams")));
-								material->SetColor(xorstr_("_ColorBehind"), get_c(aidsware::ui::get_color("invisible npc chams")));
-								continue;
-							}
-
-							if (!player->playerModel()->isNpc() && player->is_visible() && player->is_teammate())
-							{
-								material->SetColor(xorstr_("_ColorVisible"), get_c(aidsware::ui::get_color("visible teammate chams")));
-								material->SetColor(xorstr_("_ColorBehind"), get_c(aidsware::ui::get_color("invisible teammate chams")));
-								continue;
-							}
-
-							material->SetColor(xorstr_("_ColorVisible"), get_c(aidsware::ui::get_color("visible chams")));
-							material->SetColor(xorstr_("_ColorBehind"), get_c(aidsware::ui::get_color("invisible chams")));
-						}
-					}
-					material->SetInt(xorstr_("_ZTest"), 8); //maybe try _ZTest Less & _ZTest Greater
-					
 					
 					if (material)
 					{
@@ -265,6 +286,7 @@ namespace entities {
 		}
 		*/
 	}
+
 	bool FindPoint(int x1, int y1, int x2,
 		int y2, int x, int y)
 	{
@@ -345,7 +367,7 @@ namespace entities {
 			LogSystem::RenderExplosions();
 		}
 
-		if (aidsware::ui::get_bool(xorstr_("target player belt")) && aidsware::ui::is_menu_open()) {
+		if (aidsware::ui::get_bool(xorstr_("target player belt"))) {
 			int w = 200, h = 102;
 
 			belt::belt_tab_mov(Vector2(w, h + 20.0f));
@@ -355,6 +377,7 @@ namespace entities {
 			Renderer::rounded_rectangle_filled(belt::pos.x + 5.0f, belt::pos.y + 20.0f + 5.0f, w - 10, h - 10, Color3(25, 25, 25), 5.f);
 			//draw_image(float x, float y, float w, float h, const wchar_t* filename)
 			//Renderer::draw_image(100, 100, 200, 200, wxorstr_(L"C:\\awlogo.png"));
+
 		}
 
 		if (aidsware::ui::get_bool(xorstr_("show users")))
@@ -402,40 +425,46 @@ namespace entities {
 		if (aidsware::ui::get_bool(xorstr_("flyhack indicator"))
 			&& LocalPlayer::Entity())
 		{
-			float threshold = aidsware::ui::get_float(xorstr_("threshold"));
 			//settings::flyhack = (settings::flyhack * 100.f) > threshold ? threshold : settings::flyhack;
 			//settings::hor_flyhack = (settings::hor_flyhack * 100.f) > threshold ? threshold : settings::hor_flyhack;
 
-			if (settings::flyhack * 100.f >= threshold)
+			if (settings::flyhack >= 3.f)
 			{
-
 				Renderer::ProgressBar({ screen_center.x - 300, screen_center.y - 500 },
-					{ screen_center.x + 300, screen_center.y - 500 }, 
-					{ 51, 88, 181 }, { 38, 38, 60 }, 
-					threshold, 
-					600);
+					{ screen_center.x + 300, screen_center.y - 500 },
+					{ 51, 88, 181 }, { 38, 38, 60 },
+					600.0f,
+					600.0f,
+					settings::flyhack);
 			}
 			else
-				Renderer::ProgressBar({ screen_center.x - 300, screen_center.y - 500 }, 
-					{ screen_center.x + 300, screen_center.y - 500 }, 
-					{ 51, 88, 181 }, { 38, 38, 60 }, 
-					(settings::flyhack * 100.f), 
-					600);
-			
-			if (settings::hor_flyhack * 100.f >= threshold)
 			{
-				Renderer::ProgressBar({ screen_center.x - 300, screen_center.y - 480 }, 
-					{ screen_center.x + 300, screen_center.y - 480 },
-					{ 51, 88, 181 }, { 38, 38, 60 }, 
-					threshold, 
-					600);
+				Renderer::ProgressBar({ screen_center.x - 300, screen_center.y - 500 },
+					{ screen_center.x + 300, screen_center.y - 500 },
+					{ 51, 88, 181 }, { 38, 38, 60 },
+					(600.0f * (3.0f / settings::flyhack)),
+					600.0f,
+					settings::flyhack);
+			}
+
+			if (settings::hor_flyhack >= 6.5f)
+			{
+				Renderer::ProgressBar({ screen_center.x - 300, screen_center.y - 470 },
+					{ screen_center.x + 300, screen_center.y - 470 },
+					{ 51, 88, 181 }, { 38, 38, 60 },
+					600.0f,
+					600.0f,
+					settings::hor_flyhack);
 			}
 			else
-				Renderer::ProgressBar({ screen_center.x - 300, screen_center.y - 480 },
-					{ screen_center.x + 300, screen_center.y - 480 },
-					{ 51, 88, 181 }, { 38, 38, 60 }, 
-					(settings::hor_flyhack * 100.f),
-					600);
+			{
+				Renderer::ProgressBar({ screen_center.x - 300, screen_center.y - 470 },
+					{ screen_center.x + 300, screen_center.y - 470 },
+					{ 51, 88, 181 }, { 38, 38, 60 },
+					(600.f * (6.5f / settings::hor_flyhack)),
+					600.f,
+					settings::hor_flyhack);
+			}
 		}
 
 		auto local = LocalPlayer::Entity();
@@ -542,8 +571,6 @@ namespace entities {
 							Renderer::rectangle_filled(Vector2(belt::pos.x, belt::pos.y), Vector2(w, h), Color3(45, 83, 122));
 							Renderer::rectangle_filled(Vector2(belt::pos.x + 5.0f, belt::pos.y + 5.0f), Vector2(w - 10, h - 10), Color3(25, 25, 25));
 
-
-
 							Renderer::text({ belt::pos.x + 7.0f, belt::pos.y - 16.0f }, Color3(219, 219, 219), 14.f, false, false, target_ply->_displayName());
 
 							auto list = target_ply->inventory()->containerBelt()->itemList();
@@ -563,6 +590,46 @@ namespace entities {
 									}
 								}
 							}
+
+							/*
+							Color defaultcol = DDraw::get_color();
+							Color defaultbgcol(0.96862745f, 0.92156863f, 0.88235295f, 0.15f);
+							Color selectedcol(0.12156863f, 0.41960785f, 0.627451f, 0.75f);
+
+							float info_y = 0;
+
+							for (size_t i = 0; i < list->size; i++)
+							{
+								auto item = (Item*)list->get(i);
+								if (!item) continue;
+								DDraw::set_color(defaultbgcol);
+
+								if (item->uid() == target_ply->clActiveItem())
+									DDraw::set_color(selectedcol);
+								Rect r(660.f + info_y, 860.f, 90.f, 92.f);
+								auto t = Texture2D::white();
+
+								DDraw::DrawTexture(r, t);
+
+								if (item)
+								{
+									auto sprite = item->iconSprite();
+									auto tex = sprite->texture();
+									auto rect = sprite->textureRect();
+
+									Rect w; 
+									w.x = 660.0f + info_y;
+									w.y = 860.f; 
+									w.wid = rect.wid / 3.f;
+									w.hei = rect.hei / 3.f;
+
+									DDraw::set_color(defaultcol);
+
+									DDraw::DrawTexture(w, tex);
+								}
+								info_y += 96;
+							}
+							*/
 						}
 					}
 				}
@@ -1201,9 +1268,11 @@ namespace entities {
 
 						
 
-						if (aidsware::ui::get_bool(xorstr_("chams")))
+						if (aidsware::ui::get_bool(xorstr_("chams"))
+							&& Time::fixedTime() > lastChamsUpdate + 0.05f)
 						{
 							do_chams(player);
+							lastChamsUpdate = Time::fixedTime();
 						}
 
 						auto bounds = player->bones()->bounds;
@@ -1327,14 +1396,17 @@ namespace entities {
 
 							
 
-							if (aidsware::ui::get_bool(xorstr_("insta kill")) || aidsware::ui::get_bool(xorstr_("peek assist")) || get_key(aidsware::ui::get_keybind(xorstr_("desync on key"))))
+							if (aidsware::ui::get_bool(xorstr_("crosshair indicators"))
+								&& aidsware::ui::get_bool(xorstr_("insta kill")) || aidsware::ui::get_bool(xorstr_("peek assist")) || get_key(aidsware::ui::get_keybind(xorstr_("desync on key")))
+								&& desyncTime > 0.0f)
 							{
-								//GUI::Render.ProgressBar(v, v2, D2D1::ColorF::White, D2D1::ColorF::Gray, (antihack::functions::current_desync_value < 0.f) ? 0.f : antihack::functions::current_desync_value, 40);
 								Renderer::ProgressBar({ screen_center.x - 30, screen_center.y + 20 },
 									{ screen_center.x + 30, screen_center.y + 20 },
 									{ 51, 88, 181 },
 									{ 38, 38, 60 }, 
-									desyncTime < 0.f ? 0.f : (desyncTime > 1.0f ? 1.0f : desyncTime), 60);
+									60.0f * (1.0 / (desyncTime < 0.f ? 0.f : (desyncTime > 1.0f ? 1.0f : desyncTime))),
+									60,	
+									desyncTime);
 							}
 
 							if (aidsware::ui::get_bool(xorstr_("hpbar")))

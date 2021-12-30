@@ -59,7 +59,7 @@ namespace other {
 		Vector3 vector = position - Vector3(0.f, 1.5f, 0.f) - Vector3(0.f, -0.6f, 0.f);
 		
 		if (vector.distance(position2) > 0.01f
-			&& TestNoClipping(loco, position2, vector, true, 0.f))
+			&& TestFlying2(loco, position2, vector, true))
 		{
 			if (aidsware::ui::get_bool(xorstr_("debug")))
 				printf("position: (%ff, %ff, %ff) caused eye_noclip!\n",

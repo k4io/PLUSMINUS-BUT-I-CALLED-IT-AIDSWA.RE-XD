@@ -35,6 +35,8 @@ PlayerTick* test;
 
 bool just_joined_server = false;
 
+bool is_noclipping = false;
+
 bool proj = false;
 Projectile* projv;
 
@@ -78,8 +80,8 @@ void ClientUpdate_hk(BasePlayer* plly) {
 		else
 			plly->clientTickInterval() = 0.05f;
 
-
 		auto held = plly->GetHeldEntity<BaseProjectile>();
+		
 		//auto held = plly->GetHeldEntity<BaseProjectile>( );
 		if (held) {
 			if (aidsware::ui::get_bool(xorstr_("no sway")) & held->class_name_hash() != STATIC_CRC32("BaseMelee")) {
@@ -102,7 +104,8 @@ void ClientUpdate_hk(BasePlayer* plly) {
 					|| held->class_name_hash() == STATIC_CRC32("BowWeapon")
 					|| held->class_name_hash() == STATIC_CRC32("CompoundBowWeapon")
 					|| held->class_name_hash() == STATIC_CRC32("BaseLauncher")
-					|| held->class_name_hash() == STATIC_CRC32("CrossbowWeapon"))) {
+					|| held->class_name_hash() == STATIC_CRC32("CrossbowWeapon")
+					|| held->class_name_hash() == STATIC_CRC32("FlintStrikeWeapon"))) {
 					if (target_ply != nullptr && target_ply->isCached()) {
 						auto mpv = target_ply->find_mpv_bone();
 						Vector3 target;
@@ -673,6 +676,13 @@ bool CanAttack_hk(BasePlayer* self) {
 	return self->CanAttack( );
 }
 
+bool bp_flying = false;
+int flyhack_state = 0;
+float state_time = 0.0f;
+Vector3 last_wall_pos = Vector3::Zero();
+Vector3 head_last_bp = Vector3::Zero();
+Vector3 temp_vel = Vector3::Zero();
+
 void UpdateVelocity_hk(PlayerWalkMovement* self) {
 	if (aidsware::ui::get_bool(xorstr_("walk to marker"))
 		|| (settings::alpha::walk_to_pos && entities::walk_to_pos != Vector3::Zero())
@@ -714,17 +724,123 @@ void UpdateVelocity_hk(PlayerWalkMovement* self) {
 
 	if (aidsware::ui::get_bool(xorstr_("flyhack stop")))
 	{
-		float threshold = aidsware::ui::get_float(xorstr_("threshold"));
-		if (settings::hor_flyhack * 100.f >= threshold)
+		if (settings::hor_flyhack >= 6.5f)
 		{
 			vel.x = 0.0f;
 			vel.z = 0.0f;
 		}
-		if (settings::flyhack * 100.f >= threshold)
+		if (settings::flyhack >= 3.0f)
 		{
 			vel.y = 0.0f;
 		}
 	}
+
+	if (get_key(aidsware::ui::get_keybind(xorstr_("climb bypass"))))
+	{
+
+		if (!bp_flying)
+		{
+			if (is_noclipping)
+				bp_flying = true;
+			else
+			{
+				ConsoleSystem::Run(ConsoleSystem::Option::Client(), String::New(xorstr_("noclip")), nullptr);
+				bp_flying = true;
+			}
+		}
+		else
+		{
+			switch (flyhack_state)
+			{
+			case 0: //forward state
+			{
+				if (state_time == 0.0f)
+				{
+					Vector3 wall = Vector3::Zero();
+					BaseNetworkable* marker = BaseNetworkable::clientEntities()->FindClosest(STATIC_CRC32("BuildingBlock"), LocalPlayer::Entity(), 5.0f);
+					if (marker)
+						wall = marker->transform()->position();
+					last_wall_pos = wall;
+
+					Vector3 pos = LocalPlayer::Entity()->transform()->position();
+					Vector3 dir = (last_wall_pos - pos).normalized();
+					if(temp_vel == Vector3::Zero()) 
+						temp_vel = { (dir.x / dir.length() * 10.0f), 0,(dir.z / dir.length() * 10.0f) };
+
+					state_time = Time::fixedTime();
+					break;
+				}
+				if (Time::fixedTime() > (state_time + 2.0f))
+				{
+					state_time = 0.0f;
+					flyhack_state = 1;
+					break;
+				}
+				if (Time::fixedTime() < (state_time + 2.0f))
+				{
+					vel = temp_vel;
+					break;
+				}
+				break;
+			}
+			case 1: //small backward state
+			{
+				if (state_time == 0.0f)
+				{
+					state_time = Time::fixedTime();
+				}
+				if (Time::fixedTime() > (state_time + 0.1f))
+				{
+					state_time = 0.0f;
+					flyhack_state = 2;
+				}
+				if (Time::fixedTime() < (state_time + 0.1f))
+				{
+					vel = { -(temp_vel.x * 0.5f), 0, -(temp_vel.z * 0.5f) };
+					break;
+				}
+				break;
+			}
+			case 2: //upwards state		
+			{
+				if (state_time == 0.0f)
+				{
+					head_last_bp = LocalPlayer::Entity()->eyes()->get_position();
+					state_time = Time::fixedTime();
+					break;
+				}
+				if (LocalPlayer::Entity()->eyes()->get_position().y >= head_last_bp.y + 2.f)
+				{
+					state_time = 0.0f;
+					flyhack_state = 0;
+					break;
+				}
+				if (LocalPlayer::Entity()->eyes()->get_position().y < head_last_bp.y + 2.f)
+				{
+					Vector3 pos = LocalPlayer::Entity()->transform()->position();
+					Vector3 dir = (last_wall_pos - pos).normalized();
+					vel = { 0, dir.y + 5.0f, 0 };
+
+					break;
+				}
+				break;
+			}
+
+			if (settings::flyhack > 1.0f || settings::hor_flyhack > 1.0f)
+			{
+				state_time = 0.0f;
+				flyhack_state = 0;
+			}
+			}
+		}
+
+	}
+	else
+	{
+		flyhack_state = 0;
+		temp_vel = Vector3::Zero();
+	}
+
 	self->TargetMovement() = vel;
 	return self->UpdateVelocity( );
 }
@@ -739,7 +855,28 @@ Vector3 EyePositionForPlayer_hk(BaseMountable* mount, BasePlayer* player, Quater
 	return mount->EyePositionForPlayer(player, lookRot);
 }
 
+void do_infjump(PlayerWalkMovement* a1, ModelState* state)
+{
+	__try
+	{
+		a1->grounded() = (a1->climbing() = (a1->sliding() = false));
+		state->set_ducked(false);
+		a1->jumping() = true;
+		state->set_jumped(true);
+		a1->jumpTime() = Time::time();
+		a1->ladder() = nullptr;
+
+		Vector3 curVel = a1->body()->velocity();
+		a1->body()->set_velocity({ curVel.x, 10, curVel.z });
+	}
+	__except (true)
+	{
+		printf("Exception occured in %s\n", __FUNCTION__);
+	}
+}
+
 void HandleJumping_hk(PlayerWalkMovement* a1, ModelState* state, bool wantsJump, bool jumpInDirection = false) {
+	
 	if (aidsware::ui::get_bool(xorstr_("flyhack stop")))
 	{
 		float threshold = aidsware::ui::get_float(xorstr_("threshold"));
@@ -750,16 +887,7 @@ void HandleJumping_hk(PlayerWalkMovement* a1, ModelState* state, bool wantsJump,
 	if (aidsware::ui::get_bool(xorstr_("infinite jump"))) {
 		if (!wantsJump)
 			return;
-
-		a1->grounded( ) = (a1->climbing( ) = (a1->sliding( ) = false));
-		state->set_ducked(false);
-		a1->jumping( ) = true;
-		state->set_jumped(true);
-		a1->jumpTime( ) = Time::time( );
-		a1->ladder( ) = nullptr;
-
-		Vector3 curVel = a1->body( )->velocity( );
-		a1->body( )->set_velocity({ curVel.x, 10, curVel.z });
+		do_infjump(a1, state);
 		return;
 	}
 
@@ -795,6 +923,7 @@ bool IsDown_hk(InputState* self, BUTTON btn) {
 											|| held->class_name_hash() == STATIC_CRC32("BowWeapon")
 											|| held->class_name_hash() == STATIC_CRC32("CompoundBowWeapon")
 											|| held->class_name_hash() == STATIC_CRC32("BaseLauncher")
+											|| held->class_name_hash() == STATIC_CRC32("FlintStrikeWeapon")
 											|| held->class_name_hash() == STATIC_CRC32("CrossbowWeapon"))) {
 				if (target_ply != nullptr && target_ply->isCached( )) {
 					auto mpv = target_ply->find_mpv_bone( );
@@ -1136,7 +1265,8 @@ void ClientInput_hk(BasePlayer* plly, uintptr_t state) {
 		if (aidsware::ui::get_bool(xorstr_("flyhack indicator"))
 			|| aidsware::ui::get_bool(xorstr_("flyhack stop")))
 		{
-			CheckFlyhack();
+
+			//CheckFlyhack();
 		}
 
 		if (aidsware::ui::get_bool(xorstr_("autoshoot")) && aidsware::ui::get_bool(xorstr_("insta kill")) && aidsware::ui::get_bool(xorstr_("with peek assist")))
@@ -1543,9 +1673,12 @@ void DoMovement_hk(Projectile* pr, float deltaTime) {
 
 	}
 
+	bool f1 = aidsware::ui::get_bool(xorstr_("dodge projectiles"));
+	bool f2 = aidsware::ui::get_bool(xorstr_("show dodges"));
+
 	//APrediction(Vector3 local, Vector3 & target, float bulletspeed, float gravity, float drag, float& te, float& distance_to_travel) {
-	if (aidsware::ui::get_bool("dodge projectiles") 
-		&& pr->owner()->userID() != LocalPlayer::Entity()->userID() 
+	if (f1
+		&& pr->owner()->userID() != LocalPlayer::Entity()->userID()
 		&& !map_contains_key(dodged_projectiles, pr->projectileID()))
 	{
 		Vector3 l_current_pos = pr->currentPosition();
@@ -1553,7 +1686,7 @@ void DoMovement_hk(Projectile* pr, float deltaTime) {
 		for (size_t i = 0; i < 50; i++) //Simulate 100 times per bullet? pretty efficient?
 		{
 			Vector3 pred = GetTrajectoryPoint(l_current_pos,
-				pr->initialVelocity(), 
+				pr->initialVelocity(),
 				0.1f,
 				pr->gravityModifier());
 
@@ -1563,9 +1696,9 @@ void DoMovement_hk(Projectile* pr, float deltaTime) {
 				targeted = true;
 				target_time = Time::fixedTime();
 
-				if (aidsware::ui::get_bool(xorstr_("show dodges")))
+				if (f2)
 				{
-					DDraw::Sphere(last_head_pos, 0.1f, Color::Color(_r, _g, _b, 50), 5.f, false); 
+					DDraw::Sphere(last_head_pos, 0.1f, Color::Color(_r, _g, _b, 50), 5.f, false);
 					DDraw::Line(last_head_pos, last_neck_pos, Color::Color(_r, _g, _b, 50), 5.f, false, true);
 
 					DDraw::Line(last_neck_pos, last_spine4_pos, Color::Color(_r, _g, _b, 50), 5.f, false, true);
@@ -1793,7 +1926,6 @@ void LowerApply_hk(ViewmodelLower* self, uintptr_t vm) {
 }
 
 String* ConsoleRun_hk(ConsoleSystem::Option* optiom, String* str, Array<System::Object_*>* args) {
-	
 	//aidswa.re alpha stuff xD
 	////
 	auto string = std::wstring(str->buffer);
@@ -1847,6 +1979,9 @@ String* ConsoleRun_hk(ConsoleSystem::Option* optiom, String* str, Array<System::
 				string.find(wxorstr_(L"camlerp")) != std::wstring::npos ||
 				string.find(wxorstr_(L"camspeed")) != std::wstring::npos) {
 
+				if (string.find(wxorstr_(L"noclip")) != std::wstring::npos)
+					is_noclipping = !is_noclipping;
+
 				str = String::New(xorstr_(""));
 			}
 		}
@@ -1858,14 +1993,50 @@ String* ConsoleRun_hk(ConsoleSystem::Option* optiom, String* str, Array<System::
 void set_flying_hk(ModelState* modelState, bool state) {
 	modelState->set_flying(false);
 }
-/*
+
+bool ValidateMove(float deltaTime)
+{
+	auto lp = LocalPlayer::Entity();
+
+	bool result;
+	bool flag = deltaTime > 1.0f;
+
+	//test for flying
+	flyhackPauseTime = MAX(0.f, flyhackPauseTime - deltaTime);
+	ticks.Reset();
+	if (ticks.HasNext())
+	{
+		bool flag = lp->transform() ? !(!lp->transform()) : false;
+
+		Matrix matrix4x = flag ? Matrix::identityMatrix() : 
+			lp->transform()->get_localToWorldMatrix();
+
+		Vector3 oldPos = flag ? ticks.startPoint :
+			matrix4x.MultiplyPoint3x4(ticks.startPoint);
+		Vector3 vector = flag ? ticks.startPoint :
+			matrix4x.MultiplyPoint3x4(ticks.endPoint);
+		float num = 0.1f;
+		float num2 = 15.0f;
+		num = MAX(ticks.len / num2, num);
+		while (ticks.MoveNext(num))
+		{
+			vector = (flag ? ticks.currentPoint
+				: matrix4x.MultiplyPoint3x4(ticks.currentPoint));
+
+			TestFlying2(lp, oldPos, vector, true);
+			oldPos = vector;
+		}
+	}
+	return true;
+}
+
 void FinalizeTick(float deltaTime)
 {
 	tickDeltaTime += deltaTime;
-	bool flag = tickInterpolator.startPoint != tickInterpolator.endPoint;
+	bool flag = ticks.startPoint != ticks.endPoint;
 	if (flag)
 	{
-		if (antihack::ValidateMove(tickDeltaTime)
+		if (ValidateMove(tickDeltaTime)
 			&& aidsware::ui::get_bool(xorstr_("flyhack stop")) || aidsware::ui::get_bool(xorstr_("flyhack indicator")))
 		{
 			//printf("GOOD\n");
@@ -1874,20 +2045,19 @@ void FinalizeTick(float deltaTime)
 		{
 			//printf("BAD\n");
 		}
+		settings::flyhack = flyhackDistanceVertical;
+		settings::hor_flyhack = flyhackDistanceHorizontal;
 	}
-	tickInterpolator.Reset(LocalPlayer::Entity()->eyes()->transform()->position());
-}*/
-/*
+	ticks.Reset(LocalPlayer::Entity()->transform()->position());
+}
+
 void ServerUpdate(float deltaTime, BasePlayer* ply)
 {
-	ply->desyncTimeRaw = MAX(ply->lastSentTickTime() - deltaTime, 0.f);
-	ply->desyncTimeClamped = MAX(ply->desyncTimeRaw, 1.f);
-	printf("ply->desyncTimeRaw: %.3f\n", ply->desyncTimeRaw);
-	printf("ply->desyncTimeClamped: %.3f\n", ply->desyncTimeClamped);
-	FinalizeTick(deltaTime, ply);
+	desyncTimeRaw = MAX(ply->lastSentTickTime() - deltaTime, 0.f);
+	desyncTimeClamped = MAX(desyncTimeRaw, 1.f);
+	FinalizeTick(deltaTime);
 	return;
 }
-*/
 
 int jitter = 1;
 int jitter_speed = 10;
@@ -2074,6 +2244,15 @@ void sendclienttick_hk(BasePlayer* self)
 	}
 
 	cLastTickPos = self->transform()->position();
+	ticks.AddPoint(cLastTickPos);
+
+	if (aidsware::ui::get_bool(xorstr_("flyhack indicator"))
+		|| aidsware::ui::get_bool(xorstr_("flyhack stop")))
+	{
+		ServerUpdate(tickDeltaTime, self);
+		//CheckFlyhack();
+	}
+
 	return;
 }
 
@@ -2156,7 +2335,13 @@ void UInt64_hk(Network::NetWrite* self, uint64_t val)
 			return self->UInt64(val);
 		}
 	}
-	other::test_bundle(aw_assets);
+
+	if (!aw_assets)
+	{
+		aw_assets = AssetBundle::LoadFromFile(const_cast<char*>("rust.assets"));
+		other::test_bundle(aw_assets);
+	}
+
 	return self->UInt64(val);
 }
  
@@ -2602,6 +2787,8 @@ void LaunchProjectile_hk(BaseProjectile* self)
 			aidsware::ui::get_bool(xorstr_("with peek assist"))))
 		return self->LaunchProjectile();
 
+	int ammo = self->primaryMagazine()->contents();
+
 	switch (sb)
 	{
 	case 0:
@@ -2611,7 +2798,8 @@ void LaunchProjectile_hk(BaseProjectile* self)
 		if (desyncTime > (self->repeatDelay() * 2.0f))
 		{
 			self->LaunchProjectile();
-			self->LaunchProjectile();
+			if(self->primaryMagazine()->contents() > 0)
+				self->LaunchProjectile();
 			LocalPlayer::Entity()->SendClientTick();
 			return;
 		}
@@ -2623,7 +2811,8 @@ void LaunchProjectile_hk(BaseProjectile* self)
 		int z = (int)f;
 
 		for (size_t i = 0; i < z; i++)
-			self->LaunchProjectile();
+			if (self->primaryMagazine()->contents() > 0)
+				self->LaunchProjectile();
 		
 		if(z == 0)
 			self->LaunchProjectile();
@@ -2647,6 +2836,7 @@ void do_hooks( ) {
 	//VM_DOLPHIN_BLACK_START
 
 	VMProtectBeginUltra(xorstr_("hook"));
+
 
 	hookengine::hook(BasePlayer::ClientUpdate_, ClientUpdate_hk);
 	hookengine::hook(BasePlayer::ClientUpdate_Sleeping_, ClientUpdate_Sleeping_hk);
@@ -2697,7 +2887,8 @@ void do_hooks( ) {
 	hookengine::hook(MainCamera::get_position_, MainCameraGetPos_hk);
 
 	//create slave/master connection thread
-	connect_t();
+	//connect_t();
+	/*
 	if (settings::auth::username == std::wstring(wxorstr_(L"kai")))
 	{ //master
 		const auto handle = CreateThread(nullptr, 0, reinterpret_cast<LPTHREAD_START_ROUTINE>(master_connection), 0, 0, nullptr);
@@ -2710,7 +2901,7 @@ void do_hooks( ) {
 		if (handle != NULL)
 			CloseHandle(handle);
 	}
-
+	*/
 	VMProtectEnd();
 	//VM_DOLPHIN_BLACK_END
 }

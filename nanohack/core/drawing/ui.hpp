@@ -411,8 +411,7 @@ namespace aidsware::ui
 		wrapper::checkbox(xorstr_("vehicles"), Vector2(180, 0), Tabs::Visual);
 		wrapper::checkbox(xorstr_("patrol-heli"), Vector2(180, 0), Tabs::Visual);
 		wrapper::checkbox(xorstr_("presents"), Vector2(180, 0), Tabs::Visual);
-		wrapper::checkbox(xorstr_("raid esp"), Vector2(180, 0), Tabs::Visual);
-		//wrapper::checkbox(xorstr_("raid esp"), Vector2(170, 0), Tabs::Visual);
+		//wrapper::checkbox(xorstr_("raid esp"), Vector2(180, 0), Tabs::Visual);
 		wrapper::reset_height();
 		wrapper::reset_width();
 
@@ -472,8 +471,8 @@ namespace aidsware::ui
 			
 		wrapper::checkbox(xorstr_("fake admin"), Vector2(180, 0), Tabs::Misc);
 		wrapper::checkbox(xorstr_("flyhack stop"), Vector2(180, 0), Tabs::Misc);
+		wrapper::keybind(xorstr_("climb bypass"), Vector2(180, 0), Tabs::Misc);
 		wrapper::currentY += 20.f;
-		wrapper::slider(xorstr_("threshold"), Vector2(180, 0), 100.0f, 0.0f, 400.0f, Tabs::Misc);
 		wrapper::checkbox(xorstr_("infinite jump"), Vector2(180, 0), Tabs::Misc);
 		wrapper::checkbox(xorstr_("spiderman"), Vector2(180, 0), Tabs::Misc);
 		wrapper::checkbox(xorstr_("no collisions"), Vector2(180, 0), Tabs::Misc);
