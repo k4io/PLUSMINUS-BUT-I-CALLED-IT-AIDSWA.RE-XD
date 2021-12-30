@@ -880,8 +880,8 @@ void HandleJumping_hk(PlayerWalkMovement* a1, ModelState* state, bool wantsJump,
 	if (aidsware::ui::get_bool(xorstr_("flyhack stop")))
 	{
 		float threshold = aidsware::ui::get_float(xorstr_("threshold"));
-		if (settings::hor_flyhack * 100.f >= threshold
-			|| settings::flyhack * 100.f >= threshold)
+		if (settings::hor_flyhack >= 6.4f
+			|| settings::flyhack >= 2.9f)
 			return;
 	}
 	if (aidsware::ui::get_bool(xorstr_("infinite jump"))) {
