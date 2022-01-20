@@ -387,6 +387,10 @@ public:
 		Type* type = GetType(xorstr_("BasePlayer, Assembly-CSharp"));
 		return type;
 	}
+	static Type* BuildingBlock() {
+		Type* type = GetType(xorstr_("BuildingBlock, Assembly-CSharp"));
+		return type;
+	}
 };
 TickInterpolator ticks;
 float timee = 120.f;
@@ -1104,7 +1108,7 @@ public:
 
 class Sprite {
 public:
-	FIELD("UnityEngine.CoreModule::UnityEngine::Sprite::texture", texture, Texture2D*);
+	FIELD("UnityEngine.CoreModule::UnityEngine::Sprite::texture", texture, Texture*);
 	FIELD("UnityEngine.CoreModule::UnityEngine::Sprite::textureRect", textureRect, Rect);
 };
 
@@ -1853,8 +1857,60 @@ public:
 	//idc about active item or parentid fk u
 };
 
+class DecayEntity : BaseCombatEntity {
+public:
+};
+
+class StabilityEntity : DecayEntity {
+public:
+};
+
+class BuildingBlock : public StabilityEntity {
+public:
+	enum class BuildingGrade
+	{
+		None = -1,
+		Twigs = 0,
+		Wood = 1,
+		Stone = 2,
+		Metal = 3,
+		TopTier = 4,
+		Count = 5
+	};
+	FIELD("Assembly-CSharp::BuildingBlock::grade", grade, BuildingGrade);
+
+	bool CanAffordUpgrade(BuildingGrade g, BasePlayer* p) {
+		if (!this) return false;
+		static auto off = METHOD("Assembly-CSharp::BuildingBlock::CanAffordUpgrade(BuildingGrade.enum, BasePlayer): Boolean");
+		return reinterpret_cast<bool(__fastcall*)(BuildingBlock*, BuildingGrade, BasePlayer*)>(off)(this, g, p);
+	}
+	bool CanChangeToGrade(BuildingGrade g, BasePlayer* p) {
+		if (!this) return false;
+		static auto off = METHOD("Assembly-CSharp::BuildingBlock::CanChangeToGrade(BuildingGrade.enum, BasePlayer): Boolean");
+		return reinterpret_cast<bool(__fastcall*)(BuildingBlock*, BuildingGrade, BasePlayer*)>(off)(this, g, p);
+	}
+	void Upgrade(BuildingGrade g, BasePlayer* p){
+		if (!this) return;
+		static auto off = METHOD("Assembly-CSharp::BuildingBlock::UpgradeToGrade(BuildingGrade.enum, BasePlayer): Void");
+		return reinterpret_cast<void(__fastcall*)(BuildingBlock*, BuildingGrade, BasePlayer*)>(off)(this, g, p);
+	}
+};
+
 float MAX(const float& A, const float& B) { return (A > B ? A : B); }
 
+class CapsuleCollider {
+public:
+	void set_radius(float v) {
+		if (!this) return;
+		static auto off = METHOD("UnityEngine.PhysicsModule::UnityEngine::CapsuleCollider::set_radius(Single): Void");
+		return reinterpret_cast<void(__fastcall*)(CapsuleCollider*, float)>(off)(this, v);
+	}
+	void set_height(float v) {
+		if (!this) return;
+		static auto off = METHOD("UnityEngine.PhysicsModule::UnityEngine::CapsuleCollider::set_height(Single): Void");
+		return reinterpret_cast<void(__fastcall*)(CapsuleCollider*, float)>(off)(this, v);
+	}
+};
 
 float flyhackDistanceVertical = 0.f;
 float flyhackDistanceHorizontal = 0.f;
@@ -1920,6 +1976,8 @@ public:
 	FIELD("Assembly-CSharp::BasePlayer::clientTickInterval", clientTickInterval, float);
 
 	FIELD("Assembly-CSharp::BasePlayer::ClientCurrentMapNote", ClientCurrentMapNote, MapNote*);
+
+	FIELD("Assembly-CSharp::BasePlayer::playerCollider", playerCollider, CapsuleCollider*);
 
 	bool IsDucked( ) { // lad don't fancy calling functions in a non-game thread, eh, thy lad shall recreate it.
 		if (!this) return false;
@@ -2020,7 +2078,9 @@ public:
 	float GetMaxSpeed() {
 		if (!this) return 0.f;
 		static auto off = METHOD("Assembly-CSharp::BasePlayer::GetMaxSpeed(): Single");
-		return reinterpret_cast<float(__fastcall*)(BasePlayer*)>(off)(this);
+		if((((ULONG64)off) > 0x400000) && (((ULONG64)off) < 0x00007FFFFFFF0000))
+			return reinterpret_cast<float(__fastcall*)(BasePlayer*)>(off)(this);
+		return 0.f;
 	}
 	float MaxVelocity( ) {
 		if (!this) return 0.f;
@@ -2136,23 +2196,30 @@ public:
 	}
 	template<typename T = HeldEntity>
 	T* GetHeldEntity( ) {
-		if (!this) return nullptr;
+		__try
+		{
+			if (!this) return nullptr;
 
-		auto inventory = this->inventory( );
-		if (!inventory) return nullptr;
+			auto inventory = this->inventory();
+			if (!inventory) return nullptr;
 
-		auto belt = inventory->containerBelt( );
-		if (!belt) return nullptr;
+			auto belt = inventory->containerBelt();
+			if (!belt) return nullptr;
 
-		auto item_list = belt->itemList( );
-		if (!item_list) return nullptr;
+			auto item_list = belt->itemList();
+			if (!item_list) return nullptr;
 
-		for (int i = 0; i < item_list->size; i++) {
-			auto item = reinterpret_cast<Item*>(item_list->get(i));
-			if (!item) continue;
+			for (int i = 0; i < item_list->size; i++) {
+				auto item = reinterpret_cast<Item*>(item_list->get(i));
+				if (!item) continue;
 
-			if (item->uid( ) == this->clActiveItem( ))
-				return item->heldEntity<T>( );
+				if (item->uid() == this->clActiveItem())
+					return item->heldEntity<T>();
+			}
+		}
+		__except (true)
+		{
+			printf(xorstr_("Exception occured in %s\n"), __FUNCTION__);
 		}
 
 		return nullptr;
@@ -2753,6 +2820,18 @@ public:
 		static auto off = METHOD("Assembly-CSharp::BaseProjectile::UpdateAmmoDisplay(): Void");
 		return reinterpret_cast<void(__fastcall*)(BaseProjectile*)>(off)(this);
 	}
+	void DidAttackClientside()
+	{
+		if (!this) return;
+		static auto off = METHOD("Assembly-CSharp::BaseProjectile::DidAttackClientside(): Void");
+		return reinterpret_cast<void(__fastcall*)(BaseProjectile*)>(off)(this);
+	}
+	void ShotFired()
+	{
+		if (!this) return;
+		static auto off = METHOD("Assembly-CSharp::BaseProjectile::ShotFired(): Void");
+		return reinterpret_cast<void(__fastcall*)(BaseProjectile*)>(off)(this);
+	}
 	void DoAttack() {
 		if (!this) return;
 		static auto off = METHOD("Assembly-CSharp::BaseProjectile::DoAttack(): Void");
@@ -2808,7 +2887,6 @@ public:
 	}
 };
 
-
 class DDraw {
 public:
 	STATIC_FUNCTION("Assembly-CSharp::UnityEngine::DDraw::Line(Vector3,Vector3,Color,Single,Boolean,Boolean): Void", Line, void(Vector3, Vector3, Color, float, bool, bool));
@@ -2817,12 +2895,7 @@ public:
 	STATIC_FUNCTION("UnityEngine.IMGUIModule::UnityEngine::GUI::get_color(): Color", get_color, Color());
 	STATIC_FUNCTION("UnityEngine.IMGUIModule::UnityEngine::GUI::set_color(Color): Void", set_color, void(Color));
 	
-	static void DrawTexture(Rect r, Texture* t) {
-		//static auto off = METHOD("UnityEngine.IMGUIModule::UnityEngine::GUI::DrawTexture(Rect,Texture): Void");
-		static auto off = METHOD("UnityEngine.CoreModule::UnityEngine::Graphics::DrawTexture(Rect,Texture,Material,Int32): Void");
-		return reinterpret_cast<void(__fastcall*)(Rect, Texture*)>(off)(r, t);
-	}
-
+	STATIC_FUNCTION("UnityEngine.IMGUIModule::UnityEngine::GUI::DrawTexture(Rect,Texture): Void", DrawTexture, void(Rect, Texture*));
 
 	static inline void(*OnGui_)(DDraw*) = nullptr;
 	void OnGui() {
@@ -3253,10 +3326,10 @@ Shader* chams = nullptr;
 																															  
 void initialize_cheat( ) {																									  
 	////VM_DOLPHIN_BLACK_START																								  
-	VMProtectBeginUltra(xorstr_("init"));																				  
+	//VMProtectBeginUltra(xorstr_("init"));																				  
 	init_classes( );
 	init_fields( );
-	init_methods( );
+	init_methods();
 
 	//chams = aw_assets->LoadAsset<Shader>(xorstr_("chams.shader"), Type::Shader());
 	
@@ -3278,7 +3351,7 @@ void initialize_cheat( ) {
 	ASSIGN_HOOK("Assembly-CSharp::BaseMountable::EyePositionForPlayer(BasePlayer,Quaternion): Vector3", BaseMountable::EyePositionForPlayer_);
 	//ASSIGN_HOOK("Assembly-CSharp::SkinnedMultiMesh::RebuildModel(PlayerModel,Boolean): Void", SkinnedMultiMesh::RebuildModel_);
 	ASSIGN_HOOK("Assembly-CSharp::FlintStrikeWeapon::DoAttack(): Void", FlintStrikeWeapon::DoAttack_);
-	ASSIGN_HOOK("Assembly-CSharp::BaseMelee::ProcessAttack(HitTest): Void", BaseMelee::ProcessAttack_);
+	//ASSIGN_HOOK("Assembly-CSharp::BaseMelee::ProcessAttack(HitTest): Void", BaseMelee::ProcessAttack_);
 	ASSIGN_HOOK("Assembly-CSharp::BaseCombatEntity::OnAttacked(HitInfo): Void", BaseCombatEntity::OnAttacked_);
 	ASSIGN_HOOK("Assembly-CSharp::InputState::IsDown(BUTTON): Boolean", InputState::IsDown_);
 	ASSIGN_HOOK("Assembly-CSharp::PlayerEyes::get_BodyLeanOffset(): Vector3", PlayerEyes::BodyLeanOffset_);
@@ -3293,6 +3366,7 @@ void initialize_cheat( ) {
 	ASSIGN_HOOK("UnityEngine.CoreModule::UnityEngine::Vector3::MoveTowards(Vector3,Vector3,Single): Vector3", Vector3_::MoveTowards_);
 	ASSIGN_HOOK("Assembly-CSharp::BasePlayer::SendClientTick(): Void", BasePlayer::SendClientTick_);
 	ASSIGN_HOOK("Assembly-CSharp::Projectile::Launch(): Void", Projectile::Launch_);
+	ASSIGN_HOOK("Assembly-CSharp::Projectile::Update(): Void", Projectile::Update_);
 	ASSIGN_HOOK("Assembly-CSharp::BaseProjectile::LaunchProjectile(): Void", BaseProjectile::LaunchProjectile_);
 	//ASSIGN_HOOK("Assembly-CSharp::EffectLibrary::CreateEffect(String,Effect): GameObject", EffectLibrary::CreateEffect_);
 	ASSIGN_HOOK("Assembly-CSharp::BaseCombatEntity::DoHitNotify(HitInfo): Void", BaseCombatEntity::DoHitNotify_);
@@ -3302,12 +3376,15 @@ void initialize_cheat( ) {
 
 	ASSIGN_HOOK("Assembly-CSharp::MainCamera::get_position(): Vector3", MainCamera::get_position_);
 
+	ASSIGN_HOOK("Assembly-CSharp::UnityEngine::DDraw::OnGUI(): Void", DDraw::OnGui_);
+
+
 
 	settings::il_init_methods = find(xorstr_("GameAssembly.dll"), "48 83 EC 48 48 8B 05 ? ? ? ? 48 63 90 ? ? ? ?");
 	settings::serverrpc_projectileshoot = find_rel(xorstr_("GameAssembly.dll"), xorstr_("4C 8B 0D ? ? ? ? 48 8B 75 28"));
 
 	settings::cheat_init = true;
 
-	VMProtectEnd();
+	//VMProtectEnd();
 	////VM_DOLPHIN_BLACK_END
 }

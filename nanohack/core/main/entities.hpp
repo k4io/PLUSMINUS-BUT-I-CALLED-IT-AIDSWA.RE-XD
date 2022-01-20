@@ -2,6 +2,8 @@ namespace entities {
 	Shader* og_shader = nullptr;
 	std::vector<BasePlayer*> current_visible_players;
 
+	bool new_esp = false;
+
 	struct slave
 	{
 		std::string forum_name;
@@ -205,10 +207,9 @@ namespace entities {
 
 	void do_chams(BasePlayer* player)
 	{
-		auto shader = aw_assets->LoadAsset<Shader>(xorstr_("Chams"), Type::Shader());
 		//chams = aw_assets->LoadAsset<Shader>(xorstr_("Chams"), Type::Shader());
-
-
+		
+		/*
 		auto mesh = player->playerModel()->_multiMesh();
 		if (mesh)
 		{
@@ -223,9 +224,9 @@ namespace entities {
 					if (material)
 					{
 						if (shader) {
-							material->set_shader(shader);
 							printf("Set shader %i\n", i);
 							if (shader != material->shader()) {
+								material->set_shader(shader);
 							}
 							else
 							{
@@ -241,8 +242,9 @@ namespace entities {
 				}
 			}
 		}
-
-		/*
+		
+		*/
+		
 		auto list = player->playerModel()->_multiMesh()->Renderers();
 		if (list) {
 			for (int i = 0; i < list->size; i++) {
@@ -284,7 +286,6 @@ namespace entities {
 				}
 			}
 		}
-		*/
 	}
 
 	bool FindPoint(int x1, int y1, int x2,
@@ -297,6 +298,7 @@ namespace entities {
 	}
 
 	int alpha_index = -1;
+
 
 	void loop() {
 		bool masterflag = false;
@@ -541,6 +543,7 @@ namespace entities {
 
 			viewMatrix = Camera::getViewMatrix();
 
+			
 			if (target_ply != nullptr) {
 				if (!target_ply->IsValid() || target_ply->health() <= 0 || target_ply->is_teammate() || target_ply->HasPlayerFlag(PlayerFlags::Sleeping) || entities::dfc(target_ply) > aidsware::ui::get_float(xorstr_("target fov")) || (target_ply->playerModel()->isNpc() && !aidsware::ui::get_bool(xorstr_("npc")))) {
 					target_ply = nullptr;
@@ -591,7 +594,7 @@ namespace entities {
 								}
 							}
 
-							/*
+							
 							Color defaultcol = DDraw::get_color();
 							Color defaultbgcol(0.96862745f, 0.92156863f, 0.88235295f, 0.15f);
 							Color selectedcol(0.12156863f, 0.41960785f, 0.627451f, 0.75f);
@@ -629,7 +632,6 @@ namespace entities {
 								}
 								info_y += 96;
 							}
-							*/
 						}
 					}
 				}
@@ -658,8 +660,12 @@ namespace entities {
 			int helis = 0;
 
 			bool zflag = aidsware::ui::get_bool(xorstr_("players")) || aidsware::ui::get_bool(xorstr_("sleepers"));
+			
+			int entlistsz = entityList->vals->size;
 
-			for (int i = 0; i < entityList->vals->size; i++) {
+			for (int i = 0; i < entlistsz; i++) {
+
+				
 				auto entity = *reinterpret_cast<BaseEntity**>(std::uint64_t(entityList->vals->buffer) + (0x20 + (sizeof(void*) * i)));
 				if (!entity)
 				{
@@ -669,7 +675,7 @@ namespace entities {
 				if (!entity->IsValid()) {
 					continue;
 				}
-				
+
 				if (aidsware::ui::get_bool(xorstr_("debug"))) {
 					if (entity->transform()->position().distance(LocalPlayer::Entity()->transform()->position()) <= 25.f) {
 						Vector2 screen;
@@ -686,13 +692,13 @@ namespace entities {
 				if (settings::alpha::shoot_same_target)
 					if (pl1->userID() == target_id)
 						target_ply = pl1;
-				if(master_id > 1000000)
+				if (master_id > 1000000)
 					if (pl1->userID() == master_id)
 						master = pl1;
-					
+
 
 				Vector2 screen;
-				
+
 
 				float d = entity->transform()->position().distance(LocalPlayer::Entity()->transform()->position());
 				auto prefab = entity->ShortPrefabName_hash();
@@ -955,7 +961,7 @@ namespace entities {
 						{
 							const wchar_t* weapon_name = entity->gameObject()->name();
 							if (!aidsware::ui::get_bool(xorstr_("weapons"))) break;
-							if (wcsstr(weapon_name, wxorstr_(L"lmg.m249")) != nullptr){
+							if (wcsstr(weapon_name, wxorstr_(L"lmg.m249")) != nullptr) {
 								if (aidsware::ui::get_bool("distance"))
 									Renderer::text({ screen.x, screen.y + 10 }, aidsware::ui::get_color(xorstr_("weapon color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
 								Renderer::text(screen, aidsware::ui::get_color(xorstr_("weapon color")), 14.f, true, true, wxorstr_(L"m249"));
@@ -1106,7 +1112,7 @@ namespace entities {
 							{
 								if (aidsware::ui::get_bool("distance"))
 									Renderer::text({ screen.x, screen.y + 10 }, aidsware::ui::get_color(xorstr_("vehicles color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
-									Renderer::text(screen, aidsware::ui::get_color(xorstr_("vehicles color")), 14.f, true, true, wxorstr_(L"RHIB"));
+								Renderer::text(screen, aidsware::ui::get_color(xorstr_("vehicles color")), 14.f, true, true, wxorstr_(L"RHIB"));
 								continue;
 							}
 							break;
@@ -1115,7 +1121,7 @@ namespace entities {
 							{
 								if (aidsware::ui::get_bool("distance"))
 									Renderer::text({ screen.x, screen.y + 10 }, aidsware::ui::get_color(xorstr_("vehicles color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
-									Renderer::text(screen, aidsware::ui::get_color(xorstr_("vehicles color")), 14.f, true, true, wxorstr_(L"Boat"));
+								Renderer::text(screen, aidsware::ui::get_color(xorstr_("vehicles color")), 14.f, true, true, wxorstr_(L"Boat"));
 								continue;
 							}
 							break;
@@ -1124,7 +1130,7 @@ namespace entities {
 							{
 								if (aidsware::ui::get_bool("distance"))
 									Renderer::text({ screen.x, screen.y + 10 }, aidsware::ui::get_color(xorstr_("vehicles color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
-									Renderer::text(screen, aidsware::ui::get_color(xorstr_("vehicles color")), 14.f, true, true, wxorstr_(L"Hot Air Balloon"));
+								Renderer::text(screen, aidsware::ui::get_color(xorstr_("vehicles color")), 14.f, true, true, wxorstr_(L"Hot Air Balloon"));
 								continue;
 							}
 							break;
@@ -1133,7 +1139,7 @@ namespace entities {
 							{
 								if (aidsware::ui::get_bool("distance"))
 									Renderer::text({ screen.x, screen.y + 10 }, aidsware::ui::get_color(xorstr_("vehicles color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
-									Renderer::text(screen, aidsware::ui::get_color(xorstr_("vehicles color")), 14.f, true, true, wxorstr_(L"Scrap Heli"));
+								Renderer::text(screen, aidsware::ui::get_color(xorstr_("vehicles color")), 14.f, true, true, wxorstr_(L"Scrap Heli"));
 								continue;
 							}
 							break;
@@ -1142,7 +1148,7 @@ namespace entities {
 							{
 								if (aidsware::ui::get_bool("distance"))
 									Renderer::text({ screen.x, screen.y + 10 }, aidsware::ui::get_color(xorstr_("vehicles color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
-									Renderer::text(screen, aidsware::ui::get_color(xorstr_("vehicles color")), 14.f, true, true, wxorstr_(L"Submarine (Duo)"));
+								Renderer::text(screen, aidsware::ui::get_color(xorstr_("vehicles color")), 14.f, true, true, wxorstr_(L"Submarine (Duo)"));
 								continue;
 							}
 							break;
@@ -1151,7 +1157,7 @@ namespace entities {
 							{
 								if (aidsware::ui::get_bool("distance"))
 									Renderer::text({ screen.x, screen.y + 10 }, aidsware::ui::get_color(xorstr_("vehicles color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
-									Renderer::text(screen, aidsware::ui::get_color(xorstr_("vehicles color")), 14.f, true, true, wxorstr_(L"Submarine (Solo)"));
+								Renderer::text(screen, aidsware::ui::get_color(xorstr_("vehicles color")), 14.f, true, true, wxorstr_(L"Submarine (Solo)"));
 								continue;
 							}
 							break;
@@ -1160,7 +1166,7 @@ namespace entities {
 							{
 								if (aidsware::ui::get_bool("distance"))
 									Renderer::text({ screen.x, screen.y + 10 }, aidsware::ui::get_color(xorstr_("vehicles color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
-									Renderer::text(screen, aidsware::ui::get_color(xorstr_("vehicles color")), 14.f, true, true, wxorstr_(L"Horse"));
+								Renderer::text(screen, aidsware::ui::get_color(xorstr_("vehicles color")), 14.f, true, true, wxorstr_(L"Horse"));
 								continue;
 							}
 							break;
@@ -1169,7 +1175,7 @@ namespace entities {
 							{
 								if (aidsware::ui::get_bool("distance"))
 									Renderer::text({ screen.x, screen.y + 10 }, aidsware::ui::get_color(xorstr_("vehicles color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
-									Renderer::text(screen, aidsware::ui::get_color(xorstr_("hemp color")), 14.f, true, true, wxorstr_(L"Hemp"));
+								Renderer::text(screen, aidsware::ui::get_color(xorstr_("hemp color")), 14.f, true, true, wxorstr_(L"Hemp"));
 								continue;
 							}
 							break;
@@ -1182,7 +1188,7 @@ namespace entities {
 							{
 								if (aidsware::ui::get_bool("distance"))
 									Renderer::text({ screen.x, screen.y + 10 }, aidsware::ui::get_color(xorstr_("corpses color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
-									Renderer::text(screen, aidsware::ui::get_color(xorstr_("corpses color")), 14.f, true, true, wxorstr_(L"Corpse"));
+								Renderer::text(screen, aidsware::ui::get_color(xorstr_("corpses color")), 14.f, true, true, wxorstr_(L"Corpse"));
 								continue;
 							}
 							break;
@@ -1191,7 +1197,7 @@ namespace entities {
 							{
 								if (aidsware::ui::get_bool("distance"))
 									Renderer::text({ screen.x, screen.y + 10 }, aidsware::ui::get_color(xorstr_("corpses color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
-									Renderer::text(screen, aidsware::ui::get_color(xorstr_("corpses color")), 14.f, true, true, wxorstr_(L"Corpse"));
+								Renderer::text(screen, aidsware::ui::get_color(xorstr_("corpses color")), 14.f, true, true, wxorstr_(L"Corpse"));
 								continue;
 							}
 							break;
@@ -1200,7 +1206,7 @@ namespace entities {
 							{
 								if (aidsware::ui::get_bool("distance"))
 									Renderer::text({ screen.x, screen.y + 10 }, aidsware::ui::get_color(xorstr_("corpses color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
-									Renderer::text(screen, aidsware::ui::get_color(xorstr_("corpses color")), 14.f, true, true, wxorstr_(L"Backpack"));
+								Renderer::text(screen, aidsware::ui::get_color(xorstr_("corpses color")), 14.f, true, true, wxorstr_(L"Backpack"));
 								continue;
 							}
 							break;
@@ -1242,6 +1248,49 @@ namespace entities {
 						}
 					}
 				}
+				if (d < 4.2f
+					&& aidsware::ui::get_bool(xorstr_("auto upgrade"))
+					&& get_key(aidsware::ui::get_keybind(xorstr_("auto upgrade key"))))
+				{
+					auto block = reinterpret_cast<BuildingBlock*>(entity);
+					auto grade = block->grade();
+					switch (aidsware::ui::get_combobox(xorstr_("upgrade tier"))) {
+					case 1:
+						if (block->CanAffordUpgrade(BuildingBlock::BuildingGrade::Wood,
+							LocalPlayer::Entity())
+							&& block->CanChangeToGrade(BuildingBlock::BuildingGrade::Wood,
+								LocalPlayer::Entity()) && grade != BuildingBlock::BuildingGrade::Wood)
+							block->Upgrade(BuildingBlock::BuildingGrade::Wood,
+								LocalPlayer::Entity());
+						break;
+					case 2:
+						if (block->CanAffordUpgrade(BuildingBlock::BuildingGrade::Stone,
+							LocalPlayer::Entity())
+							&& block->CanChangeToGrade(BuildingBlock::BuildingGrade::Stone,
+								LocalPlayer::Entity()) && grade != BuildingBlock::BuildingGrade::Stone)
+							block->Upgrade(BuildingBlock::BuildingGrade::Stone,
+								LocalPlayer::Entity());
+						break;
+					case 3:
+						if (block->CanAffordUpgrade(BuildingBlock::BuildingGrade::Metal,
+							LocalPlayer::Entity())
+							&& block->CanChangeToGrade(BuildingBlock::BuildingGrade::Metal,
+								LocalPlayer::Entity()) && grade != BuildingBlock::BuildingGrade::Metal)
+							block->Upgrade(BuildingBlock::BuildingGrade::Metal,
+								LocalPlayer::Entity());
+						break;
+					case 4:
+						if (block->CanAffordUpgrade(BuildingBlock::BuildingGrade::TopTier,
+							LocalPlayer::Entity())
+							&& block->CanChangeToGrade(BuildingBlock::BuildingGrade::TopTier,
+								LocalPlayer::Entity()) && grade != BuildingBlock::BuildingGrade::TopTier)
+							block->Upgrade(BuildingBlock::BuildingGrade::TopTier,
+								LocalPlayer::Entity());
+						break;
+					}
+				}
+
+
 				if (zflag)
 				{
 					//continue; these if statements fk it up
@@ -1261,12 +1310,12 @@ namespace entities {
 						auto player = reinterpret_cast<BasePlayer*>(entity);
 
 						if (!player->isCached()) continue;
-						if (player->health() <= 0.1f) continue;
+						if (player->health() <= 0.1f || player->lifestate() != BaseCombatEntity::Lifestate::Alive) continue;
 						if (player->HasPlayerFlag(PlayerFlags::Sleeping) && !aidsware::ui::get_bool(xorstr_("sleepers"))) continue;
 						if (player->playerModel()->isNpc() && !aidsware::ui::get_bool(xorstr_("npc"))) continue;
 						if (player->userID() == LocalPlayer::Entity()->userID()) continue;
 
-						
+
 
 						if (aidsware::ui::get_bool(xorstr_("chams"))
 							&& Time::fixedTime() > lastChamsUpdate + 0.05f)
@@ -1276,7 +1325,7 @@ namespace entities {
 						}
 
 						auto bounds = player->bones()->bounds;
-						if (!bounds.empty()) {
+						if (true) {
 							int y_ = 0;
 
 							float box_width = bounds.right - bounds.left;
@@ -1394,7 +1443,7 @@ namespace entities {
 							if (aidsware::ui::get_bool(xorstr_("looking direction")) && !player->HasPlayerFlag(PlayerFlags::Sleeping))
 								Renderer::line(player->bones()->dfc, player->bones()->forward, aidsware::ui::get_color(xorstr_("looking direction color")), true);
 
-							
+
 
 							if (aidsware::ui::get_bool(xorstr_("crosshair indicators"))
 								&& aidsware::ui::get_bool(xorstr_("insta kill")) || aidsware::ui::get_bool(xorstr_("peek assist")) || get_key(aidsware::ui::get_keybind(xorstr_("desync on key")))
@@ -1403,9 +1452,9 @@ namespace entities {
 								Renderer::ProgressBar({ screen_center.x - 30, screen_center.y + 20 },
 									{ screen_center.x + 30, screen_center.y + 20 },
 									{ 51, 88, 181 },
-									{ 38, 38, 60 }, 
+									{ 38, 38, 60 },
 									60.0f * (1.0 / (desyncTime < 0.f ? 0.f : (desyncTime > 1.0f ? 1.0f : desyncTime))),
-									60,	
+									60,
 									desyncTime);
 							}
 
@@ -1593,7 +1642,6 @@ namespace entities {
 						target_ply = nullptr;
 				}
 			}
-
 			if (helis < 1)
 				target_heli = nullptr;
 

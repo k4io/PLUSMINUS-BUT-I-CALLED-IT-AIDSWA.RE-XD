@@ -81,3 +81,4 @@ namespace settings {
 
 uintptr_t game_assembly = 0;
 uintptr_t unity_player = 0;
+uintptr_t imgui_mod = 0;

@@ -31,6 +31,7 @@ Vector3 last_l_foot_pos = Vector3::Zero();
 Vector3 last_r_knee_pos = Vector3::Zero();
 Vector3 last_r_foot_pos = Vector3::Zero();
 
+//std::map<Projectile*, BasePlayer*> projectiles_with_targets{};
 PlayerTick* test;
 
 bool just_joined_server = false;
@@ -69,8 +70,8 @@ void ClientUpdate_hk(BasePlayer* plly) {
 
 		if (aidsware::ui::get_bool(xorstr_("spiderman")))
 		{
-			plly->movement()->groundAngle() = 0.f;
-			plly->movement()->groundAngleNew() = 0.f;
+			plly->movement()->groundAngle() = -1.f;
+			plly->movement()->groundAngleNew() = -1.f;
 		}
 
 		float _p = (aidsware::ui::get_float(xorstr_("max radius")) / 10);
@@ -251,12 +252,41 @@ Vector3 GetModifiedAimConeDirection_hk(float aimCone, Vector3 inputVec, bool any
 			else
 				actualTargetPos = target_ply->bones()->head->position;
 
+			Vector3 localPos = LocalPlayer::Entity()->eyes()->get_position();
+			//////////////
+
+			if (aidsware::ui::get_bool(xorstr_("fat bullet")))
+			{
+				if (!LineOfSight(localPos, actualTargetPos))
+				{ //check if can shoot fat bullet radius and change target position accordingly
+					for (auto e : other::ext)
+					{
+						Vector3 c = actualTargetPos + e;
+						if (LineOfSight(localPos, c))
+						{
+							actualTargetPos = c;
+							break;
+						}
+					}
+				}
+			}
+			/*
+			if (aidsware::ui::get_bool(xorstr_("fat bullet"))
+				&& other::manipulate_fat
+				&& other::fat_target != Vector3::Zero())
+			{
+				actualTargetPos = other::fat_target;
+				other::fat_target = Vector3::Zero();
+				other::manipulate_fat = false;
+			}
+			*/
+			//////////////
+
 			Vector3 targetvel = target_ply->playerModel()->newVelocity();
 
 
-			Vector3 localPos = LocalPlayer::Entity()->eyes()->get_position();
 
-			while (simulations < 500)
+			while (simulations < 100)
 			{
 				auto position = localPos;
 				auto origin = position;
@@ -266,7 +296,7 @@ Vector3 GetModifiedAimConeDirection_hk(float aimCone, Vector3 inputVec, bool any
 
 				Vector3 targetPosition = actualTargetPos + Vector3(0, offset, 0);
 				
-				Vector3 vel = Vector3(targetvel.x, 0, targetvel.y);// *0.75;
+				Vector3 vel = Vector3(targetvel.x, 0, targetvel.z);// *0.75;
 
 				auto _aimDir = AimConeUtil::GetModifiedAimConeDirection(0.f, targetPosition - localPos, anywhereInside);
 				Vector3 velocity = _aimDir * projectileVelocity * projectileVelocityScale;
@@ -279,6 +309,9 @@ Vector3 GetModifiedAimConeDirection_hk(float aimCone, Vector3 inputVec, bool any
 				Vector3 t = aimutils::SimulateProjectile(position, velocity, x, travelTime, gravity, drag);
 				printf("HitTime: %ff\partialTime: %ff\n", travelTime, partialTime);
 
+				if (travelTime > 8.f)
+					travelTime = 0.0f;
+				
 				actualTargetPos += (vel * travelTime);
 				
 				targetPosition = actualTargetPos + Vector3(0, offset, 0);
@@ -307,6 +340,7 @@ Vector3 GetModifiedAimConeDirection_hk(float aimCone, Vector3 inputVec, bool any
 
 	return AimConeUtil::GetModifiedAimConeDirection(aimCone, inputVec, anywhereInside);
 }
+
 double CalcBulletDrop(double height, double DepthPlayerTarget, float velocity, float gravity) {
 	double pitch = (Vector3::my_atan2(height, DepthPlayerTarget));
 	double BulletVelocityXY = velocity * Vector3::my_cos(pitch);
@@ -508,6 +542,27 @@ void serverrpc_projectileshoot_hk(int64_t rcx, int64_t rdx, int64_t r9, int64_t 
 				aimbot_velocity = (aim_angle).normalized() * original_vel.Length();
 
 				*reinterpret_cast<Vector3*>(projectile + 0x24) = aimbot_velocity;
+
+				Vector3 localPos = LocalPlayer::Entity()->eyes()->get_position();
+				//////////////
+
+				if (aidsware::ui::get_bool(xorstr_("fat bullet")))
+				{
+					if (!LineOfSight(localPos, bonepos))
+					{
+						for (auto e : other::ext)
+						{
+							Vector3 c = bonepos + e;
+							c.y -= 0.5;
+							if (LineOfSight(localPos, c))
+							{
+								bonepos = c;
+								break;
+							}
+						}
+					}
+				}
+
 				if (aidsware::ui::get_bool(xorstr_("bullet tracers"))) {
 					DDraw::Line(rpc_position, bonepos, Color::Color(114, 77, 179, 255), 10.f, false, true);
 				}
@@ -655,18 +710,21 @@ Vector3 BodyLeanOffset_hk(PlayerEyes* a1) {
 void DoFirstPersonCamera_hk(PlayerEyes* a1, Component* cam) {
 	a1->DoFirstPersonCamera(cam);
 
+	if (!projv || !a1 || !cam) return;
+
 	if (aidsware::ui::get_bool(xorstr_("follow projectile"))
 		&& proj)
 	{
 		Vector3 p = projv->currentPosition();
 		cam->transform()->set_position(Vector3(p.x, p.y + 0.1f, p.z));
 	}
-
-	if (aidsware::ui::get_bool(xorstr_("peek assist"))
+	/* //Visualize peek assist?
+	else if (aidsware::ui::get_bool(xorstr_("peek assist"))
 		&& !proj) {
 		Vector3 re_p = LocalPlayer::Entity( )->transform( )->position( ) + LocalPlayer::Entity( )->transform( )->up( ) * (PlayerEyes::EyeOffset( ).y + LocalPlayer::Entity( )->eyes( )->viewOffset( ).y);
 		cam->transform( )->set_position(re_p);
 	}
+	*/
 }
 
 bool CanAttack_hk(BasePlayer* self) {
@@ -707,7 +765,7 @@ void UpdateVelocity_hk(PlayerWalkMovement* self) {
 	if (aidsware::ui::get_bool(xorstr_("peek assist")) && (get_key(aidsware::ui::get_keybind(xorstr_("peek assist key"))) || settings::tr::manipulate_visible)) {
 		float max_speed = (self->swimming() || self->Ducking() > 0.5) ? 1.7f : 5.5f;
 		if (vel.length() > 0.f) {
-			//self->TargetMovement( ) = Vector3::Zero( );
+			//self->TargetMovement( ) = Vector3::Zero( );gh
 		}
 	}
 
@@ -756,16 +814,10 @@ void UpdateVelocity_hk(PlayerWalkMovement* self) {
 			{
 				if (state_time == 0.0f)
 				{
-					Vector3 wall = Vector3::Zero();
-					BaseNetworkable* marker = BaseNetworkable::clientEntities()->FindClosest(STATIC_CRC32("BuildingBlock"), LocalPlayer::Entity(), 5.0f);
-					if (marker)
-						wall = marker->transform()->position();
-					last_wall_pos = wall;
-
-					Vector3 pos = LocalPlayer::Entity()->transform()->position();
-					Vector3 dir = (last_wall_pos - pos).normalized();
+					auto rot = LocalPlayer::Entity()->eyes()->rotation();
+					Vector3 dir = rot * Vector3(0, 0, 1);
 					if(temp_vel == Vector3::Zero()) 
-						temp_vel = { (dir.x / dir.length() * 10.0f), 0,(dir.z / dir.length() * 10.0f) };
+						temp_vel = { (dir.x / dir.length() * 5.f), 0,(dir.z / dir.length() * 5.f) };
 
 					state_time = Time::fixedTime();
 					break;
@@ -810,16 +862,16 @@ void UpdateVelocity_hk(PlayerWalkMovement* self) {
 					break;
 				}
 				if (LocalPlayer::Entity()->eyes()->get_position().y >= head_last_bp.y + 2.f)
-				{
+				{	
 					state_time = 0.0f;
 					flyhack_state = 0;
 					break;
 				}
 				if (LocalPlayer::Entity()->eyes()->get_position().y < head_last_bp.y + 2.f)
 				{
-					Vector3 pos = LocalPlayer::Entity()->transform()->position();
-					Vector3 dir = (last_wall_pos - pos).normalized();
-					vel = { 0, dir.y + 5.0f, 0 };
+					auto rot = LocalPlayer::Entity()->eyes()->rotation();
+					Vector3 dir = rot * Vector3(0, 0, 1);
+					vel = { 0, (dir.y + 1) * 5.f, 0 };
 
 					break;
 				}
@@ -1175,6 +1227,13 @@ void ClientInput_hk(BasePlayer* plly, uintptr_t state) {
 		settings::tr::desync_time = desyncTime;
 
 
+		auto mpv = target_ply->find_mpv_bone();
+		Vector3 target;
+		if (mpv != nullptr)
+			target = mpv->position;
+		else
+			target = target_ply->bones()->head->position;
+
 		if (aidsware::ui::get_bool(xorstr_("rapid fire"))) {
 			if (held)
 				held->repeatDelay() = 0.07f;
@@ -1190,6 +1249,12 @@ void ClientInput_hk(BasePlayer* plly, uintptr_t state) {
 		_r = GetRValue(rgb);
 		_g = GetGValue(rgb);
 		_b = GetBValue(rgb);
+
+		if (aidsware::ui::get_bool(xorstr_("shrink")))
+		{
+			plly->playerCollider()->set_radius(0.1f);
+			plly->playerCollider()->set_height(0.1f);
+		}
 
 		if (aidsware::ui::get_bool(xorstr_("show desync")))
 		{
@@ -1297,7 +1362,7 @@ void ClientInput_hk(BasePlayer* plly, uintptr_t state) {
 								if (aidsware::ui::get_bool(xorstr_("with peek assist")))
 								{
 									settings::peek_insta = true;
-									other::find_manipulate_angle(desyncTime);
+									other::find_manipulate_angle(desyncTime, target);
 									for (int j = 0; j < aidsware::ui::get_float(xorstr_("bullets")); j++)
 										held->LaunchProjectile();
 									settings::peek_insta = false;
@@ -1307,7 +1372,10 @@ void ClientInput_hk(BasePlayer* plly, uintptr_t state) {
 										held->LaunchProjectile();
 							}
 							LocalPlayer::Entity()->clientTickInterval() = 0.05f;
+							held->primaryMagazine()->contents()--;
 							held->UpdateAmmoDisplay();
+							held->ShotFired();
+							held->DidAttackClientside();
 						}
 		}
 		else
@@ -1321,14 +1389,14 @@ void ClientInput_hk(BasePlayer* plly, uintptr_t state) {
 
 
 		if (aidsware::ui::get_bool(xorstr_("peek assist")) && target_ply != nullptr && target_ply->isCached() && get_key(aidsware::ui::get_keybind(xorstr_("peek assist key"))) && !settings::instakill)
-			other::find_manipulate_angle(desyncTime);
+			other::find_manipulate_angle(desyncTime, target);
 		else
 			if (!other::m_manipulate.empty())
 				other::m_manipulate = Vector3::Zero();
 
 		if (aidsware::ui::get_bool(xorstr_("peek assist")) && target_ply != nullptr && target_ply->isCached() && aidsware::ui::get_bool(xorstr_("autoshoot")) && !settings::instakill)
 			if (other::can_manipulate()) {
-				other::find_manipulate_angle(desyncTime);
+				other::find_manipulate_angle(desyncTime, target);
 				settings::tr::manipulate_visible = true;
 			}
 			else {
@@ -1338,23 +1406,17 @@ void ClientInput_hk(BasePlayer* plly, uintptr_t state) {
 		if (aidsware::ui::get_bool(xorstr_("always reload")))
 		{
 			entities::t_TimeSinceLastShot = (Time::fixedTime() - t_FixedTimeLastShot);
-			if (t_JustShot)
+			if (t_JustShot && (entities::t_TimeSinceLastShot > 0.2f || held->primaryMagazine()->contents())) //0.2f is like cooldown before reload
 			{
 				held->ServerRPC("StartReload");
 				LocalPlayer::Entity()->SendSignalBroadcast(BaseEntity::Signal::Reload);
 				t_JustShot = false;
-				printf("Reload time: %ff\nt_TimeSinceLastShot: %ff\nt_FixedTimeLastShot: %ff\n", 
-					held->reloadTime(),
-					entities::t_TimeSinceLastShot,
-					t_FixedTimeLastShot);
 			}
 
-			if (entities::t_TimeSinceLastShot > (held->reloadTime() - (held->reloadTime() / 10)) //faster reload?
+			if (entities::t_TimeSinceLastShot > (held->reloadTime() - (held->reloadTime() / 10)) + 0.2f //faster reload?
 				&& !t_DidReload)
 			{
-				printf("Reloading...\n");
 				held->ServerRPC("Reload");
-				//held->UpdateAmmoDisplay();
 				t_DidReload = true;
 			}
 		}
@@ -1397,8 +1459,6 @@ void ClientInput_hk(BasePlayer* plly, uintptr_t state) {
 				plly->clientTickInterval() = 0.4f;
 			break;
 		}
-
-		if (aidsware::ui::get_bool(xorstr_("fake lag")))
 
 		Physics::IgnoreLayerCollision(4, 12, !aidsware::ui::get_bool(xorstr_("no collisions")));
 		Physics::IgnoreLayerCollision(30, 12, aidsware::ui::get_bool(xorstr_("no collisions")));
@@ -1748,6 +1808,8 @@ void DoMovement_hk(Projectile* pr, float deltaTime) {
 			}
 		}
 	}
+	if (dodged_projectiles.size() >= 9)
+		dodged_projectiles.clear();
 
 	/*
 	if (aidsware::ui::get_bool(xorstr_("insta kill"))
@@ -1778,29 +1840,44 @@ float GetRandomVelocity_hk(ItemModProjectile* self) {
 	return self->GetRandomVelocity( ) * modifier;
 }
 
+void pa(BaseMelee* self, HitTest* hit)
+{
+	__try
+	{
+		auto entity = hit->HitEntity();
+		if (entity->class_name_hash() == STATIC_CRC32("OreResourceEntity")) {
+			BaseNetworkable* marker = BaseNetworkable::clientEntities()->FindClosest(STATIC_CRC32("OreHotSpot"), entity, 5.0f);
+			if (marker) {
+				entity = marker;
+				hit->HitTransform() = marker->transform();
+				hit->HitPoint() = marker->transform()->InverseTransformPoint(marker->transform()->position());
+				hit->HitMaterial() = String::New(xorstr_("MetalOre"));
+			}
+		}
+		else if (entity->class_name_hash() == STATIC_CRC32("TreeEntity")) {
+			BaseNetworkable* marker = BaseNetworkable::clientEntities()->FindClosest(STATIC_CRC32("TreeMarker"), entity, 5.0f);
+			if (marker) {
+				hit->HitTransform() = marker->transform();
+				hit->HitPoint() = marker->transform()->InverseTransformPoint(marker->transform()->position());
+				hit->HitMaterial() = String::New(xorstr_("Wood"));
+			}
+		}
+	}
+	__except (true)
+	{
+		printf(xorstr_("Exception occured in %s\n"), __FUNCTION__);
+	}
+}
+
 void ProcessAttack_hk(BaseMelee* self, HitTest* hit) {
+	if (!self || !hit) return;
 	auto entity = hit->HitEntity( );
+	if(!entity) return self->ProcessAttack(hit);
 
 	if (!aidsware::ui::get_bool(xorstr_("farm assist")) || !entity)
 		return self->ProcessAttack(hit);
 
-	if (entity->class_name_hash( ) == STATIC_CRC32("OreResourceEntity")) {
-		BaseNetworkable* marker = BaseNetworkable::clientEntities( )->FindClosest(STATIC_CRC32("OreHotSpot"), entity, 5.0f);
-		if (marker) {
-			entity = marker;
-			hit->HitTransform( ) = marker->transform( );
-			hit->HitPoint( ) = marker->transform( )->InverseTransformPoint(marker->transform( )->position( ));
-			hit->HitMaterial( ) = String::New(xorstr_("MetalOre"));
-		}
-	}
-	else if (entity->class_name_hash( ) == STATIC_CRC32("TreeEntity")) {
-		BaseNetworkable* marker = BaseNetworkable::clientEntities( )->FindClosest(STATIC_CRC32("TreeMarker"), entity, 5.0f);
-		if (marker) {
-			hit->HitTransform( ) = marker->transform( );
-			hit->HitPoint( ) = marker->transform( )->InverseTransformPoint(marker->transform( )->position( ));
-			hit->HitMaterial( ) = String::New(xorstr_("Wood"));
-		}
-	}
+	pa(self, hit);
 
 	return self->ProcessAttack(hit);
 }
@@ -1822,6 +1899,7 @@ Vector3 MoveTowards_hk(Vector3 current, Vector3 target, float maxDelta) {
 }
 
 bool DoHit_hk(Projectile* prj, HitTest* test, Vector3 point, Vector3 normal) {
+
 	auto lol = test->HitEntity();
 	if(lol)
 	{
@@ -1837,6 +1915,7 @@ bool DoHit_hk(Projectile* prj, HitTest* test, Vector3 point, Vector3 normal) {
 			}
 		}
 	}
+
 	if (aidsware::ui::get_bool(xorstr_("pierce"))) {
 		if (prj->isAuthoritative( )) {
 			auto go = test->gameObject( );
@@ -1892,6 +1971,8 @@ bool DoHit_hk(Projectile* prj, HitTest* test, Vector3 point, Vector3 normal) {
 		LogSystem::Log(buffer, 5.f);
 	}
 	projectile_targets.erase(prj->projectileID());
+	if (projectile_targets.size() > 5)
+		projectile_targets.clear();
 	return r;
 }
 
@@ -2258,8 +2339,6 @@ void sendclienttick_hk(BasePlayer* self)
 
 Vector3 playereyes_getpos_hk(PlayerEyes* self)
 {
-	if (settings::peek_insta)
-		return self->get_position() + other::m_manipulate;
 	return self->get_position();
 }
 
@@ -2338,8 +2417,8 @@ void UInt64_hk(Network::NetWrite* self, uint64_t val)
 
 	if (!aw_assets)
 	{
-		aw_assets = AssetBundle::LoadFromFile(const_cast<char*>("rust.assets"));
-		other::test_bundle(aw_assets);
+		//aw_assets = AssetBundle::LoadFromFile(const_cast<char*>("rust.assets"));
+		//other::test_bundle(aw_assets);
 	}
 
 	return self->UInt64(val);
@@ -2347,25 +2426,38 @@ void UInt64_hk(Network::NetWrite* self, uint64_t val)
  
 void ProjectileUpdate_hk(Projectile* self)
 {
-	printf("called\n");
-	if (aidsware::ui::get_bool(xorstr_("insta kill"))
-		&& settings::tr::desync_time >= f_travel_time)
+	if (aidsware::ui::get_bool(xorstr_("fat bullet"))
+		&& self->isAuthoritative()
+		&& self->isAlive())
 	{
-		auto hittest = self->hitTest();
-		hittest->HitEntity() = target_ply;
-		hittest->HitTransform() = target_ply->transform();
-		hittest->HitPoint() = target_ply->transform()->position();
+		auto mpv = target_ply->find_mpv_bone();
+		Vector3 target;
+		if (mpv != nullptr)
+			target = mpv->position;
+		else
+			target = target_ply->bones()->head->position;
+		auto cpos = self->currentPosition();
+		int zt = 0;
+		if (target.distance(cpos) < 2.2f)
+		{
+			self->currentPosition() = Vector3_::MoveTowards(cpos, target, 1.0f);
+			if (self->currentPosition().distance(target) <= 1.2f)
+			{
+				Vector3 t = Vector3_::MoveTowards(cpos, target, 0.2f);
 
-		//bool DoHit_hk(Projectile * prj, HitTest * test, Vector3 point, Vector3 normal)
-		
-		self->DoHit(hittest, target_ply->transform()->position().normalized(), self->currentPosition());
+				DDraw::Sphere(t, 0.05f, Color::Color(_r, _g, _b, 50), 2.f, false); //head
 
-		//self->currentPosition() = target_ply->transform()->position();
-		return;
+				self->hitTest()->DidHit() = true;
+				self->hitTest()->HitEntity() = target_ply;
+				self->hitTest()->HitTransform() = target_ply->transform();
+				self->hitTest()->HitPoint() = t;
+
+				DoHit_hk(self, self->hitTest(), t, self->hitTest()->HitNormalWorld());
+			}
+		}
 	}
 	return self->Update();
 }
-
 
 void connect_t()
 {
@@ -2779,6 +2871,15 @@ GameObject* CreateEffect_hk(pUncStr strPrefab, Effect* effect)
 
 void LaunchProjectile_hk(BaseProjectile* self)
 {
+	bool z = settings::tr::manipulated;
+	Vector3 o = LocalPlayer::Entity()->transform()->position();
+	if (z)
+	{
+		Vector3 vec = LocalPlayer::Entity()->eyes()->get_position_(LocalPlayer::Entity()->eyes());
+		LocalPlayer::Entity()->transform()->position() = vec;
+		LocalPlayer::Entity()->SendClientTick();
+	}
+
 	int sb = aidsware::ui::get_combobox(xorstr_("double tap"));
 	float desyncTime = (Time::realtimeSinceStartup() - LocalPlayer::Entity()->lastSentTickTime()) - 0.03125 * 3;
 
@@ -2788,7 +2889,7 @@ void LaunchProjectile_hk(BaseProjectile* self)
 		return self->LaunchProjectile();
 
 	int ammo = self->primaryMagazine()->contents();
-
+	if (aidsware::ui::get_bool(xorstr_("rapid fire"))) sb = 0;
 	switch (sb)
 	{
 	case 0:
@@ -2798,8 +2899,14 @@ void LaunchProjectile_hk(BaseProjectile* self)
 		if (desyncTime > (self->repeatDelay() * 2.0f))
 		{
 			self->LaunchProjectile();
-			if(self->primaryMagazine()->contents() > 0)
+			if (self->primaryMagazine()->contents() > 0)
+			{
 				self->LaunchProjectile();
+				self->primaryMagazine()->contents()--;
+				self->UpdateAmmoDisplay();
+				self->ShotFired();
+				self->DidAttackClientside();
+			}
 			LocalPlayer::Entity()->SendClientTick();
 			return;
 		}
@@ -2812,30 +2919,36 @@ void LaunchProjectile_hk(BaseProjectile* self)
 
 		for (size_t i = 0; i < z; i++)
 			if (self->primaryMagazine()->contents() > 0)
+			{
 				self->LaunchProjectile();
+				self->primaryMagazine()->contents()--;
+				self->UpdateAmmoDisplay();
+				self->ShotFired();
+				self->DidAttackClientside();
+			}
 		
 		if(z == 0)
 			self->LaunchProjectile();
+
 		LocalPlayer::Entity()->SendClientTick();
 		return;
 	}
+
+	//if (z)
+	//	LocalPlayer::Entity()->transform()->position() = o;
+
 	return self->LaunchProjectile();
 }
 
-Vector3 MainCameraGetPos_hk()
+void OnGui_hk(DDraw* instance)
 {
-	if (aidsware::ui::get_bool(xorstr_("follow projectile"))
-		&& proj) {
-		//MainCamera::position() = projv->currentPosition();
-		return projv->currentPosition();
-	}
-	return MainCamera::get_position_();
+	return DDraw::OnGui_(instance);
 }
 
 void do_hooks( ) {
 	//VM_DOLPHIN_BLACK_START
 
-	VMProtectBeginUltra(xorstr_("hook"));
+	//VMProtectBeginUltra(xorstr_("hook"));
 
 
 	hookengine::hook(BasePlayer::ClientUpdate_, ClientUpdate_hk);
@@ -2854,7 +2967,7 @@ void do_hooks( ) {
 	hookengine::hook(ViewmodelLower::Apply_, LowerApply_hk);
 	hookengine::hook(ModelState::set_flying_, set_flying_hk);
 	hookengine::hook(HitTest::BuildAttackMessage_, BuildAttackMessage_hk);
-	hookengine::hook(BaseMelee::ProcessAttack_, ProcessAttack_hk);
+	//hookengine::hook(BaseMelee::ProcessAttack_, ProcessAttack_hk);
 	hookengine::hook(Projectile::DoHit_, DoHit_hk);
 	hookengine::hook(BaseMountable::EyePositionForPlayer_, EyePositionForPlayer_hk);
 	hookengine::hook(MonoBehaviour::StartCoroutine_, StartCoroutine_hk);
@@ -2884,8 +2997,9 @@ void do_hooks( ) {
 
 	hookengine::hook(BaseProjectile::LaunchProjectile_, LaunchProjectile_hk);
 
-	hookengine::hook(MainCamera::get_position_, MainCameraGetPos_hk);
+	hookengine::hook(Projectile::Update_, ProjectileUpdate_hk);
 
+	hookengine::hook(DDraw::OnGui_, OnGui_hk);
 	//create slave/master connection thread
 	//connect_t();
 	/*
@@ -2902,37 +3016,49 @@ void do_hooks( ) {
 			CloseHandle(handle);
 	}
 	*/
-	VMProtectEnd();
+	//VMProtectEnd();
 	//VM_DOLPHIN_BLACK_END
 }
 
 void undo_hooks( ) {
 	//VM_DOLPHIN_BLACK_START
-	VMProtectBeginUltra(xorstr_("unhook"));
+	//VMProtectBeginUltra(xorstr_("unhook"));
 
 	closesocket(server_fd);
 
+
+	hookengine::unhook(BaseCombatEntity::OnAttacked_, OnAttacked_hk);
+	hookengine::unhook(BaseCombatEntity::DoHitNotify_, DoHitNotify_hk);
+
 	hookengine::unhook(BasePlayer::ClientUpdate_, ClientUpdate_hk);
-	hookengine::unhook(PlayerWalkMovement::UpdateVelocity_, UpdateVelocity_hk);
-	hookengine::unhook(PlayerWalkMovement::HandleJumping_, HandleJumping_hk);
 	hookengine::unhook(BasePlayer::CanAttack_, CanAttack_hk);
 	hookengine::unhook(BasePlayer::OnLand_, OnLand_hk);
+	hookengine::unhook(BasePlayer::ClientInput_, ClientInput_hk);
+	hookengine::unhook(BasePlayer::SendClientTick_, sendclienttick_hk);
+
+	hookengine::unhook(PlayerWalkMovement::UpdateVelocity_, UpdateVelocity_hk);
+	hookengine::unhook(PlayerWalkMovement::HandleJumping_, HandleJumping_hk);
+
 	hookengine::unhook(Projectile::DoMovement_, DoMovement_hk);
+	hookengine::unhook(Projectile::SetEffectScale_, SetEffectScale_hk);
+	hookengine::unhook(Projectile::Launch_, Launch_hk);
+	hookengine::unhook(Projectile::Update_, ProjectileUpdate_hk);
+	hookengine::unhook(Projectile::DoHit_, DoHit_hk);
+
+	hookengine::unhook(BaseProjectile::CreateProjectile_, CreateProjectile_hk);
+	hookengine::unhook(BaseProjectile::LaunchProjectile_, LaunchProjectile_hk);
+
 	hookengine::unhook(FlintStrikeWeapon::DoAttack_, DoAttack_hk);
 	hookengine::unhook(ViewmodelBob::Apply_, BobApply_hk);
 	hookengine::unhook(ViewmodelSway::Apply_, SwayApply_hk);
 	hookengine::unhook(InputState::IsDown_, IsDown_hk);
-	hookengine::unhook(BaseCombatEntity::OnAttacked_, OnAttacked_hk);
 	hookengine::unhook(ConsoleSystem::Run_, ConsoleRun_hk);
 	hookengine::unhook(ViewmodelLower::Apply_, LowerApply_hk);
 	hookengine::unhook(ModelState::set_flying_, set_flying_hk);
 	hookengine::unhook(HitTest::BuildAttackMessage_, BuildAttackMessage_hk);
-	hookengine::unhook(BaseMelee::ProcessAttack_, ProcessAttack_hk);
-	hookengine::unhook(Projectile::DoHit_, DoHit_hk);
+	//hookengine::unhook(BaseMelee::ProcessAttack_, ProcessAttack_hk);
 	hookengine::unhook(BaseMountable::EyePositionForPlayer_, EyePositionForPlayer_hk);
 	hookengine::unhook(MonoBehaviour::StartCoroutine_, StartCoroutine_hk);
-	hookengine::unhook(Projectile::SetEffectScale_, SetEffectScale_hk);
-	hookengine::unhook(BasePlayer::ClientInput_, ClientInput_hk);
 	hookengine::unhook(ItemModProjectile::GetRandomVelocity_, GetRandomVelocity_hk);
 	hookengine::unhook(PlayerEyes::BodyLeanOffset_, BodyLeanOffset_hk);
 	hookengine::unhook(AimConeUtil::GetModifiedAimConeDirection_, GetModifiedAimConeDirection_hk);
@@ -2940,11 +3066,7 @@ void undo_hooks( ) {
 	hookengine::unhook(Vector3_::MoveTowards_, MoveTowards_hk);
 	hookengine::unhook(HeldEntity::AddPunch_, AddPunch_hk);
 
-	hookengine::unhook(BasePlayer::SendClientTick_, sendclienttick_hk);
 	hookengine::unhook(PlayerEyes::get_position_, playereyes_getpos_hk);
-	hookengine::unhook(Projectile::Launch_, Launch_hk);
-	hookengine::unhook(BaseCombatEntity::DoHitNotify_, DoHitNotify_hk);
-	hookengine::unhook(BaseProjectile::CreateProjectile_, CreateProjectile_hk);
 
 	hookengine::unhook(Network::Client::OnRequestUserInformation_, OnRequestUserInformation_hk);
 
@@ -2952,9 +3074,9 @@ void undo_hooks( ) {
 
 	hookengine::unhook(Network::Client::OnNetworkMessage_, OnNetworkMessage_hk);
 
-	hookengine::unhook(BaseProjectile::LaunchProjectile_, LaunchProjectile_hk);
 
-	hookengine::unhook(MainCamera::get_position_, MainCameraGetPos_hk);
-	VMProtectEnd();
+	hookengine::unhook(DDraw::OnGui_, OnGui_hk);
+	
+	//VMProtectEnd();
 	//VM_DOLPHIN_BLACK_END
 }

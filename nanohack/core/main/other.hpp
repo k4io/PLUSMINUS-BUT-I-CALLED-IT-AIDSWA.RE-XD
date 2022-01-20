@@ -108,7 +108,7 @@ namespace other {
 
 		return flag;
 	}
-
+	
 	void get_sphere_points(float radius, unsigned int sectors, std::vector<Vector3>& re, float max = 1.6f)
 	{
 		for (float y = -1.6f; y < 1.6f; y += 0.1f) {
@@ -128,6 +128,29 @@ namespace other {
 				current += step;
 			}
 		}
+	}
+
+	std::vector<Vector3> ext = { Vector3(0.752444, -2.067324, 0.000000), Vector3(0.576406, -2.067324, 0.483662), Vector3(0.130661, -2.067324, 0.741013), Vector3(-0.376222, -2.067324, 0.651636), Vector3(-0.707066, -2.067324, 0.257351), Vector3(-0.707066, -2.067324, -0.257351), Vector3(-0.376222, -2.067324, -0.651636), Vector3(0.130661, -2.067324, -0.741013), Vector3(0.576406, -2.067324, -0.483662), Vector3(0.752444, -2.067324, 0.000000), Vector3(1.414133, -1.685298, 0.000000), Vector3(1.083289, -1.685298, 0.908987), Vector3(0.245561, -1.685298, 1.392649), Vector3(-0.707066, -1.685298, 1.224675), Vector3(-1.328850, -1.685298, 0.483662), Vector3(-1.328850, -1.685298, -0.483662), Vector3(-0.707066, -1.685298, -1.224675), Vector3(0.245562, -1.685298, -1.392649), Vector3(1.083289, -1.685298, -0.908987), Vector3(1.414133, -1.685298, 0.000000), Vector3(1.905256, -1.100000, 0.000000), Vector3(1.459511, -1.100000, 1.224675), Vector3(0.330844, -1.100000, 1.876311), Vector3(-0.952628, -1.100000, 1.650000), Vector3(-1.790355, -1.100000, 0.651636), Vector3(-1.790355, -1.100000, -0.651636), Vector3(-0.952628, -1.100000, -1.650000), Vector3(0.330845, -1.100000, -1.876311), Vector3(1.459511, -1.100000, -1.224675), Vector3(1.905256, -1.100000, 0.000000), Vector3(2.166577, -0.382026, 0.000000), Vector3(1.659694, -0.382026, 1.392649), Vector3(0.376222, -0.382026, 2.133662), Vector3(-1.083289, -0.382026, 1.876311), Vector3(-2.035917, -0.382026, 0.741013), Vector3(-2.035916, -0.382026, -0.741014), Vector3(-1.083288, -0.382026, -1.876311), Vector3(0.376223, -0.382026, -2.133662), Vector3(1.659695, -0.382026, -1.392648), Vector3(2.166577, -0.382026, 0.000000), Vector3(2.166577, 0.382026, 0.000000), Vector3(1.659694, 0.382026, 1.392649), Vector3(0.376222, 0.382026, 2.133662), Vector3(-1.083289, 0.382026, 1.876311), Vector3(-2.035917, 0.382026, 0.741013), Vector3(-2.035916, 0.382026, -0.741014), Vector3(-1.083288, 0.382026, -1.876311), Vector3(0.376223, 0.382026, -2.133662), Vector3(1.659695, 0.382026, -1.392648), Vector3(2.166577, 0.382026, 0.000000), Vector3(1.905256, 1.100000, 0.000000), Vector3(1.459511, 1.100000, 1.224675), Vector3(0.330844, 1.100000, 1.876311), Vector3(-0.952628, 1.100000, 1.650000), Vector3(-1.790355, 1.100000, 0.651636), Vector3(-1.790355, 1.100000, -0.651636), Vector3(-0.952628, 1.100000, -1.650000), Vector3(0.330845, 1.100000, -1.876311), Vector3(1.459511, 1.100000, -1.224674), Vector3(1.905256, 1.100000, 0.000000), Vector3(1.414132, 1.685298, 0.000000), Vector3(1.083288, 1.685298, 0.908987), Vector3(0.245561, 1.685298, 1.392649), Vector3(-0.707066, 1.685298, 1.224675), Vector3(-1.328850, 1.685298, 0.483662), Vector3(-1.328850, 1.685298, -0.483662), Vector3(-0.707066, 1.685298, -1.224675), Vector3(0.245562, 1.685298, -1.392648), Vector3(1.083289, 1.685298, -0.908987), Vector3(1.414132, 1.685298, 0.000000), Vector3(0.752444, 2.067324, 0.000000), Vector3(0.576406, 2.067324, 0.483662), Vector3(0.130660, 2.067324, 0.741013), Vector3(-0.376222, 2.067324, 0.651636), Vector3(-0.707066, 2.067324, 0.257351), Vector3(-0.707066, 2.067324, -0.257351), Vector3(-0.376222, 2.067324, -0.651636), Vector3(0.130661, 2.067324, -0.741013), Vector3(0.576406, 2.067324, -0.483662), Vector3(0.752444, 2.067324, 0.000000), Vector3(-0.000000, 2.200000, -0.000000) };
+
+	void get_sphere_points_z(std::vector<Vector3>& re, float radius = 2.2f, unsigned int sectors = 20, unsigned int rings = 20)
+	{
+		float const R = 1. / (float)(rings - 1);
+		float const S = 1. / (float)(sectors - 1);
+		int r, s;
+
+		for (r = 0; r < rings; r++)
+			for (s = 0; s < sectors; s++)
+			{
+				float y = sin(-(M_PI / 2) + M_PI * r * R);
+				float x = cos(2 * M_PI * s * S) * sin(M_PI * r * R);
+				float z = sin(2 * M_PI * s * S) * sin(M_PI * r * R);
+
+				x *= radius;
+				y *= radius;
+				z *= radius;
+
+				re.push_back(Vector3(x, y, z));
+			}
 	}
 
 	bool can_manipulate()
@@ -204,7 +227,10 @@ namespace other {
 		return true;
 	}
 
-	void find_manipulate_angle(float desyncTime) {
+	bool manipulate_fat = false;
+	Vector3 fat_target = Vector3::Zero();
+
+	void find_manipulate_angle(float desyncTime, Vector3 target_pos) {
 		auto loco = LocalPlayer::Entity( );
 		auto held = LocalPlayer::Entity()->GetHeldEntity<BaseProjectile>();
 		loco->modelState()->set_mounted(true);
@@ -221,11 +247,16 @@ namespace other {
 		float mm_max_eye = ((0.1f + ((desyncTime + 2.f / 60.f + 0.125f) * 1.5f) * loco->MaxVelocity( )));
 
 		std::vector<Vector3> arr = {};
+		std::vector<Vector3> fat = {};
 
 		float _fa = aidsware::ui::get_float(xorstr_("checks")) / 4.0f;
 
 		get_sphere_points(mm_max_eye, _fa, arr);
-		
+		//fat = ext;
+
+		bool fatq = false;
+		Vector3 fat_choice = Vector3::Zero();
+
 		for (auto s : arr) {
 			Vector3 point = re_p + s;
 
@@ -233,10 +264,31 @@ namespace other {
 				continue;
 
 			if (aidsware::ui::get_bool(xorstr_("show peek assist checks")))
+			{
 				DDraw::Sphere(point, 0.05f, Color::Color(52.f / 255.f, 100.f / 255.f, 235.f / 255.f, 1.f), aidsware::ui::get_float("duration"), true);
+			}
 
-			if (!target_ply->bones( )->head->visible_(point))
-				continue;
+			if (!target_ply->bones()->head->visible_(point))
+			{
+				/*
+				//check fat bullet?
+				if (aidsware::ui::get_bool(xorstr_("fat bullet"))) {
+					for (auto z : fat)
+					{
+						DDraw::Sphere(target_pos + z, 0.05f, Color::Color(52.f / 255.f, 100.f / 255.f, 235.f / 255.f, 1.f), 0.02f, true);
+
+						if (LineOfSight(point, target_pos + z))
+						{
+							fat_choice = s;
+							other::fat_target = target_pos + z;
+							fatq = true; //can see their fatbullet radius
+							break;
+						}
+					}
+				}
+				
+				if(!fatq) */continue;
+			}
 
 			if (ValidateEyePos(point))
 				continue;
@@ -250,6 +302,12 @@ namespace other {
 		}
 		
 		if (choice.empty( )) {
+			if (fatq)
+			{
+				other::manipulate_fat = true;
+				m_manipulate = fat_choice;
+				return;
+			}
 			m_manipulate = Vector3::Zero( );
 			return;
 		}

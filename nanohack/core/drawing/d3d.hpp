@@ -59,8 +59,10 @@ namespace d3d {
 
 				aidsware::ui::vars::Container->Render();
 
+				
 				if (settings::cheat_init)
-					entities::loop( );
+					entities::loop();
+					
 				if (aidsware::ui::get_bool(xorstr_("draw targeting fov")))
 					Renderer::circle(screen_center, aidsware::ui::get_color(xorstr_("targeting fov color")), aidsware::ui::get_float(xorstr_("target fov")), 1.f);
 				//SleepEx(1, 0);

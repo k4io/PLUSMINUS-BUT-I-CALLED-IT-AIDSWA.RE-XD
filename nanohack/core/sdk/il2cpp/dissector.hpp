@@ -12,26 +12,26 @@ static std::map<uint32_t, uint64_t> offsets = std::map<uint32_t, uint64_t>( );
 
 Il2CppClass* klass(uint32_t path) {
 	if (map_contains_key(offsets, path))
-		return reinterpret_cast<Il2CppClass*>(offsets[ path ]);
+		return reinterpret_cast<Il2CppClass*>(offsets[path]);
 
-	Il2CppDomain* domain = il2cpp_domain_get( );
-	Il2CppAssembly** assemblies = domain->assemblies( );
+	Il2CppDomain* domain = il2cpp_domain_get();
+	Il2CppAssembly** assemblies = domain->assemblies();
 
-	for (int i = 0; i < domain->assemblyCount( ); i++) {
+	for (int i = 0; i < domain->assemblyCount(); i++) {
 		Il2CppImage* image = *reinterpret_cast<Il2CppImage**>(*reinterpret_cast<uint64_t*>(std::uint64_t(assemblies) + (0x8 * i)));
-		for (int c = 0; c < image->classcount( ); c++) {
+		for (int c = 0; c < image->classcount(); c++) {
 			std::string temp(image->assemblyName);
 			temp.erase(temp.find(xorstr_(".dll")), 4);
 
 			Il2CppClass* klass = image->get_class(c);
 			char* name = klass->name;
 			char* ns = klass->namespaze;
-			if (std::string(ns).empty( ))
+			if (std::string(ns).empty())
 				temp = temp + xorstr_("::") + name;
 			else
 				temp = temp + xorstr_("::") + ns + xorstr_("::") + name;
 
-			if (path == RUNTIME_CRC32(temp.c_str( ))) {
+			if (path == RUNTIME_CRC32(temp.c_str())) {
 				uint64_t ptr = std::uint64_t(klass);
 
 				offsets.insert(std::make_pair(path, ptr));
@@ -202,7 +202,7 @@ public:
 
 	template<typename... t_FunctionParameters>
 	auto operator()(t_FunctionParameters... params) {
-		using result_type = decltype(std::declval<t_Function>( )(std::declval<t_FunctionParameters>( )...));
+		using result_type = decltype(std::declval<t_Function>( )(std::declval<t_FunctionParameters>()...));
 		using function_cdecl_ptr_t = result_type(__cdecl*)(t_FunctionParameters...);
 		using function_stdcall_ptr_t = result_type(__stdcall*)(t_FunctionParameters...);
 		using function_fastcall_ptr_t = result_type(_fastcall*)(t_FunctionParameters...);

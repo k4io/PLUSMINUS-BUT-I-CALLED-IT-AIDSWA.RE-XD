@@ -288,7 +288,7 @@ namespace aidsware::ui
 
 		wrapper::checkbox(xorstr_("peek assist"), Vector2(0, 0), Tabs::Combat, true, false); 
 	
-
+		
 		wrapper::currentY += 10.0f;
 		wrapper::slider(xorstr_("max radius"), Vector2(0, 10.0f), 7.f, 1.0f, 20.0f, Tabs::Combat);
 		wrapper::slider(xorstr_("checks"), Vector2(0, 10.0f), 30.f, 1.f, 360.0f, Tabs::Combat);
@@ -359,6 +359,7 @@ namespace aidsware::ui
 
 		wrapper::currentX += 5.f; //170
 
+		wrapper::checkbox(xorstr_("new esp"), Vector2(0, 0), Tabs::Visual);
 		wrapper::checkbox(xorstr_("players"), Vector2(0, 0), Tabs::Visual);
 		wrapper::checkbox(xorstr_("sleepers"), Vector2(0, 0), Tabs::Visual);
 		wrapper::checkbox(xorstr_("npc"), Vector2(0, 0), Tabs::Visual);
@@ -420,7 +421,7 @@ namespace aidsware::ui
 		wrapper::currentX += 5.0f;
 
 		wrapper::checkbox(xorstr_("fast loot"), Vector2(0, 0), Tabs::Misc);
-		wrapper::checkbox(xorstr_("farm assist"), Vector2(0, 0), Tabs::Misc);
+		//wrapper::checkbox(xorstr_("farm assist"), Vector2(0, 0), Tabs::Misc);
 		wrapper::checkbox(xorstr_("can hold items"), Vector2(0, 0), Tabs::Misc);
 		wrapper::checkbox(xorstr_("fake shots"), Vector2(0, 0), Tabs::Misc, true, false);
 		wrapper::checkbox(xorstr_("weapon spam"), Vector2(0, 0), Tabs::Misc);
@@ -475,6 +476,7 @@ namespace aidsware::ui
 		wrapper::currentY += 20.f;
 		wrapper::checkbox(xorstr_("infinite jump"), Vector2(180, 0), Tabs::Misc);
 		wrapper::checkbox(xorstr_("spiderman"), Vector2(180, 0), Tabs::Misc);
+		wrapper::checkbox(xorstr_("shrink"), Vector2(180, 0), Tabs::Misc);
 		wrapper::checkbox(xorstr_("no collisions"), Vector2(180, 0), Tabs::Misc);
 		wrapper::checkbox(xorstr_("omnisprint"), Vector2(180, 0), Tabs::Misc);
 		wrapper::checkbox(xorstr_("no fall"), Vector2(180, 0), Tabs::Misc);
@@ -529,6 +531,15 @@ namespace aidsware::ui
 		wrapper::textbox(xorstr_("custom box path"), Vector2(170, 0), Tabs::Misc, xorstr_(""));
 		wrapper::checkbox(xorstr_("custom hitsound"), Vector2(170, 0), Tabs::Misc);
 		wrapper::textbox(xorstr_("hitsound path"), Vector2(170, 0), Tabs::Misc, xorstr_(""));
+		wrapper::checkbox(xorstr_("auto upgrade"), Vector2(170, 0), Tabs::Misc, true);
+		wrapper::combobox(xorstr_("upgrade tier"),
+			{
+				xorstr_("none"),
+				xorstr_("wood"),
+				xorstr_("stone"),
+				xorstr_("metal"),
+				xorstr_("hqm")
+			}, Vector2(170, 0), Tabs::Misc);
 		wrapper::checkbox(xorstr_("spoof id"), Vector2(170, 0), Tabs::Misc);
 		wrapper::textbox(xorstr_("steamid"), Vector2(170, 0), Tabs::Misc, xorstr_(""));
 		//wrapper::checkbox(xorstr_("test"), Vector2(170, 0), Tabs::Combat);
