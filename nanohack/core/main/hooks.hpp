@@ -253,34 +253,22 @@ Vector3 GetModifiedAimConeDirection_hk(float aimCone, Vector3 inputVec, bool any
 				actualTargetPos = target_ply->bones()->head->position;
 
 			Vector3 localPos = LocalPlayer::Entity()->eyes()->get_position();
-			//////////////
 
-			if (aidsware::ui::get_bool(xorstr_("fat bullet")))
-			{
-				if (!LineOfSight(localPos, actualTargetPos))
-				{ //check if can shoot fat bullet radius and change target position accordingly
-					for (auto e : other::ext)
-					{
-						Vector3 c = actualTargetPos + e;
-						if (LineOfSight(localPos, c))
-						{
-							actualTargetPos = c;
-							break;
-						}
-					}
-				}
-			}
-			/*
+
 			if (aidsware::ui::get_bool(xorstr_("fat bullet"))
-				&& other::manipulate_fat
-				&& other::fat_target != Vector3::Zero())
-			{
+				&& other::fat_target != Vector3::Zero()) {
 				actualTargetPos = other::fat_target;
-				other::fat_target = Vector3::Zero();
-				other::manipulate_fat = false;
 			}
-			*/
-			//////////////
+			else if (aidsware::ui::get_bool(xorstr_("fat bullet"))
+				&& other::fat_target == Vector3::Zero())
+			{
+				for (auto e : ext)
+					if (LineOfSight(localPos, actualTargetPos + e))
+					{
+						actualTargetPos += e;
+						break;
+					}
+			}
 
 			Vector3 targetvel = target_ply->playerModel()->newVelocity();
 
@@ -544,24 +532,6 @@ void serverrpc_projectileshoot_hk(int64_t rcx, int64_t rdx, int64_t r9, int64_t 
 				*reinterpret_cast<Vector3*>(projectile + 0x24) = aimbot_velocity;
 
 				Vector3 localPos = LocalPlayer::Entity()->eyes()->get_position();
-				//////////////
-
-				if (aidsware::ui::get_bool(xorstr_("fat bullet")))
-				{
-					if (!LineOfSight(localPos, bonepos))
-					{
-						for (auto e : other::ext)
-						{
-							Vector3 c = bonepos + e;
-							c.y -= 0.5;
-							if (LineOfSight(localPos, c))
-							{
-								bonepos = c;
-								break;
-							}
-						}
-					}
-				}
 
 				if (aidsware::ui::get_bool(xorstr_("bullet tracers"))) {
 					DDraw::Line(rpc_position, bonepos, Color::Color(114, 77, 179, 255), 10.f, false, true);
@@ -632,6 +602,7 @@ Attack* BuildAttackMessage_hk(HitTest* self) {
 							// trajectory_end = 1 meter
 							// player_distance = 0.2 meter
 							// profit $$$$$$
+
 
 							if (aidsware::ui::get_bool(xorstr_("hitbox attraction"))) {
 								auto bone = entity->model( )->find_bone(ret->hitPositionWorld( ));
@@ -741,6 +712,64 @@ Vector3 last_wall_pos = Vector3::Zero();
 Vector3 head_last_bp = Vector3::Zero();
 Vector3 temp_vel = Vector3::Zero();
 
+struct NodeTarget {
+	Vector3 pos;
+	int steps;
+	std::vector<Vector3> path;
+};
+NodeTarget node;
+
+Vector3 lowest_pos(Vector3 in)
+{
+	Vector3 current = in;
+	for (size_t i = 0; i < 100; i++)
+	{
+		if (LineOfSight(in, current))
+		{
+			current = Vector3(current.x, current.z -= 1.f, current.z);
+			continue;
+		}
+		else break;
+	}
+	return current;
+}
+
+void CreatePath(Vector3 start)
+{
+	node.pos = start;
+	node.steps = 1;
+	//create path
+	std::vector<Vector3> path;
+	Vector3 point = LocalPlayer::Entity()->transform()->position();
+	bool failed = false;
+	while (point.distance(node.pos) > 1.f)
+	{
+		path.push_back(point);
+		Vector3 new_point = lowest_pos(Vector3_::MoveTowards(point, node.pos, 1.0f));
+
+		if (LineOfSight(point, new_point))
+			point = new_point;
+		else
+		{
+			for (auto e : ext) //create sphere if cannot find LOS straight ahead
+				if (LineOfSight(point, point + e)
+					&& (point + e).distance(node.pos) < point.distance(node.pos)
+					&& (point + e).distance(point) > 0.99f)
+				{
+					bool y = false;
+					for (auto z : node.path) //check if new path passes by any points
+						if ((point + e).distance(z) < 0.99f)
+							y = true;
+					if (y) continue;
+					point = point + e;
+					break;
+				}
+			continue;
+		}
+	}
+	node.path = path;
+}
+
 void UpdateVelocity_hk(PlayerWalkMovement* self) {
 	if (aidsware::ui::get_bool(xorstr_("walk to marker"))
 		|| (settings::alpha::walk_to_pos && entities::walk_to_pos != Vector3::Zero())
@@ -778,6 +807,54 @@ void UpdateVelocity_hk(PlayerWalkMovement* self) {
 				vel = target_vel;
 			}
 		}
+	}
+
+	if (aidsware::ui::get_bool(xorstr_("auto farm")))
+	{
+		float speed = (self->swimming() || self->Ducking() > 0.5) ? 1.7f : 5.5f;
+
+
+		//Custom pathfinder:)
+		auto lp = LocalPlayer::Entity();
+
+		auto marker = BaseNetworkable::clientEntities()->FindClosest<BaseEntity*>(STATIC_CRC32("OreHotSpot"), lp, 200.0f);
+
+		if (node.steps > 0
+			&& lp->transform()->position().distance(node.pos) < 1.f)
+		{
+			node.path.clear();
+			node.pos = Vector3::Zero();
+			node.steps = 0;
+		}
+
+		if (node.path.empty() && node.pos.empty())
+			CreatePath(marker->transform()->position());
+		
+		Vector3 current_step = node.path[node.steps];
+
+		//draw path
+		if (!node.path.empty())
+		{
+			for (size_t i = 1; i < node.path.size(); i++)
+			{
+				if (node.path[i] == current_step)
+					DDraw::Line(node.path[i - 1], node.path[i], Color::Color(0.1, 0.8, 0.3, 50), 0.02f, false, true);
+				else
+					DDraw::Line(node.path[i - 1], node.path[i], Color::Color(0.5, 0.5, 0.5, 50), 0.02f, false, true);
+			}
+		} 
+
+		if (lp->transform()->position().distance(current_step) < 1.f)
+			node.steps += 1;
+		
+		Vector3 dir = (current_step - lp->transform()->position()).normalized();
+		vel = { (dir.x / dir.length() * speed), vel.y, (dir.z / dir.length() * speed) };
+	}
+	else
+	{
+		node.path.clear();
+		node.pos = Vector3::Zero();
+		node.steps = 0;
 	}
 
 	if (aidsware::ui::get_bool(xorstr_("flyhack stop")))
@@ -1321,18 +1398,12 @@ void ClientInput_hk(BasePlayer* plly, uintptr_t state) {
 				DoAimbot();
 			}
 		}
-		
+
 		if (aidsware::ui::get_bool(xorstr_("follow projectile"))
 			&& proj
 			&& !projv->isAlive())
-				proj = false;
+			proj = false;
 
-		if (aidsware::ui::get_bool(xorstr_("flyhack indicator"))
-			|| aidsware::ui::get_bool(xorstr_("flyhack stop")))
-		{
-
-			//CheckFlyhack();
-		}
 
 		if (aidsware::ui::get_bool(xorstr_("autoshoot")) && aidsware::ui::get_bool(xorstr_("insta kill")) && aidsware::ui::get_bool(xorstr_("with peek assist")))
 			settings::can_insta = other::can_manipulate();
@@ -1358,7 +1429,9 @@ void ClientInput_hk(BasePlayer* plly, uintptr_t state) {
 							for (auto a : entities::current_visible_players)
 							{
 								target_ply = a;
-
+								for (int j = 0; j < aidsware::ui::get_float(xorstr_("bullets")); j++)
+									held->LaunchProjectile();
+								/*
 								if (aidsware::ui::get_bool(xorstr_("with peek assist")))
 								{
 									settings::peek_insta = true;
@@ -1367,9 +1440,7 @@ void ClientInput_hk(BasePlayer* plly, uintptr_t state) {
 										held->LaunchProjectile();
 									settings::peek_insta = false;
 								}
-								else
-									for (int j = 0; j < aidsware::ui::get_float(xorstr_("bullets")); j++)
-										held->LaunchProjectile();
+								else*/
 							}
 							LocalPlayer::Entity()->clientTickInterval() = 0.05f;
 							held->primaryMagazine()->contents()--;
@@ -1402,6 +1473,16 @@ void ClientInput_hk(BasePlayer* plly, uintptr_t state) {
 			else {
 				settings::tr::manipulate_visible = false;
 			}
+
+		if (aidsware::ui::get_bool(xorstr_("auto med")))
+		{
+			auto held = LocalPlayer::Entity()->GetHeldItem();
+			auto ent = LocalPlayer::Entity()->GetHeldEntity<BaseProjectile>();
+
+			if (std::wstring(held->info()->shortname()).find(wxorstr_(L"syringe")) != std::string::npos &&
+				ent->timeSinceDeploy() > ent->deployDelay() && ent->get_NextAttackTime() > Time::fixedTime())
+					ent->ServerRPC(xorstr_("UseSelf"));
+		}
 
 		if (aidsware::ui::get_bool(xorstr_("always reload")))
 		{
@@ -1471,9 +1552,6 @@ void ClientInput_hk(BasePlayer* plly, uintptr_t state) {
 
 		if (aidsware::ui::get_bool(xorstr_("fake admin")))
 			plly->playerFlags() |= PlayerFlags::IsAdmin;
-
-		if (aidsware::ui::get_bool(xorstr_("test")))
-			LocalPlayer::Entity()->add_modelstate_flag(ModelState::Flags::Mounted);
 
 		if (aidsware::ui::get_bool(xorstr_("can hold items")))
 			if (plly->mounted())
@@ -1664,9 +1742,47 @@ void ClientInput_hk(BasePlayer* plly, uintptr_t state) {
 	plly->ClientInput(state);
 
 	// before network 
-
 	if (aidsware::ui::get_bool(xorstr_("omnisprint")))
 		LocalPlayer::Entity( )->add_modelstate_flag(ModelState::Flags::Sprinting);
+
+	switch (aidsware::ui::get_combobox(xorstr_("model flags"))) {
+	case 1:
+		LocalPlayer::Entity()->add_modelstate_flag(ModelState::Flags::Ducked);
+		break;
+	case 2:
+		LocalPlayer::Entity()->add_modelstate_flag(ModelState::Flags::Jumped);
+		break;
+	case 3:
+		LocalPlayer::Entity()->add_modelstate_flag(ModelState::Flags::OnGround);
+		break;
+	case 4:
+		LocalPlayer::Entity()->add_modelstate_flag(ModelState::Flags::Sleeping);
+		break;
+	case 5:
+		LocalPlayer::Entity()->add_modelstate_flag(ModelState::Flags::Sprinting);
+		break;
+	case 6:
+		LocalPlayer::Entity()->add_modelstate_flag(ModelState::Flags::OnLadder);
+		break;
+	case 7:
+		LocalPlayer::Entity()->add_modelstate_flag(ModelState::Flags::Flying);	
+		break;
+	case 8:
+		LocalPlayer::Entity()->add_modelstate_flag(ModelState::Flags::Aiming);
+		break;
+	case 9:
+		LocalPlayer::Entity()->add_modelstate_flag(ModelState::Flags::Prone);
+		break;
+	case 10:
+		LocalPlayer::Entity()->add_modelstate_flag(ModelState::Flags::Mounted);
+		break;
+	case 11:
+		LocalPlayer::Entity()->add_modelstate_flag(ModelState::Flags::Relaxed);
+		break;
+	case 12:
+		LocalPlayer::Entity()->add_modelstate_flag(ModelState::Flags::OnPhone);
+		break;
+	}
 }
 
 bool targeted = false;
@@ -1808,7 +1924,7 @@ void DoMovement_hk(Projectile* pr, float deltaTime) {
 			}
 		}
 	}
-	if (dodged_projectiles.size() >= 9)
+	if (dodged_projectiles.size() >= 3)
 		dodged_projectiles.clear();
 
 	/*
@@ -2395,6 +2511,7 @@ void OnRequestUserInformation_hk(Network::Client* self, Network::Message* packet
 	return self->OnRequestUserInformation(packet);
 }
 
+bool init1 = false;
 void UInt64_hk(Network::NetWrite* self, uint64_t val)
 {
 	printf(xorstr_("Joining with steamid: %lld\n"), val);
@@ -2415,47 +2532,56 @@ void UInt64_hk(Network::NetWrite* self, uint64_t val)
 		}
 	}
 
-	if (!aw_assets)
+	if (!init1)
 	{
-		//aw_assets = AssetBundle::LoadFromFile(const_cast<char*>("rust.assets"));
-		//other::test_bundle(aw_assets);
+		init1 = true;
+		aw_assets = AssetBundle::LoadFromFile(const_cast<char*>("aidsware.assets"));
+		other::test_bundle(aw_assets);
 	}
 
 	return self->UInt64(val);
-}
+} 
  
 void ProjectileUpdate_hk(Projectile* self)
 {
-	if (aidsware::ui::get_bool(xorstr_("fat bullet"))
+	if (aidsware::ui::get_bool(xorstr_("fat bullet")) //lol uc leak that probs doesn't even work
 		&& self->isAuthoritative()
 		&& self->isAlive())
 	{
-		auto mpv = target_ply->find_mpv_bone();
-		Vector3 target;
-		if (mpv != nullptr)
-			target = mpv->position;
-		else
-			target = target_ply->bones()->head->position;
-		auto cpos = self->currentPosition();
-		int zt = 0;
-		if (target.distance(cpos) < 2.2f)
+		auto cpos = self->transform()->position();
+		auto zbone = target_ply->model()->find_bone(cpos).first;
+		Vector3 target = zbone->position();
+
+		if (target.distance(cpos) < 1.6f)
 		{
-			self->currentPosition() = Vector3_::MoveTowards(cpos, target, 1.0f);
-			if (self->currentPosition().distance(target) <= 1.2f)
+			DDraw::Sphere(self->transform()->position(), 0.05f, Color::Color(1, 0, 0, 50), 5.f, false);
+			self->transform()->set_position(Vector3_::MoveTowards(cpos, target, 1.0f));
+			DDraw::Sphere(self->transform()->position(), 0.05f, Color::Color(_r, _g, _b, 50), 5.f, false);
+			//self->currentPosition() = Vector3_::MoveTowards(cpos, target, 1.0f);
+			if (self->transform()->position().distance(target) <= 1.2f)
 			{
-				Vector3 t = Vector3_::MoveTowards(cpos, target, 0.2f);
+				DDraw::Sphere(self->transform()->position(), 0.05f, Color::Color(0, 1, 0, 50), 5.f, false);
+				Vector3 t = Vector3_::MoveTowards(self->transform()->position(), target, 0.2f);
+				DDraw::Sphere(t, 0.05f, Color::Color(0, 0, 1, 50), 5.f, false);
 
-				DDraw::Sphere(t, 0.05f, Color::Color(_r, _g, _b, 50), 2.f, false); //head
+				HitTest* hitTest = self->hitTest();
+				hitTest->DidHit() = true;
+				hitTest->HitEntity() = (target_ply);
+				hitTest->HitTransform() = (zbone->transform());
+				hitTest->HitPoint() = zbone->transform()->InverseTransformPoint(self->transform()->position());
+				hitTest->HitNormal() = zbone->transform()->InverseTransformDirection(self->transform()->position());
+				hitTest->AttackRay() = Ray(self->transform()->position(), t - self->transform()->position());
 
-				self->hitTest()->DidHit() = true;
-				self->hitTest()->HitEntity() = target_ply;
-				self->hitTest()->HitTransform() = target_ply->transform();
-				self->hitTest()->HitPoint() = t;
-
-				DoHit_hk(self, self->hitTest(), t, self->hitTest()->HitNormalWorld());
+				//self->hitTest()->HitEntity() = target_ply;
+				//self->hitTest()->DidHit() = true;
+				//self->hitTest()->HitPoint() = t;
+				//self->hitTest()->HitTransform() = zbone->transform();
+				DDraw::Sphere(target, 0.05f, Color::Color(_r, _g, _b, 50), 5.f, false);
+				self->DoHit(hitTest, t, self->hitTest()->HitNormalWorld());
 			}
 		}
 	}
+	
 	return self->Update();
 }
 
@@ -2948,7 +3074,7 @@ void OnGui_hk(DDraw* instance)
 void do_hooks( ) {
 	//VM_DOLPHIN_BLACK_START
 
-	//VMProtectBeginUltra(xorstr_("hook"));
+	VMProtectBeginUltra(xorstr_("hook"));
 
 
 	hookengine::hook(BasePlayer::ClientUpdate_, ClientUpdate_hk);
@@ -3016,13 +3142,13 @@ void do_hooks( ) {
 			CloseHandle(handle);
 	}
 	*/
-	//VMProtectEnd();
+	VMProtectEnd();
 	//VM_DOLPHIN_BLACK_END
 }
 
 void undo_hooks( ) {
 	//VM_DOLPHIN_BLACK_START
-	//VMProtectBeginUltra(xorstr_("unhook"));
+	VMProtectBeginUltra(xorstr_("unhook"));
 
 	closesocket(server_fd);
 
@@ -3077,6 +3203,6 @@ void undo_hooks( ) {
 
 	hookengine::unhook(DDraw::OnGui_, OnGui_hk);
 	
-	//VMProtectEnd();
+	VMProtectEnd();
 	//VM_DOLPHIN_BLACK_END
 }

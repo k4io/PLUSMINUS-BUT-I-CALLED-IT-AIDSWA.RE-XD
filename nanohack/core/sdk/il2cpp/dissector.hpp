@@ -88,21 +88,21 @@ uint64_t static_field(uint32_t path) {
 
 uint64_t field(uint32_t path) {
 	if (map_contains_key(offsets, path))
-		return std::uint32_t(offsets[ path ]);
+		return std::uint32_t(offsets[path]);
 
-	Il2CppDomain* domain = il2cpp_domain_get( );
-	Il2CppAssembly** assemblies = domain->assemblies( );
+	Il2CppDomain* domain = il2cpp_domain_get();
+	Il2CppAssembly** assemblies = domain->assemblies();
 
-	for (int i = 0; i < domain->assemblyCount( ); i++) {
+	for (int i = 0; i < domain->assemblyCount(); i++) {
 		Il2CppImage* image = *reinterpret_cast<Il2CppImage**>(*reinterpret_cast<uint64_t*>(std::uint64_t(assemblies) + (0x8 * i)));
-		for (int c = 0; c < image->classcount( ); c++) {
+		for (int c = 0; c < image->classcount(); c++) {
 			std::string temp(image->assemblyName);
 			temp.erase(temp.find(xorstr_(".dll")), 4);
 
 			Il2CppClass* klass = image->get_class(c);
 			char* name = klass->name;
 			char* ns = klass->namespaze;
-			if (std::string(ns).empty( ))
+			if (std::string(ns).empty())
 				temp = temp + xorstr_("::") + name;
 			else
 				temp = temp + xorstr_("::") + ns + xorstr_("::") + name;
@@ -112,9 +112,9 @@ uint64_t field(uint32_t path) {
 			while (field = klass->fields(&iter)) {
 				if (!field) continue;
 
-				std::string t(temp + xorstr_("::") + field->name( ));
-				if (RUNTIME_CRC32(t.c_str( )) == path) {
-					uint32_t off = field->offset( );
+				std::string t(temp + xorstr_("::") + field->name());
+				if (RUNTIME_CRC32(t.c_str()) == path) {
+					uint32_t off = field->offset();
 					offsets.insert(std::make_pair(path, off));
 
 					return off;

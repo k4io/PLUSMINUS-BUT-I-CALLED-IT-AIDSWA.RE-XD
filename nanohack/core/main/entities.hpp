@@ -207,9 +207,8 @@ namespace entities {
 
 	void do_chams(BasePlayer* player)
 	{
-		//chams = aw_assets->LoadAsset<Shader>(xorstr_("Chams"), Type::Shader());
-		
-		/*
+		if (!chams)
+			chams = aw_assets->LoadAsset<Shader>(xorstr_("assets/assets/resources/chamsshader.shader"), Type::Shader());
 		auto mesh = player->playerModel()->_multiMesh();
 		if (mesh)
 		{
@@ -223,11 +222,11 @@ namespace entities {
 					const auto material = renderer->material();
 					if (material)
 					{
-						if (shader) {
-							printf("Set shader %i\n", i);
-							if (shader != material->shader()) {
-								material->set_shader(shader);
+						if (chams) {
+							if (chams != material->shader()) {
+								material->set_shader(chams);
 							}
+							/*
 							else
 							{
 								//Color c1 = get_c(Color3(190, 190, 210));
@@ -236,15 +235,15 @@ namespace entities {
 								material->SetColor(xorstr_("_ColorVisible"), c1);
 								material->SetColor(xorstr_("_ColorBehind"), c2);
 							}
-							material->SetInt(xorstr_("_ZTest"), 8);
+							material->SetInt(xorstr_("_ZTest"), 8);*/
 						}
 					}
 				}
 			}
 		}
 		
-		*/
 		
+		/*
 		auto list = player->playerModel()->_multiMesh()->Renderers();
 		if (list) {
 			for (int i = 0; i < list->size; i++) {
@@ -286,6 +285,7 @@ namespace entities {
 				}
 			}
 		}
+		*/
 	}
 
 	bool FindPoint(int x1, int y1, int x2,
@@ -552,8 +552,38 @@ namespace entities {
 					if (target_ply->isCached()) {
 						auto bounds = target_ply->bones()->bounds;
 						if (!bounds.empty())
-							Renderer::line({ bounds.left + ((bounds.right - bounds.left) / 2), bounds.bottom }, { screen_center.x, screen_size.y }, Color3(255, 0, 0), true);
-						
+						{
+							Color3 col = get_color(target_ply, false, true);
+							switch (aidsware::ui::get_combobox(xorstr_("target snapline"))) {
+							case 1: //top
+								Renderer::line({ bounds.left + ((bounds.right - bounds.left) / 2), bounds.bottom },
+									{ screen_center.x, 0 },
+									col,
+									true);
+								break;
+							case 2: //center
+								Renderer::line({ bounds.left + ((bounds.right - bounds.left) / 2), bounds.bottom },
+									{ screen_center.x, screen_size.y / 2 },
+									col,
+									true);
+								break;
+							case 3: //bottom
+								Renderer::line({ bounds.left + ((bounds.right - bounds.left) / 2), bounds.bottom }, 
+									{ screen_center.x, screen_size.y }, 
+									col,
+									true);
+								break;
+							case 4: //penis
+								Vector2 w;
+								Camera::world_to_screen(LocalPlayer::Entity()->bones()->penis->position, w);
+								Renderer::line({ bounds.left + ((bounds.right - bounds.left) / 2), bounds.bottom },
+									w,
+									col,
+									true);
+								break;
+							}
+						}
+							
 						auto mpv = target_ply->find_mpv_bone();
 						Bone* target;
 						if (mpv != nullptr)
@@ -570,9 +600,9 @@ namespace entities {
 
 							belt::belt_tab_mov(Vector2(w, -20));
 
-							Renderer::rectangle_filled({ belt::pos.x, belt::pos.y - 20.0f }, Vector2(w, 20), Color3(25, 25, 25));
-							Renderer::rectangle_filled(Vector2(belt::pos.x, belt::pos.y), Vector2(w, h), Color3(45, 83, 122));
-							Renderer::rectangle_filled(Vector2(belt::pos.x + 5.0f, belt::pos.y + 5.0f), Vector2(w - 10, h - 10), Color3(25, 25, 25));
+							Renderer::rounded_rectangle_filled( belt::pos.x, belt::pos.y - 20.0f, w, 20, Color3(25, 25, 25), 10.f);
+							Renderer::rounded_rectangle_filled(belt::pos.x, belt::pos.y, w, h, Color3(45, 83, 122), 10.f);
+							Renderer::rounded_rectangle_filled(belt::pos.x + 5.0f, belt::pos.y + 5.0f, w - 10, h - 10, Color3(25, 25, 25), 10.f);
 
 							Renderer::text({ belt::pos.x + 7.0f, belt::pos.y - 16.0f }, Color3(219, 219, 219), 14.f, false, false, target_ply->_displayName());
 
@@ -585,7 +615,7 @@ namespace entities {
 										if (!item)
 											continue;
 
-										Color3 col = item->uid() == target_ply->clActiveItem() ? Color3(255, 0, 0) : Color3(219, 219, 219);
+										Color3 col = item->uid() == target_ply->clActiveItem() ? Color3(114, 31, 204) : Color3(219, 219, 219);
 
 										Renderer::text({ belt::pos.x + 7.0f, belt::pos.y + 7.0f + y }, col, 14.f, false, false, wxorstr_(L"%s [x%d]"), item->info()->displayName()->english(), item->amount());
 
@@ -594,7 +624,8 @@ namespace entities {
 								}
 							}
 
-							
+
+							/*
 							Color defaultcol = DDraw::get_color();
 							Color defaultbgcol(0.96862745f, 0.92156863f, 0.88235295f, 0.15f);
 							Color selectedcol(0.12156863f, 0.41960785f, 0.627451f, 0.75f);
@@ -632,6 +663,7 @@ namespace entities {
 								}
 								info_y += 96;
 							}
+							*/
 						}
 					}
 				}
@@ -960,7 +992,6 @@ namespace entities {
 						case STATIC_CRC32("generic_world"):
 						{
 							const wchar_t* weapon_name = entity->gameObject()->name();
-							if (!aidsware::ui::get_bool(xorstr_("weapons"))) break;
 							if (wcsstr(weapon_name, wxorstr_(L"lmg.m249")) != nullptr) {
 								if (aidsware::ui::get_bool("distance"))
 									Renderer::text({ screen.x, screen.y + 10 }, aidsware::ui::get_color(xorstr_("weapon color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
@@ -1249,44 +1280,41 @@ namespace entities {
 					}
 				}
 				if (d < 4.2f
-					&& aidsware::ui::get_bool(xorstr_("auto upgrade"))
-					&& get_key(aidsware::ui::get_keybind(xorstr_("auto upgrade key"))))
+					&& aidsware::ui::get_bool(xorstr_("auto upgrade")))
 				{
-					auto block = reinterpret_cast<BuildingBlock*>(entity);
+					auto block = entity->GetComponent<BuildingBlock>(Type::BuildingBlock());
 					auto grade = block->grade();
-					switch (aidsware::ui::get_combobox(xorstr_("upgrade tier"))) {
-					case 1:
-						if (block->CanAffordUpgrade(BuildingBlock::BuildingGrade::Wood,
-							LocalPlayer::Entity())
-							&& block->CanChangeToGrade(BuildingBlock::BuildingGrade::Wood,
-								LocalPlayer::Entity()) && grade != BuildingBlock::BuildingGrade::Wood)
-							block->Upgrade(BuildingBlock::BuildingGrade::Wood,
-								LocalPlayer::Entity());
-						break;
-					case 2:
-						if (block->CanAffordUpgrade(BuildingBlock::BuildingGrade::Stone,
-							LocalPlayer::Entity())
-							&& block->CanChangeToGrade(BuildingBlock::BuildingGrade::Stone,
-								LocalPlayer::Entity()) && grade != BuildingBlock::BuildingGrade::Stone)
-							block->Upgrade(BuildingBlock::BuildingGrade::Stone,
-								LocalPlayer::Entity());
-						break;
-					case 3:
-						if (block->CanAffordUpgrade(BuildingBlock::BuildingGrade::Metal,
-							LocalPlayer::Entity())
-							&& block->CanChangeToGrade(BuildingBlock::BuildingGrade::Metal,
-								LocalPlayer::Entity()) && grade != BuildingBlock::BuildingGrade::Metal)
-							block->Upgrade(BuildingBlock::BuildingGrade::Metal,
-								LocalPlayer::Entity());
-						break;
-					case 4:
-						if (block->CanAffordUpgrade(BuildingBlock::BuildingGrade::TopTier,
-							LocalPlayer::Entity())
-							&& block->CanChangeToGrade(BuildingBlock::BuildingGrade::TopTier,
-								LocalPlayer::Entity()) && grade != BuildingBlock::BuildingGrade::TopTier)
-							block->Upgrade(BuildingBlock::BuildingGrade::TopTier,
-								LocalPlayer::Entity());
-						break;
+
+					
+
+					if (block)
+					{
+						switch (aidsware::ui::get_combobox(xorstr_("upgrade tier"))) {
+						case 1:
+							if (block->CanAffordUpgrade(BuildingBlock::BuildingGrade::Wood)
+								&& block->CanChangeToGrade(BuildingBlock::BuildingGrade::Wood)
+								&& grade != BuildingBlock::BuildingGrade::Wood)
+								block->Upgrade(BuildingBlock::BuildingGrade::Wood);
+							break;
+						case 2:
+							if (block->CanAffordUpgrade(BuildingBlock::BuildingGrade::Stone)
+								&& block->CanChangeToGrade(BuildingBlock::BuildingGrade::Stone)
+								&& grade != BuildingBlock::BuildingGrade::Stone)
+								block->Upgrade(BuildingBlock::BuildingGrade::Stone);
+							break;
+						case 3:
+							if (block->CanAffordUpgrade(BuildingBlock::BuildingGrade::Metal)
+								&& block->CanChangeToGrade(BuildingBlock::BuildingGrade::Metal)
+								&& grade != BuildingBlock::BuildingGrade::Metal)
+								block->Upgrade(BuildingBlock::BuildingGrade::Metal);
+							break;
+						case 4:
+							if (block->CanAffordUpgrade(BuildingBlock::BuildingGrade::TopTier)
+								&& block->CanChangeToGrade(BuildingBlock::BuildingGrade::TopTier) 
+								&& grade != BuildingBlock::BuildingGrade::TopTier)
+								block->Upgrade(BuildingBlock::BuildingGrade::TopTier);
+							break;
+						}
 					}
 				}
 
@@ -1442,7 +1470,6 @@ namespace entities {
 
 							if (aidsware::ui::get_bool(xorstr_("looking direction")) && !player->HasPlayerFlag(PlayerFlags::Sleeping))
 								Renderer::line(player->bones()->dfc, player->bones()->forward, aidsware::ui::get_color(xorstr_("looking direction color")), true);
-
 
 
 							if (aidsware::ui::get_bool(xorstr_("crosshair indicators"))

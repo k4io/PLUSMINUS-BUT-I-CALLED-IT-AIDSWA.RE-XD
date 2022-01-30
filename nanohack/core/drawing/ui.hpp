@@ -303,7 +303,6 @@ namespace aidsware::ui
 		wrapper::slider(xorstr_("counter"), Vector2(0, 0), 5.0f, 0.0f, 9.0f, Tabs::Combat);
 		wrapper::slider(xorstr_("bullets"), Vector2(0, 0), 1.0f, 0.0f, 5.0f, Tabs::Combat);
 		wrapper::currentY -= 5.f;
-		wrapper::checkbox(xorstr_("with peek assist"), Vector2(0, 0), Tabs::Combat);
 
 		wrapper::combobox(xorstr_("double tap"),
 			{
@@ -385,6 +384,15 @@ namespace aidsware::ui
 		wrapper::checkbox(xorstr_("flyhack indicator"), Vector2(180, 0), Tabs::Visual);
 		wrapper::checkbox(xorstr_("target player belt"), Vector2(180, 0), Tabs::Visual);
 		wrapper::checkbox(xorstr_("draw targeting fov"), Vector2(180, 0.0f), Tabs::Visual);
+		wrapper::currentX += 5.f;
+		wrapper::combobox(xorstr_("target snapline"),
+			{
+				xorstr_("none"),
+				xorstr_("top"),
+				xorstr_("center"),
+				xorstr_("bottom")
+			}, Vector2(170, 0), Tabs::Visual);
+		wrapper::currentX -= 5.f;
 		wrapper::checkbox(xorstr_("show peek assist checks"), Vector2(180, 0), Tabs::Visual);
 		wrapper::checkbox(xorstr_("show prediction"), Vector2(180, 0), Tabs::Visual);
 		wrapper::checkbox(xorstr_("show desync"), Vector2(180, 0), Tabs::Visual);
@@ -421,7 +429,9 @@ namespace aidsware::ui
 		wrapper::currentX += 5.0f;
 
 		wrapper::checkbox(xorstr_("fast loot"), Vector2(0, 0), Tabs::Misc);
-		//wrapper::checkbox(xorstr_("farm assist"), Vector2(0, 0), Tabs::Misc);
+		wrapper::checkbox(xorstr_("auto med"), Vector2(0, 0), Tabs::Misc);
+		wrapper::checkbox(xorstr_("auto farm"), Vector2(0, 0), Tabs::Misc);
+		wrapper::checkbox(xorstr_("farm assist"), Vector2(0, 0), Tabs::Misc);
 		wrapper::checkbox(xorstr_("can hold items"), Vector2(0, 0), Tabs::Misc);
 		wrapper::checkbox(xorstr_("fake shots"), Vector2(0, 0), Tabs::Misc, true, false);
 		wrapper::checkbox(xorstr_("weapon spam"), Vector2(0, 0), Tabs::Misc);
@@ -432,7 +442,7 @@ namespace aidsware::ui
 		wrapper::keybind(xorstr_("zoom key"), Vector2(0, 0.0f), Tabs::Misc);
 		wrapper::currentY += 5.0f;
 
-		wrapper::currentY += 55.0f;
+		wrapper::currentY += 25.0f;
 
 		wrapper::combobox(xorstr_("anti-aim"),
 			{
@@ -473,9 +483,30 @@ namespace aidsware::ui
 		wrapper::checkbox(xorstr_("fake admin"), Vector2(180, 0), Tabs::Misc);
 		wrapper::checkbox(xorstr_("flyhack stop"), Vector2(180, 0), Tabs::Misc);
 		wrapper::keybind(xorstr_("climb bypass"), Vector2(180, 0), Tabs::Misc);
-		wrapper::currentY += 20.f;
+		wrapper::currentY += 10.f;
 		wrapper::checkbox(xorstr_("infinite jump"), Vector2(180, 0), Tabs::Misc);
 		wrapper::checkbox(xorstr_("spiderman"), Vector2(180, 0), Tabs::Misc);
+		//wrapper::checkbox(xorstr_("interactive debug"), Vector2(180, 0), Tabs::Misc);
+
+		wrapper::currentX += 5.f;
+		wrapper::combobox(xorstr_("model flags"),
+			{
+				xorstr_("none"),
+				xorstr_("Ducked"),
+				xorstr_("Jumped"),
+				xorstr_("OnGround"),
+				xorstr_("Sleeping"),
+				xorstr_("Sprinting"),
+				xorstr_("OnLadder"),
+				xorstr_("Flying"),
+				xorstr_("Aiming"),
+				xorstr_("Prone"),
+				xorstr_("Mounted"),
+				xorstr_("Relaxed"),
+				xorstr_("OnPhone"),
+			}, Vector2(170, 0), Tabs::Misc);
+		wrapper::currentX -= 5.f;
+
 		wrapper::checkbox(xorstr_("shrink"), Vector2(180, 0), Tabs::Misc);
 		wrapper::checkbox(xorstr_("no collisions"), Vector2(180, 0), Tabs::Misc);
 		wrapper::checkbox(xorstr_("omnisprint"), Vector2(180, 0), Tabs::Misc);
@@ -531,6 +562,7 @@ namespace aidsware::ui
 		wrapper::textbox(xorstr_("custom box path"), Vector2(170, 0), Tabs::Misc, xorstr_(""));
 		wrapper::checkbox(xorstr_("custom hitsound"), Vector2(170, 0), Tabs::Misc);
 		wrapper::textbox(xorstr_("hitsound path"), Vector2(170, 0), Tabs::Misc, xorstr_(""));
+		
 		wrapper::checkbox(xorstr_("auto upgrade"), Vector2(170, 0), Tabs::Misc, true);
 		wrapper::combobox(xorstr_("upgrade tier"),
 			{
@@ -540,6 +572,7 @@ namespace aidsware::ui
 				xorstr_("metal"),
 				xorstr_("hqm")
 			}, Vector2(170, 0), Tabs::Misc);
+
 		wrapper::checkbox(xorstr_("spoof id"), Vector2(170, 0), Tabs::Misc);
 		wrapper::textbox(xorstr_("steamid"), Vector2(170, 0), Tabs::Misc, xorstr_(""));
 		//wrapper::checkbox(xorstr_("test"), Vector2(170, 0), Tabs::Combat);

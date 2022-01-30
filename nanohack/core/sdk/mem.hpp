@@ -25,12 +25,16 @@ namespace mem {
 	}
 	template<typename T = uintptr_t, typename A>
 	T& read(A address) {
-		auto addresss = (DWORD64)address;
-		if (addresss > 0x40000 && (addresss + sizeof(T)) < 0x7FFFFFFF0000)
-			return *(T*)addresss;
+		__try
+		{
+			auto addresss = (DWORD64)address;
+			if (addresss > 0x40000 && (addresss + sizeof(T)) < 0x7FFFFFFF0000)
+				return *(T*)addresss;
 
-		auto n = nullptr;
-		return reinterpret_cast<T&>(n);
+			auto n = nullptr;
+			return reinterpret_cast<T&>(n);
+		}
+		__except (true) { auto n = nullptr; return reinterpret_cast<T&>(n); }
 	}
 	template <typename T>
 	void write(uintptr_t address, T data) {

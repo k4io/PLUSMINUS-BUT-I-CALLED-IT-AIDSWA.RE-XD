@@ -76,6 +76,7 @@ namespace managed_system
 			return *reinterpret_cast<type*>(internal_list + idx * sizeof(type));
 		}
 
+
 		type value(std::uint32_t idx)
 		{
 			const auto list = *reinterpret_cast<std::uintptr_t*>(this + 0x10);
@@ -873,10 +874,25 @@ public:
 	STATIC_FUNCTION("Assembly-CSharp::GamePhysics::CheckCapsule(Vector3,Vector3,Single,Int32,QueryTriggerInteraction): Boolean", CheckCapsule, bool(Vector3, Vector3, float, int, QueryTriggerInteraction));
 	//STATIC_FUNCTION("Assembly-CSharp::GamePhysics::OverlapCapsule(Vector3,Vector3,Single,List<Collider>,Int32,QueryTriggerInteraction): int", OverlapCapsule, int(Vector3, Vector3, float, List<Collider*>, int, QueryTriggerInteraction));
 };
+
+std::vector<Vector3> ext = { Vector3(0.000000, -1.000000, 0.000000), Vector3(0.342020, -0.939693, 0.000000), Vector3(0.262003, -0.939693, 0.219846), Vector3(0.059391, -0.939693, 0.336824), Vector3(-0.171010, -0.939693, 0.296198), Vector3(-0.321394, -0.939693, 0.116978), Vector3(-0.321394, -0.939693, -0.116978), Vector3(-0.171010, -0.939693, -0.296198), Vector3(0.059391, -0.939693, -0.336824), Vector3(0.262003, -0.939693, -0.219846), Vector3(0.342020, -0.939693, 0.000000), Vector3(0.642788, -0.766044, 0.000000), Vector3(0.492404, -0.766044, 0.413176), Vector3(0.111619, -0.766044, 0.633022), Vector3(-0.321394, -0.766044, 0.556670), Vector3(-0.604023, -0.766044, 0.219846), Vector3(-0.604023, -0.766044, -0.219846), Vector3(-0.321394, -0.766044, -0.556670), Vector3(0.111619, -0.766044, -0.633022), Vector3(0.492404, -0.766044, -0.413176), Vector3(0.642788, -0.766044, 0.000000), Vector3(0.866025, -0.500000, 0.000000), Vector3(0.663414, -0.500000, 0.556670), Vector3(0.150384, -0.500000, 0.852869), Vector3(-0.433013, -0.500000, 0.750000), Vector3(-0.813798, -0.500000, 0.296198), Vector3(-0.813798, -0.500000, -0.296198), Vector3(-0.433013, -0.500000, -0.750000), Vector3(0.150384, -0.500000, -0.852868), Vector3(0.663414, -0.500000, -0.556670), Vector3(0.866025, -0.500000, 0.000000), Vector3(0.984808, -0.173648, 0.000000), Vector3(0.754407, -0.173648, 0.633022), Vector3(0.171010, -0.173648, 0.969846), Vector3(-0.492404, -0.173648, 0.852869), Vector3(-0.925417, -0.173648, 0.336824), Vector3(-0.925417, -0.173648, -0.336824), Vector3(-0.492404, -0.173648, -0.852869), Vector3(0.171011, -0.173648, -0.969846), Vector3(0.754407, -0.173648, -0.633022), Vector3(0.984808, -0.173648, 0.000000), Vector3(0.984808, 0.173648, 0.000000), Vector3(0.754407, 0.173648, 0.633022), Vector3(0.171010, 0.173648, 0.969846), Vector3(-0.492404, 0.173648, 0.852868), Vector3(-0.925417, 0.173648, 0.336824), Vector3(-0.925416, 0.173648, -0.336824), Vector3(-0.492404, 0.173648, -0.852869), Vector3(0.171011, 0.173648, -0.969846), Vector3(0.754407, 0.173648, -0.633022), Vector3(0.984808, 0.173648, 0.000000), Vector3(0.866025, 0.500000, 0.000000), Vector3(0.663414, 0.500000, 0.556670), Vector3(0.150384, 0.500000, 0.852869), Vector3(-0.433013, 0.500000, 0.750000), Vector3(-0.813798, 0.500000, 0.296198), Vector3(-0.813798, 0.500000, -0.296198), Vector3(-0.433013, 0.500000, -0.750000), Vector3(0.150384, 0.500000, -0.852868), Vector3(0.663414, 0.500000, -0.556670), Vector3(0.866025, 0.500000, 0.000000), Vector3(0.642787, 0.766045, 0.000000), Vector3(0.492404, 0.766045, 0.413176), Vector3(0.111619, 0.766045, 0.633022), Vector3(-0.321394, 0.766045, 0.556670), Vector3(-0.604023, 0.766045, 0.219846), Vector3(-0.604023, 0.766045, -0.219846), Vector3(-0.321394, 0.766045, -0.556670), Vector3(0.111619, 0.766045, -0.633022), Vector3(0.492404, 0.766045, -0.413176), Vector3(0.642787, 0.766045, 0.000000), Vector3(0.342020, 0.939693, 0.000000), Vector3(0.262003, 0.939693, 0.219846), Vector3(0.059391, 0.939693, 0.336824), Vector3(-0.171010, 0.939693, 0.296198), Vector3(-0.321394, 0.939693, 0.116978), Vector3(-0.321394, 0.939693, -0.116978), Vector3(-0.171010, 0.939693, -0.296198), Vector3(0.059391, 0.939693, -0.336824), Vector3(0.262003, 0.939693, -0.219846), Vector3(0.342020, 0.939693, 0.000000) };
 bool LineOfSight(Vector3 a, Vector3 b) {
 	int mask = aidsware::ui::get_bool(xorstr_("pierce")) ? 10551296 : 1503731969; // projectile los, flyhack mask
-
+	
 	bool result = GamePhysics::LineOfSight(a, b, mask, 0.f) && GamePhysics::LineOfSight(b, a, mask, 0.f);
+	/*
+	if (aidsware::ui::get_bool(xorstr_("fat bullet"))
+		&& !result)
+	{
+		for (auto e : ext)
+		{
+			bool result = GamePhysics::LineOfSight(a, b, mask, 0.f) && GamePhysics::LineOfSight(a, b, mask, 0.f);
+
+			if (result)
+				return true;
+		}
+	}
+	*/
 	return result;
 }
 class Time {
@@ -1577,6 +1593,16 @@ class AttackEntity : public BaseEntity {
 public:
 	FIELD("Assembly-CSharp::AttackEntity::lastTickTime", lastTickTime, float);
 	FIELD("Assembly-CSharp::AttackEntity::repeatDelay", repeatDelay, float);
+	FIELD("Assembly-CSharp::AttackEntity::deployDelay", deployDelay, float);
+	FIELD("Assembly-CSharp::AttackEntity::timeSinceDeploy", timeSinceDeploy, float);
+	FIELD("Assembly-CSharp::AttackEntity::nextAttackTime", nextAttackTime, float);
+
+
+	float get_NextAttackTime() {
+		if (!this) return false;
+		static auto off = OFFSET("Assembly-CSharp::AttackEntity::get_NextAttackTime");
+		return *reinterpret_cast<float*>(this + off);
+	}
 };
 class BaseMelee : public AttackEntity {
 public:
@@ -1751,6 +1777,7 @@ public:
 	Bone* r_foot;
 	Bone* r_toe;
 	Bone* l_toe;
+	Bone* penis;
 
 	box_bounds bounds;
 	Vector2 dfc;
@@ -1875,24 +1902,24 @@ public:
 		Stone = 2,
 		Metal = 3,
 		TopTier = 4,
-		Count = 5
+		Count = 5	
 	};
 	FIELD("Assembly-CSharp::BuildingBlock::grade", grade, BuildingGrade);
 
-	bool CanAffordUpgrade(BuildingGrade g, BasePlayer* p) {
+	bool CanAffordUpgrade(BuildingGrade g) {
 		if (!this) return false;
-		static auto off = METHOD("Assembly-CSharp::BuildingBlock::CanAffordUpgrade(BuildingGrade.enum, BasePlayer): Boolean");
-		return reinterpret_cast<bool(__fastcall*)(BuildingBlock*, BuildingGrade, BasePlayer*)>(off)(this, g, p);
+		static auto off = METHOD("Assembly-CSharp::BuildingBlock::CanAffordUpgrade(Assembly-CSharp::BuildingGrade.Enum,BasePlayer): Boolean");
+		return reinterpret_cast<bool(__fastcall*)(BuildingBlock*, int, BasePlayer*)>(off)(this, (int)g, LocalPlayer::Entity());
 	}
-	bool CanChangeToGrade(BuildingGrade g, BasePlayer* p) {
+	bool CanChangeToGrade(BuildingGrade g) {
 		if (!this) return false;
-		static auto off = METHOD("Assembly-CSharp::BuildingBlock::CanChangeToGrade(BuildingGrade.enum, BasePlayer): Boolean");
-		return reinterpret_cast<bool(__fastcall*)(BuildingBlock*, BuildingGrade, BasePlayer*)>(off)(this, g, p);
+		static auto off = METHOD("Assembly-CSharp::BuildingBlock::CanChangeToGrade(BuildingGrade.Enum,BasePlayer): Boolean");
+		return reinterpret_cast<bool(__fastcall*)(BuildingBlock*, int, BasePlayer*)>(off)(this, (int)g, LocalPlayer::Entity());
 	}
-	void Upgrade(BuildingGrade g, BasePlayer* p){
+	void Upgrade(BuildingGrade g){
 		if (!this) return;
-		static auto off = METHOD("Assembly-CSharp::BuildingBlock::UpgradeToGrade(BuildingGrade.enum, BasePlayer): Void");
-		return reinterpret_cast<void(__fastcall*)(BuildingBlock*, BuildingGrade, BasePlayer*)>(off)(this, g, p);
+		static auto off = METHOD("Assembly-CSharp::BuildingBlock::UpgradeToGrade(BuildingGrade.Enum,BasePlayer): Void");
+		return reinterpret_cast<void(__fastcall*)(BuildingBlock*, int, BasePlayer*)>(off)(this, (int)g, LocalPlayer::Entity());
 	}
 };
 
@@ -2952,8 +2979,8 @@ public:
 		return reinterpret_cast<T * (*)(AssetBundle*, String*, Type*)>(off)(this, String::New(name), type);
 	}
 	static AssetBundle* LoadFromFile(char* path) {
-		static auto off = METHOD("UnityEngine.AssetBundleModule::UnityEngine::AssetBundle::LoadFromFile_Internal(String,UInt32,UInt64): AssetBundle");
-		return reinterpret_cast<AssetBundle * (*)(String*, uint32_t, uint64_t)>(off)(String::New(path), 0, 0);
+		static auto off = METHOD("UnityEngine.AssetBundleModule::UnityEngine::AssetBundle::LoadFromFile(String): AssetBundle");
+		return reinterpret_cast<AssetBundle * (*)(String*)>(off)(String::New(path));
 	}
 };
 
@@ -3326,13 +3353,11 @@ Shader* chams = nullptr;
 																															  
 void initialize_cheat( ) {																									  
 	////VM_DOLPHIN_BLACK_START																								  
-	//VMProtectBeginUltra(xorstr_("init"));																				  
+	VMProtectBeginUltra(xorstr_("init"));																				  
 	init_classes( );
 	init_fields( );
 	init_methods();
 
-	//chams = aw_assets->LoadAsset<Shader>(xorstr_("chams.shader"), Type::Shader());
-	
 	ASSIGN_HOOK("Assembly-CSharp::BasePlayer::ClientUpdate(): Void", BasePlayer::ClientUpdate_);
 	ASSIGN_HOOK("Assembly-CSharp::BasePlayer::ClientUpdate_Sleeping(): Void", BasePlayer::ClientUpdate_Sleeping_);
 	ASSIGN_HOOK("Assembly-CSharp::HitTest::BuildAttackMessage(): Attack", HitTest::BuildAttackMessage_);
@@ -3374,7 +3399,7 @@ void initialize_cheat( ) {
 	
 	ASSIGN_HOOK("Assembly-CSharp::Client::OnNetworkMessage(Message): Void", Network::Client::OnNetworkMessage_);
 
-	ASSIGN_HOOK("Assembly-CSharp::MainCamera::get_position(): Vector3", MainCamera::get_position_);
+	//ASSIGN_HOOK("Assembly-CSharp::MainCamera::get_position(): Vector3", MainCamera::get_position_);
 
 	ASSIGN_HOOK("Assembly-CSharp::UnityEngine::DDraw::OnGUI(): Void", DDraw::OnGui_);
 
@@ -3385,6 +3410,6 @@ void initialize_cheat( ) {
 
 	settings::cheat_init = true;
 
-	//VMProtectEnd();
+	VMProtectEnd();
 	////VM_DOLPHIN_BLACK_END
 }

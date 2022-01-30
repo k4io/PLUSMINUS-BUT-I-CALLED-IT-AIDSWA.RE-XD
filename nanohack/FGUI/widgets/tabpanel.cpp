@@ -212,7 +212,7 @@ namespace FGUI
                           arWidgetRegion.m_iLeft + 150,
                           arWidgetRegion.m_iTop - 135,
                           arWidgetRegion.m_iRight + 125,
-                          arWidgetRegion.m_iBottom + 245,
+                          arWidgetRegion.m_iBottom + 265,
                           { 32,36,36 }, 23.f);
                       FGUI::RENDER.Text(arWidgetRegion.m_iLeft + 250,
                           arWidgetRegion.m_iTop - 130,
@@ -221,12 +221,12 @@ namespace FGUI
                       //weapon group
                       FGUI::RENDER.RoundedRectangleFilled(
                           arWidgetRegion.m_iLeft + 150,
-                          arWidgetRegion.m_iTop + 180,
+                          arWidgetRegion.m_iTop + 200,
                           arWidgetRegion.m_iRight + 125,
                           arWidgetRegion.m_iBottom + 120,
                           { 32,36,36 }, 23.f);
                       FGUI::RENDER.Text(arWidgetRegion.m_iLeft + 260,
-                          arWidgetRegion.m_iTop + 185,
+                          arWidgetRegion.m_iTop + 205,
                           m_anyFont, { 220, 120, 220 }, "misc");
 
                       //extras group
@@ -234,7 +234,7 @@ namespace FGUI
                           arWidgetRegion.m_iLeft + 400,
                           arWidgetRegion.m_iTop - 135,
                           arWidgetRegion.m_iRight + 100,
-                          arWidgetRegion.m_iBottom + 390,
+                          arWidgetRegion.m_iBottom + 430,
                           { 32,36,36 }, 23.f);
                       FGUI::RENDER.Text(arWidgetRegion.m_iLeft + 485,
                           arWidgetRegion.m_iTop - 130,
@@ -244,7 +244,7 @@ namespace FGUI
                           arWidgetRegion.m_iLeft + 625,
                           arWidgetRegion.m_iTop - 135,
                           arWidgetRegion.m_iRight + 100,
-                          arWidgetRegion.m_iBottom + 310,
+                          arWidgetRegion.m_iBottom + 360,
                           { 32,36,36 }, 23.f);
                       FGUI::RENDER.Text(arWidgetRegion.m_iLeft + 700,
                           arWidgetRegion.m_iTop - 130,

@@ -69,6 +69,7 @@ namespace bonecache {
 			cache->r_foot = model->resolve(STATIC_CRC32("r_foot"));
 			cache->r_toe = model->resolve(STATIC_CRC32("r_toe"));
 			cache->l_toe = model->resolve(STATIC_CRC32("l_toe"));
+			cache->penis = model->resolve(STATIC_CRC32("penis"));
 
 			if (player->userID() != LocalPlayer::Entity()->userID()) {
 				box_bounds bo = get_bounds(player, 2.f);
