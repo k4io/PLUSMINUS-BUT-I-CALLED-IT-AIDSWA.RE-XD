@@ -6,7 +6,7 @@
 #define authh
 #define _WINSOCKAPI_
 
-#include <VMProtectSDK.h>
+//#include <//VMProtectSDK.h>
 
 #include <Windows.h>
 #include <stdint.h>
@@ -168,7 +168,7 @@ std::string get_pwd(std::string file)
 #define MAX_LINE 255
 void entry_thread() {
 	//VM_DOLPHIN_BLACK_START
-	VMProtectBeginUltra(xorstr_("entry"));
+	//VMProtectBeginUltra(xorstr_("entry"));
 	PWSTR szPath = NULL;
 	
 	HRESULT dl;
@@ -343,7 +343,7 @@ void entry_thread() {
 
 	d3d::init();
 
-	VMProtectEnd();
+	//VMProtectEnd();
 	initialize_cheat();
 	//VM_DOLPHIN_BLACK_END
 	do_hooks();

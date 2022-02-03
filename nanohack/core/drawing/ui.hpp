@@ -251,6 +251,7 @@ namespace aidsware::ui
 
 		//wrapper::slider(xorstr_("shaders"), Vector2(0, 0), 1.0f, 1.0f, 40.0f);
 		wrapper::checkbox(xorstr_("psilent"), Vector2(0, 0), Tabs::Combat, true);
+		wrapper::checkbox(xorstr_("silent melee"), Vector2(0, 0), Tabs::Combat, true);
 		wrapper::checkbox(xorstr_("target heli"), Vector2(0, 0), Tabs::Combat);
 
 		wrapper::reset_height();
@@ -431,7 +432,7 @@ namespace aidsware::ui
 		wrapper::checkbox(xorstr_("fast loot"), Vector2(0, 0), Tabs::Misc);
 		wrapper::checkbox(xorstr_("auto med"), Vector2(0, 0), Tabs::Misc);
 		wrapper::checkbox(xorstr_("auto farm"), Vector2(0, 0), Tabs::Misc);
-		wrapper::checkbox(xorstr_("farm assist"), Vector2(0, 0), Tabs::Misc);
+		//wrapper::checkbox(xorstr_("farm assist"), Vector2(0, 0), Tabs::Misc);
 		wrapper::checkbox(xorstr_("can hold items"), Vector2(0, 0), Tabs::Misc);
 		wrapper::checkbox(xorstr_("fake shots"), Vector2(0, 0), Tabs::Misc, true, false);
 		wrapper::checkbox(xorstr_("weapon spam"), Vector2(0, 0), Tabs::Misc);
@@ -511,6 +512,7 @@ namespace aidsware::ui
 		wrapper::checkbox(xorstr_("no collisions"), Vector2(180, 0), Tabs::Misc);
 		wrapper::checkbox(xorstr_("omnisprint"), Vector2(180, 0), Tabs::Misc);
 		wrapper::checkbox(xorstr_("no fall"), Vector2(180, 0), Tabs::Misc);
+		wrapper::checkbox(xorstr_("silent farm"), Vector2(180, 0), Tabs::Misc);
 		wrapper::checkbox(xorstr_("walk to marker"), Vector2(180, 0), Tabs::Misc);
 		wrapper::checkbox(xorstr_("bullet tracers"), Vector2(180, 0), Tabs::Misc);
 		wrapper::checkbox(xorstr_("follow projectile"), Vector2(180, 0), Tabs::Misc);

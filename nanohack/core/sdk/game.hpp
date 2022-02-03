@@ -655,10 +655,10 @@ public:
 					auto baseNetworkable = *reinterpret_cast<BaseNetworkable**>(std::uint64_t(entityList->vals->buffer) + (0x20 + (sizeof(void*) * i)));
 					if (!baseNetworkable) continue;
 
-					if (baseNetworkable->class_name_hash( ) == hash && baseNetworkable->transform( )->position( ).distance(targetEnt->transform( )->position( )) <= dist)                     
+					if (baseNetworkable->class_name_hash( ) == hash && baseNetworkable->transform( )->position( ).distance(targetEnt->transform( )->position( )) <= dist
+						&& baseNetworkable->transform()->position().distance(targetEnt->transform()->position()) < ent->transform()->position().distance(targetEnt->transform()->position()))
 					{
 						ent = reinterpret_cast<T>(baseNetworkable);
-						break;
 					}
 				}
 			}
@@ -870,6 +870,7 @@ public:
 	};
 
 	STATIC_FUNCTION("Assembly-CSharp::GamePhysics::LineOfSight(Vector3,Vector3,Int32,Single): Boolean", LineOfSight, bool(Vector3, Vector3, int, float));
+	STATIC_FUNCTION("Assembly-CSharp::GamePhysics::LineOfSightRadius(Vector3,Vector3,Int32,Single,Single): Boolean", LineOfSightRadius, bool(Vector3, Vector3, int, float, float));
 	STATIC_FUNCTION("Assembly-CSharp::GamePhysics::Verify(RaycastHit): Boolean", Verify, bool(RaycastHit*));
 	STATIC_FUNCTION("Assembly-CSharp::GamePhysics::CheckCapsule(Vector3,Vector3,Single,Int32,QueryTriggerInteraction): Boolean", CheckCapsule, bool(Vector3, Vector3, float, int, QueryTriggerInteraction));
 	//STATIC_FUNCTION("Assembly-CSharp::GamePhysics::OverlapCapsule(Vector3,Vector3,Single,List<Collider>,Int32,QueryTriggerInteraction): int", OverlapCapsule, int(Vector3, Vector3, float, List<Collider*>, int, QueryTriggerInteraction));
@@ -1483,6 +1484,9 @@ public:
 		return reinterpret_cast<String * (__fastcall*)(uint32_t)>(off)(i);
 	}
 };
+class DamageProperties {
+public:
+};
 class Attack;
 class HitTest {
 public:
@@ -1503,6 +1507,7 @@ public:
 	FIELD("Assembly-CSharp::HitTest::HitTransform", HitTransform, Transform*);
 	FIELD("Assembly-CSharp::HitTest::HitPart", HitPart, uint32_t);
 	FIELD("Assembly-CSharp::HitTest::HitMaterial", HitMaterial, String*);
+	FIELD("Assembly-CSharp::HitTest::damageProperties", damageProperties, DamageProperties*);
 
 	Vector3 HitPointWorld( ) {
 		if (!this) return Vector3::Zero( );
@@ -1589,6 +1594,29 @@ class TraceInfo {
 	}
 };
 */
+class GatherPropertyEntry {
+public:
+	float gatherDamage() {
+		return *reinterpret_cast<float*>(this + 0x10);
+	}
+	//FIELD("Assembly-CSharp::ResourceDispenser.GatherPropertyEntry::gatherDamage", gatherDamage, float);
+	FIELD("Assembly-CSharp::ResourceDispenser.GatherPropertyEntry::destroyFraction", destroyFraction, float);
+	FIELD("Assembly-CSharp::ResourceDispenser.GatherPropertyEntry::conditionLost", conditionLost, float);
+};
+class GatherProperties {
+public:
+	GatherPropertyEntry* tree()
+	{
+		return *reinterpret_cast<GatherPropertyEntry**>(this + 0x10);
+	}
+	GatherPropertyEntry* ore()
+	{
+		return *reinterpret_cast<GatherPropertyEntry**>(this + 0x18);
+	}
+	//FIELD("Assembly-CSharp::ResourceDispenser.GatherProperties::Tree", tree, GatherPropertyEntry*);
+	//FIELD("Assembly-CSharp::ResourceDispenser.GatherProperties::Ore", ore, GatherPropertyEntry*);
+	FIELD("Assembly-CSharp::ResourceDispenser.GatherProperties::Flesh", flesh, GatherPropertyEntry*);
+};
 class AttackEntity : public BaseEntity {
 public:
 	FIELD("Assembly-CSharp::AttackEntity::lastTickTime", lastTickTime, float);
@@ -1603,10 +1631,17 @@ public:
 		static auto off = OFFSET("Assembly-CSharp::AttackEntity::get_NextAttackTime");
 		return *reinterpret_cast<float*>(this + off);
 	}
+	void StartAttackCooldown(float cd) {
+		if (!this) return;
+		static auto off = METHOD("Assembly-CSharp::AttackEntity::StartAttackCooldown(Single): Void");
+		return reinterpret_cast<void(__fastcall*)(AttackEntity*, float)>(off)(this, cd);
+	}
 };
 class BaseMelee : public AttackEntity {
 public:
 	FIELD("Assembly-CSharp::BaseMelee::MaxDistance", maxDistance, float);
+	FIELD("Assembly-CSharp::BaseMelee::damageProperties", damageProperties, DamageProperties*);
+	FIELD("Assembly-CSharp::BaseMelee::gathering", gathering, GatherProperties*);
 	static inline void (*ProcessAttack_)(BaseMelee*, HitTest*) = nullptr;
 	void ProcessAttack(HitTest* test) {
 		return ProcessAttack_(this, test);
@@ -3353,7 +3388,7 @@ Shader* chams = nullptr;
 																															  
 void initialize_cheat( ) {																									  
 	////VM_DOLPHIN_BLACK_START																								  
-	VMProtectBeginUltra(xorstr_("init"));																				  
+	//VMProtectBeginUltra(xorstr_("init"));																				  
 	init_classes( );
 	init_fields( );
 	init_methods();
@@ -3376,7 +3411,7 @@ void initialize_cheat( ) {
 	ASSIGN_HOOK("Assembly-CSharp::BaseMountable::EyePositionForPlayer(BasePlayer,Quaternion): Vector3", BaseMountable::EyePositionForPlayer_);
 	//ASSIGN_HOOK("Assembly-CSharp::SkinnedMultiMesh::RebuildModel(PlayerModel,Boolean): Void", SkinnedMultiMesh::RebuildModel_);
 	ASSIGN_HOOK("Assembly-CSharp::FlintStrikeWeapon::DoAttack(): Void", FlintStrikeWeapon::DoAttack_);
-	//ASSIGN_HOOK("Assembly-CSharp::BaseMelee::ProcessAttack(HitTest): Void", BaseMelee::ProcessAttack_);
+	ASSIGN_HOOK("Assembly-CSharp::BaseMelee::ProcessAttack(HitTest): Void", BaseMelee::ProcessAttack_);
 	ASSIGN_HOOK("Assembly-CSharp::BaseCombatEntity::OnAttacked(HitInfo): Void", BaseCombatEntity::OnAttacked_);
 	ASSIGN_HOOK("Assembly-CSharp::InputState::IsDown(BUTTON): Boolean", InputState::IsDown_);
 	ASSIGN_HOOK("Assembly-CSharp::PlayerEyes::get_BodyLeanOffset(): Vector3", PlayerEyes::BodyLeanOffset_);
@@ -3410,6 +3445,6 @@ void initialize_cheat( ) {
 
 	settings::cheat_init = true;
 
-	VMProtectEnd();
+	//VMProtectEnd();
 	////VM_DOLPHIN_BLACK_END
 }

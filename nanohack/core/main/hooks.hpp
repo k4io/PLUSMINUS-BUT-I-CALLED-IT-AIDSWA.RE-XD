@@ -7,6 +7,8 @@
 #pragma comment (lib, "Ws2_32.lib")
 #pragma comment( lib, "shlwapi.lib" )  // needed for the ColorHLSToRGB() function
 
+int _r = 255, _g = 0, _b = 0;
+
 #define ID3_VAL 76561197960265728
 
 #define CALLED_BY(func,off) (reinterpret_cast<std::uint64_t>(_ReturnAddress()) > func && reinterpret_cast<std::uint64_t>(_ReturnAddress()) < func + off)
@@ -429,6 +431,8 @@ void serverrpc_projectileshoot_hk(int64_t rcx, int64_t rdx, int64_t r9, int64_t 
 	Vector3 vp{};
 	Vector3 tp{};
 	f_travel_time = 0.0f;
+
+	//good prediction but needed for getmodifiedaimcone not rpc
 	while (1)
 	{
 		if (!ProjectileShoot)
@@ -698,11 +702,99 @@ void DoFirstPersonCamera_hk(PlayerEyes* a1, Component* cam) {
 	*/
 }
 
+
+void pa(BaseMelee* self, HitTest* hit)
+{
+	__try
+	{
+		auto entity = hit->HitEntity();
+		if (entity->class_name_hash() == STATIC_CRC32("OreResourceEntity")) {
+			BaseNetworkable* marker = BaseNetworkable::clientEntities()->FindClosest(STATIC_CRC32("OreHotSpot"), entity, 5.0f);
+			if (marker) {
+				entity = marker;
+				hit->HitTransform() = marker->transform();
+				hit->HitPoint() = marker->transform()->InverseTransformPoint(marker->transform()->position());
+				hit->HitMaterial() = String::New(xorstr_("MetalOre"));
+			}
+		}
+		else if (entity->class_name_hash() == STATIC_CRC32("TreeEntity")) {
+			BaseNetworkable* marker = BaseNetworkable::clientEntities()->FindClosest(STATIC_CRC32("TreeMarker"), entity, 5.0f);
+			if (marker) {
+				hit->HitTransform() = marker->transform();
+				hit->HitPoint() = marker->transform()->InverseTransformPoint(marker->transform()->position());
+				hit->HitMaterial() = String::New(xorstr_("Wood"));
+			}
+		}
+	}
+	__except (true)
+	{
+		printf(xorstr_("Exception occured in %s\n"), __FUNCTION__);
+	}
+}
+
+void ProcessAttack_hk(BaseMelee* self, HitTest* hit) {
+	if (!self || !hit) return;
+	auto entity = hit->HitEntity();
+	if (!entity) return self->ProcessAttack(hit);
+
+	if (!aidsware::ui::get_bool(xorstr_("farm assist")) || !entity)
+		return self->ProcessAttack(hit);
+
+	pa(self, hit);
+
+	return self->ProcessAttack(hit);
+}
+
 bool CanAttack_hk(BasePlayer* self) {
 	if (aidsware::ui::get_bool(xorstr_("can hold items")))
 		return true;
 
 	return self->CanAttack( );
+}
+
+void doMeleeAttack(Vector3 pos, BaseEntity* ply, BaseMelee* p, bool is_player = false)
+{
+	__try
+	{
+		auto lp = LocalPlayer::Entity();
+		if (!LineOfSight(pos, lp->transform()->position()))
+			return;
+
+		Vector3 lpos = lp->eyes()->get_position();
+
+		if (p->nextAttackTime() >= Time::fixedTime())
+			return;
+
+		if (p->timeSinceDeploy() < p->deployDelay())
+			return;
+		p->maxDistance() = 4.5f;
+
+
+		auto clazz = init_class(xorstr_("HitTest"));
+		auto n = (HitTest*)il2cpp_object_new(clazz);
+
+
+		if (!n) return;
+		Ray r(lpos, (pos - lpos).normalized());
+		Transform* tranny = is_player ? reinterpret_cast<BasePlayer*>(ply)->bones()->head->transform : ply->transform();
+		if (!tranny) return;
+
+		n->MaxDistance() = 1000.f;
+		n->HitTransform() = tranny;
+		n->AttackRay() = r;
+		n->HitEntity() = ply;
+		n->HitPoint() = tranny->InverseTransformPoint(pos);
+		n->HitNormal() = Vector3(0, 0, 0);
+		n->damageProperties() = p->damageProperties();
+
+		p->StartAttackCooldown(p->repeatDelay());
+		printf(xorstr_("Ret do_autofarm\n"));
+		return p->ProcessAttack(n);
+	}
+	__except (true)
+	{
+		printf(xorstr_("Exception occured inside do_autofarm\n"));
+	}
 }
 
 bool bp_flying = false;
@@ -716,6 +808,7 @@ struct NodeTarget {
 	Vector3 pos;
 	int steps;
 	std::vector<Vector3> path;
+	BaseEntity* ent;
 };
 NodeTarget node;
 
@@ -731,7 +824,19 @@ Vector3 lowest_pos(Vector3 in)
 		}
 		else break;
 	}
-	return current;
+	return Vector3(current.x, current.y += 1.6f, current.z);
+}
+
+float dfg(Vector3 v)
+{
+	Vector3 p = v;
+	int t = 0;
+	while (t++ < 100)
+	{
+		if (!LineOfSight(v, p))
+			return v.distance(p);
+		p.y -= 0.1;
+	}
 }
 
 void CreatePath(Vector3 start)
@@ -740,19 +845,31 @@ void CreatePath(Vector3 start)
 	node.steps = 1;
 	//create path
 	std::vector<Vector3> path;
-	Vector3 point = LocalPlayer::Entity()->transform()->position();
+	Vector3 point = LocalPlayer::Entity()->eyes()->transform()->position();
 	bool failed = false;
-	while (point.distance(node.pos) > 1.f)
+	Vector3 old_point = point;
+	float control = 0.f;
+	int iterations = 0;
+	while (point.distance(node.pos) > 2.f)
 	{
+		if (iterations++ > 10000)
+			return;
+
+
 		path.push_back(point);
 		Vector3 new_point = lowest_pos(Vector3_::MoveTowards(point, node.pos, 1.0f));
-
-		if (LineOfSight(point, new_point))
+		if (GamePhysics::LineOfSightRadius(point, new_point, 10551296, 1.5f, 0.f))
+		{
+			old_point = point;
 			point = new_point;
+		}
 		else
 		{
+			std::vector<Vector3> ps = {};
+
 			for (auto e : ext) //create sphere if cannot find LOS straight ahead
-				if (LineOfSight(point, point + e)
+				if ((GamePhysics::LineOfSightRadius(point, point + e, 10551296, 1.0f, 0.f) && //0.5 for margin next to walls
+					GamePhysics::LineOfSightRadius(point, point + e, 10551296, 1.0f, 0.f)) //0.5 for margin next to walls
 					&& (point + e).distance(node.pos) < point.distance(node.pos)
 					&& (point + e).distance(point) > 0.99f)
 				{
@@ -761,14 +878,132 @@ void CreatePath(Vector3 start)
 						if ((point + e).distance(z) < 0.99f)
 							y = true;
 					if (y) continue;
-					point = point + e;
-					break;
+					ps.push_back(point + e);
 				}
-			continue;
+			Vector3 best = Vector3::Zero();
+			for (auto e : ps)
+				if (e.distance(node.pos) < best.distance(node.pos)
+					&& dfg(e) < 1.6f)
+					best = e;
+			old_point = point;
+			point = best;
 		}
 	}
 	node.path = path;
 }
+
+void do_infjump(PlayerWalkMovement* a1, ModelState* state)
+{
+	__try
+	{
+		a1->grounded() = (a1->climbing() = (a1->sliding() = false));
+		state->set_ducked(false);
+		a1->jumping() = true;
+		state->set_jumped(true);
+		a1->jumpTime() = Time::time();
+		a1->ladder() = nullptr;
+
+		Vector3 curVel = a1->body()->velocity();
+		a1->body()->set_velocity({ curVel.x, 10, curVel.z });
+	}
+	__except (true)
+	{
+		printf("Exception occured in %s\n", __FUNCTION__);
+	}
+}
+
+
+int psteps = 0;
+bool needs_jump = false;
+void do_autofarm(Vector3& vel)
+{
+	__try {
+		auto lp = LocalPlayer::Entity();
+		float speed = (lp->movement()->swimming() || lp->movement()->Ducking() > 0.5) ? 1.7f : 5.5f;
+
+		auto marker = BaseNetworkable::clientEntities()->FindClosest<BaseEntity*>(STATIC_CRC32("OreResourceEntity"), lp, 400.0f);
+		
+		auto marker = entities::closest_node;
+		node.ent = marker;
+		//auto marker = entities::closest_node;
+
+		if (marker)
+		{
+			if (node.steps > 0
+				&& lp->transform()->position().distance(node.pos) < 1.f)
+			{
+				node.path.clear();
+				node.pos = Vector3::Zero();
+				node.steps = 0;
+				vel = Vector3::Zero();
+			}
+
+			if (marker->transform())
+			{
+				if (lp->transform()->position().distance(node.pos) > 0.5f)
+				{
+					if (node.path.empty() && (node.pos.empty() || node.pos == Vector3::Zero()))
+						CreatePath(marker->transform()->position());
+
+					Vector3 current_step = node.path[node.steps];
+					psteps = node.steps;
+					if (current_step.distance(node.pos) <= 0.5f)
+					{
+						vel = Vector3::Zero();
+						node.path.clear();
+						node.pos = Vector3::Zero();
+						node.steps = 0;
+						return;
+					}
+
+					//draw path
+					if (!node.path.empty())
+					{
+						for (size_t i = 1; i < node.path.size(); i++)
+						{
+							if (node.path[i] == current_step)
+								DDraw::Line(node.path[i - 1], node.path[i], Color::Color(1, 0, 0, 50), 0.02f, false, true);
+							else
+								DDraw::Line(node.path[i - 1], node.path[i], Color::Color(_r, _g, _b, 50), 0.02f, false, true);
+						}
+					}
+
+					if (lp->transform()->position().distance(current_step) < 1.6f)
+						node.steps += 1;
+
+					if (node.steps >= node.path.size())
+					{
+						vel = Vector3::Zero();
+						node.path.clear();
+						node.pos = Vector3::Zero();
+						node.steps = 0;
+						return;
+					}
+
+					Vector3 dir = ((Vector3(current_step.x, current_step.y - dfg(current_step) + 0.1f, current_step.z)) - lp->transform()->position()).normalized();
+					vel = { (dir.x / dir.length() * speed), vel.y, (dir.z / dir.length() * speed) };
+
+					if (node.path[node.steps].y - lp->transform()->position().y > 1.6f)
+					{
+						needs_jump = true;
+						do_infjump(lp->movement(), lp->modelState());
+					}
+				}
+				else {
+					vel = Vector3::Zero();
+					node.path.clear();
+					node.pos = Vector3::Zero();
+					node.steps = 0;
+				}
+			}
+		}
+	}
+	__except (true)
+	{
+		printf("Exception occured in %s\n", xorstr_(__FUNCTION__));
+	}
+}
+
 
 void UpdateVelocity_hk(PlayerWalkMovement* self) {
 	if (aidsware::ui::get_bool(xorstr_("walk to marker"))
@@ -809,46 +1044,33 @@ void UpdateVelocity_hk(PlayerWalkMovement* self) {
 		}
 	}
 
+	if (aidsware::ui::get_bool(xorstr_("silent farm")))
+	{
+
+	}
 	if (aidsware::ui::get_bool(xorstr_("auto farm")))
 	{
-		float speed = (self->swimming() || self->Ducking() > 0.5) ? 1.7f : 5.5f;
-
-
-		//Custom pathfinder:)
-		auto lp = LocalPlayer::Entity();
-
-		auto marker = BaseNetworkable::clientEntities()->FindClosest<BaseEntity*>(STATIC_CRC32("OreHotSpot"), lp, 200.0f);
-
-		if (node.steps > 0
-			&& lp->transform()->position().distance(node.pos) < 1.f)
+		if(entities::closest_node)
+			do_autofarm(vel);
+		//if (LocalPlayer::Entity()->transform()->position().distance(node.pos) < 2.f)
+		if(LocalPlayer::Entity()->transform()->position().distance(node.pos) < 4.5f)
 		{
-			node.path.clear();
-			node.pos = Vector3::Zero();
-			node.steps = 0;
-		}
-
-		if (node.path.empty() && node.pos.empty())
-			CreatePath(marker->transform()->position());
-		
-		Vector3 current_step = node.path[node.steps];
-
-		//draw path
-		if (!node.path.empty())
-		{
-			for (size_t i = 1; i < node.path.size(); i++)
+			auto attack = [&](Vector3 pos, BaseEntity* ply, BaseMelee* p, bool is_tree)
 			{
-				if (node.path[i] == current_step)
-					DDraw::Line(node.path[i - 1], node.path[i], Color::Color(0.1, 0.8, 0.3, 50), 0.02f, false, true);
+				auto gathering = p->gathering();
+				if (is_tree) {
+					if (!(gathering->tree()->gatherDamage() > 1))
+						return;
+				}
 				else
-					DDraw::Line(node.path[i - 1], node.path[i], Color::Color(0.5, 0.5, 0.5, 50), 0.02f, false, true);
-			}
-		} 
+					if (!(gathering->ore()->gatherDamage() > 1))
+						return;
 
-		if (lp->transform()->position().distance(current_step) < 1.f)
-			node.steps += 1;
-		
-		Vector3 dir = (current_step - lp->transform()->position()).normalized();
-		vel = { (dir.x / dir.length() * speed), vel.y, (dir.z / dir.length() * speed) };
+				doMeleeAttack(pos, ply, p);
+			};
+
+			attack(node.pos, node.ent, LocalPlayer::Entity()->GetHeldEntity<BaseMelee>(), false);
+		}
 	}
 	else
 	{
@@ -984,25 +1206,7 @@ Vector3 EyePositionForPlayer_hk(BaseMountable* mount, BasePlayer* player, Quater
 	return mount->EyePositionForPlayer(player, lookRot);
 }
 
-void do_infjump(PlayerWalkMovement* a1, ModelState* state)
-{
-	__try
-	{
-		a1->grounded() = (a1->climbing() = (a1->sliding() = false));
-		state->set_ducked(false);
-		a1->jumping() = true;
-		state->set_jumped(true);
-		a1->jumpTime() = Time::time();
-		a1->ladder() = nullptr;
 
-		Vector3 curVel = a1->body()->velocity();
-		a1->body()->set_velocity({ curVel.x, 10, curVel.z });
-	}
-	__except (true)
-	{
-		printf("Exception occured in %s\n", __FUNCTION__);
-	}
-}
 
 void HandleJumping_hk(PlayerWalkMovement* a1, ModelState* state, bool wantsJump, bool jumpInDirection = false) {
 	
@@ -1013,13 +1217,14 @@ void HandleJumping_hk(PlayerWalkMovement* a1, ModelState* state, bool wantsJump,
 			|| settings::flyhack >= 2.9f)
 			return;
 	}
-	if (aidsware::ui::get_bool(xorstr_("infinite jump"))) {
+	wantsJump == needs_jump;
+	if (aidsware::ui::get_bool(xorstr_("infinite jump"))
+		|| aidsware::ui::get_bool(xorstr_("auto farm"))) {
 		if (!wantsJump)
 			return;
 		do_infjump(a1, state);
 		return;
 	}
-
 	return a1->HandleJumping(state, wantsJump, jumpInDirection);
 }
 
@@ -1046,6 +1251,10 @@ bool IsDown_hk(InputState* self, BUTTON btn) {
 			}
 		}
 
+		if (btn == BUTTON::JUMP && aidsware::ui::get_bool(xorstr_("auto farm")) && needs_jump) {
+			needs_jump = false;
+			return true;
+		}
 		if (btn == BUTTON::FIRE_PRIMARY) {
 			auto held = LocalPlayer::Entity( )->GetHeldEntity<BaseProjectile>( );
 			if (held && !held->Empty( ) && (held->class_name_hash() == STATIC_CRC32("BaseProjectile")
@@ -1211,7 +1420,6 @@ void DoAimbot()
 bool debugcam = false;
 bool has_intialized_methods = false;
 
-int _r = 255, _g = 0, _b = 0;
 bool r_ = false, g_ = false, b_ = false;
 
 float hue = 0, lum = 60, sat = 240;
@@ -1259,6 +1467,28 @@ void update_slave(std::string name)
 
 BasePlayer* last_target = nullptr;
 Vector3 last_marker = Vector3::Zero();
+
+void do_light(float amb = 1.f)
+{
+	__try {
+		auto list = TOD_Sky::instances();
+		if (list) {
+			for (int j = 0; j < list->size; j++) {
+				auto sky = (TOD_Sky*)list->get(j);
+				if (!sky)
+					continue;
+
+				sky->Day()->AmbientMultiplier() = amb == 4.f ? 0.2f : 1.f;
+				sky->Night()->AmbientMultiplier() = amb;
+			}
+		}
+	}
+	__except (true)
+	{
+		printf("Error occured inside do_light!\n");
+		return;
+	}
+}
 
 void ClientInput_hk(BasePlayer* plly, uintptr_t state) {
 	if (!plly)
@@ -1474,13 +1704,15 @@ void ClientInput_hk(BasePlayer* plly, uintptr_t state) {
 				settings::tr::manipulate_visible = false;
 			}
 
-		if (aidsware::ui::get_bool(xorstr_("auto med")))
+		if (aidsware::ui::get_bool(xorstr_("auto med"))
+			&& plly->health() < 99)
 		{
 			auto held = LocalPlayer::Entity()->GetHeldItem();
 			auto ent = LocalPlayer::Entity()->GetHeldEntity<BaseProjectile>();
 
-			if (std::wstring(held->info()->shortname()).find(wxorstr_(L"syringe")) != std::string::npos &&
-				ent->timeSinceDeploy() > ent->deployDelay() && ent->get_NextAttackTime() > Time::fixedTime())
+			if (std::wstring(held->info()->shortname()).find(wxorstr_(L"med")) != std::string::npos
+				|| std::wstring(held->info()->shortname()).find(wxorstr_(L"band")) != std::string::npos)
+				if (ent->timeSinceDeploy() > ent->deployDelay() && ent->get_NextAttackTime() > Time::fixedTime())
 					ent->ServerRPC(xorstr_("UseSelf"));
 		}
 
@@ -1558,23 +1790,12 @@ void ClientInput_hk(BasePlayer* plly, uintptr_t state) {
 				plly->mounted()->canWieldItems() = true;
 
 		if (aidsware::ui::get_combobox(xorstr_("light")) != 0) {
-			auto list = TOD_Sky::instances();
-			if (list) {
-				for (int j = 0; j < list->size; j++) {
-					auto sky = (TOD_Sky*)list->get(j);
-					if (!sky)
-						continue;
-
-					float amb = 1.f;
-					if (aidsware::ui::get_combobox(xorstr_("light")) == 1)
-						amb = 4.f;
-					else if (aidsware::ui::get_combobox(xorstr_("light")) == 2)
-						amb = 6.f;
-
-					sky->Day()->AmbientMultiplier() = amb == 4.f ? 0.2f : 1.f;
-					sky->Night()->AmbientMultiplier() = amb;
-				}
-			}
+			float amb = 1.f;
+			if (aidsware::ui::get_combobox(xorstr_("light")) == 1)
+				amb = 4.f;
+			else if (aidsware::ui::get_combobox(xorstr_("light")) == 2)
+				amb = 6.f;
+			do_light(amb);
 		}
 	}
 
@@ -1956,47 +2177,6 @@ float GetRandomVelocity_hk(ItemModProjectile* self) {
 	return self->GetRandomVelocity( ) * modifier;
 }
 
-void pa(BaseMelee* self, HitTest* hit)
-{
-	__try
-	{
-		auto entity = hit->HitEntity();
-		if (entity->class_name_hash() == STATIC_CRC32("OreResourceEntity")) {
-			BaseNetworkable* marker = BaseNetworkable::clientEntities()->FindClosest(STATIC_CRC32("OreHotSpot"), entity, 5.0f);
-			if (marker) {
-				entity = marker;
-				hit->HitTransform() = marker->transform();
-				hit->HitPoint() = marker->transform()->InverseTransformPoint(marker->transform()->position());
-				hit->HitMaterial() = String::New(xorstr_("MetalOre"));
-			}
-		}
-		else if (entity->class_name_hash() == STATIC_CRC32("TreeEntity")) {
-			BaseNetworkable* marker = BaseNetworkable::clientEntities()->FindClosest(STATIC_CRC32("TreeMarker"), entity, 5.0f);
-			if (marker) {
-				hit->HitTransform() = marker->transform();
-				hit->HitPoint() = marker->transform()->InverseTransformPoint(marker->transform()->position());
-				hit->HitMaterial() = String::New(xorstr_("Wood"));
-			}
-		}
-	}
-	__except (true)
-	{
-		printf(xorstr_("Exception occured in %s\n"), __FUNCTION__);
-	}
-}
-
-void ProcessAttack_hk(BaseMelee* self, HitTest* hit) {
-	if (!self || !hit) return;
-	auto entity = hit->HitEntity( );
-	if(!entity) return self->ProcessAttack(hit);
-
-	if (!aidsware::ui::get_bool(xorstr_("farm assist")) || !entity)
-		return self->ProcessAttack(hit);
-
-	pa(self, hit);
-
-	return self->ProcessAttack(hit);
-}
 
 void AddPunch_hk(HeldEntity* attackEntity, Vector3 amount, float duration) {
 	amount *= aidsware::ui::get_float(xorstr_("recoil %")) / 100.0f;
@@ -3074,7 +3254,7 @@ void OnGui_hk(DDraw* instance)
 void do_hooks( ) {
 	//VM_DOLPHIN_BLACK_START
 
-	VMProtectBeginUltra(xorstr_("hook"));
+	//VMProtectBeginUltra(xorstr_("hook"));
 
 
 	hookengine::hook(BasePlayer::ClientUpdate_, ClientUpdate_hk);
@@ -3093,7 +3273,7 @@ void do_hooks( ) {
 	hookengine::hook(ViewmodelLower::Apply_, LowerApply_hk);
 	hookengine::hook(ModelState::set_flying_, set_flying_hk);
 	hookengine::hook(HitTest::BuildAttackMessage_, BuildAttackMessage_hk);
-	//hookengine::hook(BaseMelee::ProcessAttack_, ProcessAttack_hk);
+	hookengine::hook(BaseMelee::ProcessAttack_, ProcessAttack_hk);
 	hookengine::hook(Projectile::DoHit_, DoHit_hk);
 	hookengine::hook(BaseMountable::EyePositionForPlayer_, EyePositionForPlayer_hk);
 	hookengine::hook(MonoBehaviour::StartCoroutine_, StartCoroutine_hk);
@@ -3142,13 +3322,13 @@ void do_hooks( ) {
 			CloseHandle(handle);
 	}
 	*/
-	VMProtectEnd();
+	//VMProtectEnd();
 	//VM_DOLPHIN_BLACK_END
 }
 
 void undo_hooks( ) {
 	//VM_DOLPHIN_BLACK_START
-	VMProtectBeginUltra(xorstr_("unhook"));
+	//VMProtectBeginUltra(xorstr_("unhook"));
 
 	closesocket(server_fd);
 
@@ -3182,7 +3362,7 @@ void undo_hooks( ) {
 	hookengine::unhook(ViewmodelLower::Apply_, LowerApply_hk);
 	hookengine::unhook(ModelState::set_flying_, set_flying_hk);
 	hookengine::unhook(HitTest::BuildAttackMessage_, BuildAttackMessage_hk);
-	//hookengine::unhook(BaseMelee::ProcessAttack_, ProcessAttack_hk);
+	hookengine::unhook(BaseMelee::ProcessAttack_, ProcessAttack_hk);
 	hookengine::unhook(BaseMountable::EyePositionForPlayer_, EyePositionForPlayer_hk);
 	hookengine::unhook(MonoBehaviour::StartCoroutine_, StartCoroutine_hk);
 	hookengine::unhook(ItemModProjectile::GetRandomVelocity_, GetRandomVelocity_hk);
@@ -3203,6 +3383,6 @@ void undo_hooks( ) {
 
 	hookengine::unhook(DDraw::OnGui_, OnGui_hk);
 	
-	VMProtectEnd();
+	//VMProtectEnd();
 	//VM_DOLPHIN_BLACK_END
 }

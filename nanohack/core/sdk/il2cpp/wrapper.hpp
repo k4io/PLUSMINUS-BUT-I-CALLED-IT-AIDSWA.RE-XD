@@ -179,7 +179,7 @@ void* il2cpp_object_get_virtual_method(void* obj, void* method) {
 	return call<void*, void*, void*>("il2cpp_object_get_virtual_method", obj, method);
 }
 
-Il2CppClass* init_class(const char* name, const char* name_space = xorstr_("")) {
+uintptr_t init_class(const char* name, const char* name_space = xorstr_("")) {
 
 	auto domain = il2cpp_domain_get();
 
@@ -189,7 +189,7 @@ Il2CppClass* init_class(const char* name, const char* name_space = xorstr_("")) 
 	for (int i = 0; i < size; i++) {
 		Il2CppImage* image = *reinterpret_cast<Il2CppImage**>(*reinterpret_cast<uint64_t*>(std::uint64_t(assemblies) + (0x8 * i)));
 
-		auto kl = image->get_class(i);
+		auto kl = (uintptr_t)image->get_class(i);
 		if (!kl) continue;
 
 		return kl;

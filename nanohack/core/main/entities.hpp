@@ -1,7 +1,45 @@
 namespace entities {
+
+	void melee_attack(Vector3 pos, BasePlayer* p, BaseMelee* w, bool is_player = false)
+	{
+		__try
+		{
+			if (!p->IsValid() || !w) return;
+			if (w->nextAttackTime() >= Time::fixedTime()) return;
+			if (w->deployDelay() > w->timeSinceDeploy()) return;
+
+			uintptr_t stat = safe_read(game_assembly + 51463256, DWORD64); if (!stat) return;
+			uintptr_t test = il2cpp_object_new(stat); if (!test) return;
+			
+			auto trans = is_player ? reinterpret_cast<BasePlayer*>(p)->bones()->head->transform : p->transform();
+			if (!trans) return;
+			Ray r = Ray(LocalPlayer::Entity()->eyes()->get_position(), (pos - LocalPlayer::Entity()->eyes()->get_position()).normalized());
+
+			safe_write(test + 0x34, 1000.f, float); //MaxDistance
+			safe_write(test + 0x14, r, Ray); //AttackRay
+			safe_write(test + 0x66, true, bool); //DidHit
+			safe_write(test + 0xB0, trans, Transform*); //HitTransform...
+			safe_write(test + 0x88, p, BasePlayer*); //HitEntity...
+			safe_write(test + 0x90, trans->InverseTransformPoint(pos), Vector3); //HitPoint
+			safe_write(test + 0x9C, Vector3(0, 0, 0), Vector3); //HitNormal
+			safe_write(test + 0x68, safe_read(w + 0x280, uintptr_t), uintptr_t); //DamageProperties...
+			
+
+			w->StartAttackCooldown(w->repeatDelay());
+			//return reinterpret_cast<void(*)(BaseMelee*, uintptr_t)>(game_assembly + 3092976)(w, test);
+
+			return w->ProcessAttack((HitTest*)test);
+		}
+		__except (true)
+		{
+			printf(xorstr_("Exception occured in melee_attack!\n"));
+			return;
+		}
+	}
+
 	Shader* og_shader = nullptr;
 	std::vector<BasePlayer*> current_visible_players;
-
+	BaseEntity* closest_node;
 	bool new_esp = false;
 
 	struct slave
@@ -299,6 +337,7 @@ namespace entities {
 
 	int alpha_index = -1;
 
+	std::vector<BaseEntity*> nodelist{};
 
 	void loop() {
 		bool masterflag = false;
@@ -474,7 +513,41 @@ namespace entities {
 			target_ply = nullptr;
 			return;
 		}
+
+		float desyncTime = (Time::realtimeSinceStartup() - LocalPlayer::Entity()->lastSentTickTime()) - 0.03125 * 3;
+
 		//LogSystem::RenderTraceResults();
+		int y = 1;
+		if (aidsware::ui::get_bool(xorstr_("crosshair indicators"))
+			&& aidsware::ui::get_bool(xorstr_("insta kill")) || aidsware::ui::get_bool(xorstr_("peek assist")) || get_key(aidsware::ui::get_keybind(xorstr_("desync on key")))
+			&& desyncTime > 0.0f)
+		{
+			y += 1;
+			Renderer::ProgressBar({ screen_center.x - 30, screen_center.y + (10 * y) },
+				{ screen_center.x + 30, screen_center.y + (10 * y) },
+				{ 51, 88, 181 },
+				{ 38, 38, 60 },
+				60.0f * (1.0 / (desyncTime < 0.f ? 0.f : (desyncTime > 1.0f ? 1.0f : desyncTime))),
+				60,
+				desyncTime);
+		}
+
+		auto entz = LocalPlayer::Entity()->GetHeldEntity<BaseProjectile>();
+
+		if (aidsware::ui::get_bool(xorstr_("crosshair indicators"))
+			&& entz->get_NextAttackTime() < Time::fixedTime())
+		{
+			y += 1;
+			float time = entz->get_NextAttackTime();
+			//printf("%ff - %ff = %ff\n", time, Time::fixedTime(), time - Time::fixedTime());
+			Renderer::ProgressBar({ screen_center.x - 30, screen_center.y + (10 * y) },
+				{ screen_center.x + 30, screen_center.y + (10 * y) },
+				{ 51, 88, 181 },
+				{ 38, 38, 60 },
+				60.0f * (1.0 / (time < 0.f ? 0.f : time)),
+				60,
+				time);
+		}
 
 		auto held = local->GetHeldEntity<BaseProjectile>();
 		if (aidsware::ui::get_bool(xorstr_("reload indicator")) && !aidsware::ui::get_bool(xorstr_("always reload"))) {
@@ -482,9 +555,9 @@ namespace entities {
 				if (held->HasReloadCooldown() && held->class_name_hash() != STATIC_CRC32("BowWeapon") && held->class_name_hash() != STATIC_CRC32("CompoundBowWeapon")) { // im sorry for my sins
 					float time_left = held->nextReloadTime() - GLOBAL_TIME;
 					float time_full = held->CalculateCooldownTime(held->nextReloadTime(), held->reloadTime()) - GLOBAL_TIME;
-
-					Renderer::rectangle_filled({ screen_center.x - 26, screen_center.y + 30 }, { 51, 5 }, Color3(0, 0, 0));
-					Renderer::rectangle_filled({ screen_center.x - 25, screen_center.y + 31 }, { 50 * (time_left / time_full), 4 }, Color3(0, 255, 0));
+					y += 1;
+					Renderer::rectangle_filled({ screen_center.x - 26, screen_center.y + (10 * y) }, { 51, 5 }, Color3(0, 0, 0));
+					Renderer::rectangle_filled({ screen_center.x - 25, screen_center.y + (10 * y) + 1}, {50 * (time_left / time_full), 4}, Color3(0, 255, 0));
 					Renderer::text({ (screen_center.x - 25) + (50 * (time_left / time_full)), screen_center.y + 31 + 2 }, Color3(219, 219, 219), 14.f, true, true, wxorstr_(L"%d"), (int)ceil(time_left));
 				}	
 				if (held->class_name_hash() == STATIC_CRC32("BaseProjectile") ||
@@ -525,6 +598,49 @@ namespace entities {
 						Renderer::text({ (screen_center.x - 50) + (99 * (time_left / time_full)), screen_center.y + 41 + 2 }, Color3(219, 219, 219), 14.f, true, true, wxorstr_(L"%d"), (int)ceil(result));
 					}
 				}
+			}
+		}
+
+		if (closest_node)
+		{
+			CBounds bounds = CBounds();
+
+			Color3 box_col = aidsware::ui::get_color("targeted boxes");;
+			float y = math::euler_angles(LocalPlayer::Entity()->bones()->eye_rot).y;
+			Vector3 center = closest_node->transform()->position();
+			center.y = center.y + 0.5;
+			Vector3 extents = Vector3(1.5, 1.0f, 1.5f);
+			Vector3 frontTopLeft = math::rotate_point(center, Vector3(center.x - extents.x, center.y + extents.y, center.z - extents.z), y);
+			Vector3 frontTopRight = math::rotate_point(center, Vector3(center.x + extents.x, center.y + extents.y, center.z - extents.z), y);
+			Vector3 frontBottomLeft = math::rotate_point(center, Vector3(center.x - extents.x, center.y - extents.y, center.z - extents.z), y);
+			Vector3 frontBottomRight = math::rotate_point(center, Vector3(center.x + extents.x, center.y - extents.y, center.z - extents.z), y);
+			Vector3 backTopLeft = math::rotate_point(center, Vector3(center.x - extents.x, center.y + extents.y, center.z + extents.z), y);
+			Vector3 backTopRight = math::rotate_point(center, Vector3(center.x + extents.x, center.y + extents.y, center.z + extents.z), y);
+			Vector3 backBottomLeft = math::rotate_point(center, Vector3(center.x - extents.x, center.y - extents.y, center.z + extents.z), y);
+			Vector3 backBottomRight = math::rotate_point(center, Vector3(center.x + extents.x, center.y - extents.y, center.z + extents.z), y);
+
+			Vector2 frontTopLeft_2d, frontTopRight_2d, frontBottomLeft_2d, frontBottomRight_2d, backTopLeft_2d, backTopRight_2d, backBottomLeft_2d, backBottomRight_2d;
+			if (Camera::world_to_screen(frontTopLeft, frontTopLeft_2d) &&
+				Camera::world_to_screen(frontTopRight, frontTopRight_2d) &&
+				Camera::world_to_screen(frontBottomLeft, frontBottomLeft_2d) &&
+				Camera::world_to_screen(frontBottomRight, frontBottomRight_2d) &&
+				Camera::world_to_screen(backTopLeft, backTopLeft_2d) &&
+				Camera::world_to_screen(backTopRight, backTopRight_2d) &&
+				Camera::world_to_screen(backBottomLeft, backBottomLeft_2d) &&
+				Camera::world_to_screen(backBottomRight, backBottomRight_2d)) {
+
+				Renderer::line(frontTopLeft_2d, frontTopRight_2d, box_col, true, 1.5f);
+				Renderer::line(frontTopRight_2d, frontBottomRight_2d, box_col, true, 1.5f);
+				Renderer::line(frontBottomRight_2d, frontBottomLeft_2d, box_col, true, 1.5f);
+				Renderer::line(frontBottomLeft_2d, frontTopLeft_2d, box_col, true, 1.5f);
+				Renderer::line(backTopLeft_2d, backTopRight_2d, box_col, true, 1.5f);
+				Renderer::line(backTopRight_2d, backBottomRight_2d, box_col, true, 1.5f);
+				Renderer::line(backBottomRight_2d, backBottomLeft_2d, box_col, true, 1.5f);
+				Renderer::line(backBottomLeft_2d, backTopLeft_2d, box_col, true, 1.5f);
+				Renderer::line(frontTopLeft_2d, backTopLeft_2d, box_col, true, 1.5f);
+				Renderer::line(frontTopRight_2d, backTopRight_2d, box_col, true, 1.5f);
+				Renderer::line(frontBottomRight_2d, backBottomRight_2d, box_col, true, 1.5f);
+				Renderer::line(frontBottomLeft_2d, backBottomLeft_2d, box_col, true, 1.5f);
 			}
 		}
 
@@ -695,6 +811,9 @@ namespace entities {
 			
 			int entlistsz = entityList->vals->size;
 
+			BaseEntity* best = nullptr;
+
+			std::vector<BaseEntity*> be{};
 			for (int i = 0; i < entlistsz; i++) {
 
 				
@@ -804,6 +923,23 @@ namespace entities {
 					}
 				}
 
+				
+				if (aidsware::ui::get_bool(xorstr_("auto farm")))
+				{
+					switch (prefab)
+					{
+					case STATIC_CRC32("stone-ore"):
+						if (entity->transform()->position().distance(LocalPlayer::Entity()->transform()->position()) < closest_node->transform()->position().distance(LocalPlayer::Entity()->transform()->position()))
+							nodelist.push_back(entity);
+					case STATIC_CRC32("sulfur-ore"):
+						if (entity->transform()->position().distance(LocalPlayer::Entity()->transform()->position()) < closest_node->transform()->position().distance(LocalPlayer::Entity()->transform()->position()))
+							nodelist.push_back(entity);
+					case STATIC_CRC32("metal-ore"):
+						if (entity->transform()->position().distance(LocalPlayer::Entity()->transform()->position()) < closest_node->transform()->position().distance(LocalPlayer::Entity()->transform()->position()))
+							nodelist.push_back(entity);
+					}
+				}
+				 
 				if (d < aidsware::ui::get_float(xorstr_("esp dist")))
 				{
 					if (Camera::world_to_screen(entity->transform()->position(), screen))
@@ -1376,8 +1512,7 @@ namespace entities {
 								}
 							}
 
-							float desyncTime = (Time::realtimeSinceStartup() - LocalPlayer::Entity()->lastSentTickTime()) - 0.03125 * 3;
-
+				
 							Color3 col = get_color(player, false, flag1);
 							Color3 box_col = get_color(player, true, flag1);
 
@@ -1471,19 +1606,8 @@ namespace entities {
 							if (aidsware::ui::get_bool(xorstr_("looking direction")) && !player->HasPlayerFlag(PlayerFlags::Sleeping))
 								Renderer::line(player->bones()->dfc, player->bones()->forward, aidsware::ui::get_color(xorstr_("looking direction color")), true);
 
+							
 
-							if (aidsware::ui::get_bool(xorstr_("crosshair indicators"))
-								&& aidsware::ui::get_bool(xorstr_("insta kill")) || aidsware::ui::get_bool(xorstr_("peek assist")) || get_key(aidsware::ui::get_keybind(xorstr_("desync on key")))
-								&& desyncTime > 0.0f)
-							{
-								Renderer::ProgressBar({ screen_center.x - 30, screen_center.y + 20 },
-									{ screen_center.x + 30, screen_center.y + 20 },
-									{ 51, 88, 181 },
-									{ 38, 38, 60 },
-									60.0f * (1.0 / (desyncTime < 0.f ? 0.f : (desyncTime > 1.0f ? 1.0f : desyncTime))),
-									60,
-									desyncTime);
-							}
 
 							if (aidsware::ui::get_bool(xorstr_("hpbar")))
 							{
@@ -1736,6 +1860,42 @@ namespace entities {
 								if (dfc(target_ply) > dfc(player))
 									target_ply = player;
 						}
+					}
+				}
+			}
+		}
+
+		auto wpn = LocalPlayer::Entity()->GetHeldEntity<BaseMelee>();
+		if (wpn)
+		{
+			if (aidsware::ui::get_bool(xorstr_("silent melee"))
+				&& target_ply->transform()->position().distance(LocalPlayer::Entity()->transform()->position()) < 4.5f)
+			{
+				melee_attack(target_ply->bones()->head->position, target_ply, wpn, false);
+			}
+			if (aidsware::ui::get_bool(xorstr_("silent farm")))
+			{
+				BaseEntity* best = nullptr;
+				for (auto z : nodelist)
+					if (z->transform()->position().distance(LocalPlayer::Entity()->transform()->position())
+						< best->transform()->position().distance(LocalPlayer::Entity()->transform()->position())
+						&& !z->IsDestroyed())
+						best = z;
+				closest_node = best;
+
+				if (nodelist.size() == 0) closest_node = nullptr;
+				if (closest_node)
+				{
+					if (closest_node->transform()->position().distance(LocalPlayer::Entity()->transform()->position()) < 4.5f)
+					{
+						bool is_tree = false;
+						auto n = closest_node;
+						auto gathering = wpn->gathering();
+						auto wstr = std::wstring(n->ShortPrefabName());
+						if (FOUNDW(wstr, wxorstr_(L"tree")))
+							is_tree = true;
+						//doMeleeAttack(Vector3 pos, BaseEntity* ply, BaseMelee* p, bool is_player = false)
+						melee_attack(n->transform()->position(), (BasePlayer*)n, wpn);
 					}
 				}
 			}
