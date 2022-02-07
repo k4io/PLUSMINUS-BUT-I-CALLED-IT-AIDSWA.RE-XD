@@ -258,11 +258,13 @@ Vector3 GetModifiedAimConeDirection_hk(float aimCone, Vector3 inputVec, bool any
 
 
 			if (aidsware::ui::get_bool(xorstr_("fat bullet"))
-				&& other::fat_target != Vector3::Zero()) {
+				&& other::fat_target != Vector3::Zero()
+				&& !LineOfSight(localPos, actualTargetPos)) {
 				actualTargetPos = other::fat_target;
 			}
 			else if (aidsware::ui::get_bool(xorstr_("fat bullet"))
-				&& other::fat_target == Vector3::Zero())
+				&& other::fat_target == Vector3::Zero()
+				&& !LineOfSight(localPos, actualTargetPos))
 			{
 				for (auto e : ext)
 					if (LineOfSight(localPos, actualTargetPos + e))
@@ -295,7 +297,7 @@ Vector3 GetModifiedAimConeDirection_hk(float aimCone, Vector3 inputVec, bool any
 				float x = 0.1f;
 				if (localPos.distance(targetPosition) < 50.0f)
 					x = 0.05f;
-				x = localPos.distance(targetPosition) / 1000.0f;
+				x += localPos.distance(targetPosition) / 1000.0f;
 				Vector3 t = aimutils::SimulateProjectile(position, velocity, x, travelTime, gravity, drag);
 				printf("HitTime: %ff\partialTime: %ff\n", travelTime, partialTime);
 
@@ -921,7 +923,7 @@ void do_autofarm(Vector3& vel)
 		auto lp = LocalPlayer::Entity();
 		float speed = (lp->movement()->swimming() || lp->movement()->Ducking() > 0.5) ? 1.7f : 5.5f;
 
-		auto marker = BaseNetworkable::clientEntities()->FindClosest<BaseEntity*>(STATIC_CRC32("OreResourceEntity"), lp, 400.0f);
+		//auto marker = BaseNetworkable::clientEntities()->FindClosest<BaseEntity*>(STATIC_CRC32("OreResourceEntity"), lp, 400.0f);
 		
 		auto marker = entities::closest_node;
 		node.ent = marker;
@@ -1490,6 +1492,7 @@ void do_light(float amb = 1.f)
 	}
 }
 
+float time_last_upgrade = 0.f;
 void ClientInput_hk(BasePlayer* plly, uintptr_t state) {
 	if (!plly)
 		return plly->ClientInput(state);
@@ -1688,6 +1691,157 @@ void ClientInput_hk(BasePlayer* plly, uintptr_t state) {
 
 		settings::tr::manipulated = aidsware::ui::get_bool(xorstr_("peek assist")) && get_key(aidsware::ui::get_keybind(xorstr_("peek assist key")) || settings::instakill);
 
+		if (aidsware::ui::get_bool(xorstr_("auto upgrade")))
+		{
+			BaseNetworkable* ent = BaseNetworkable::clientEntities()->FindClosest(STATIC_CRC32("BuildingBlock"), plly, 4.2f);
+			auto block = ent->GetComponent<BuildingBlock>(Type::BuildingBlock());
+			float dist = plly->eyes()->get_position().distance(block->ClosestPoint(plly->eyes()->get_position()));
+			if (dist < 4.2f)
+			{
+				auto grade = block->grade();
+
+				if (block && (Time::fixedTime() > time_last_upgrade + 0.35f))
+				{
+					switch (aidsware::ui::get_combobox(xorstr_("upgrade tier"))) {
+					case 1:
+						if (block->CanAffordUpgrade(BuildingBlock::BuildingGrade::Wood)
+							&& block->CanChangeToGrade(BuildingBlock::BuildingGrade::Wood)
+							&& grade != BuildingBlock::BuildingGrade::Wood)
+						{
+							block->Upgrade(BuildingBlock::BuildingGrade::Wood);
+							time_last_upgrade = Time::fixedTime();
+						}
+						break;
+					case 2:
+						if (block->CanAffordUpgrade(BuildingBlock::BuildingGrade::Stone)
+							&& block->CanChangeToGrade(BuildingBlock::BuildingGrade::Stone)
+							&& grade != BuildingBlock::BuildingGrade::Stone)
+						{
+							block->Upgrade(BuildingBlock::BuildingGrade::Stone);
+							time_last_upgrade = Time::fixedTime();
+						}
+						break;
+					case 3:
+						if (block->CanAffordUpgrade(BuildingBlock::BuildingGrade::Metal)
+							&& block->CanChangeToGrade(BuildingBlock::BuildingGrade::Metal)
+							&& grade != BuildingBlock::BuildingGrade::Metal)
+						{
+							block->Upgrade(BuildingBlock::BuildingGrade::Metal);
+							time_last_upgrade = Time::fixedTime();
+						}
+						break;
+					case 4:
+						if (block->CanAffordUpgrade(BuildingBlock::BuildingGrade::TopTier)
+							&& block->CanChangeToGrade(BuildingBlock::BuildingGrade::TopTier)
+							&& grade != BuildingBlock::BuildingGrade::TopTier)
+						{
+							block->Upgrade(BuildingBlock::BuildingGrade::TopTier);
+							time_last_upgrade = Time::fixedTime();
+						}
+						break;
+					}
+				}
+			}
+		}
+
+		auto wpn = LocalPlayer::Entity()->GetHeldEntity<BaseMelee>();
+		if (wpn)
+		{
+			auto melee_attack = [&](Vector3 pos, BasePlayer* p, BaseMelee* w, bool is_player = false)
+			{
+				__try
+				{
+					if (!p->IsValid() || !w) return;
+					if (w->nextAttackTime() >= Time::fixedTime()) return;
+					if (w->deployDelay() > w->timeSinceDeploy()) return;
+
+					uintptr_t stat = safe_read(game_assembly + 51671352, DWORD64); if (!stat) return;
+					uintptr_t test = il2cpp_object_new(stat); if (!test) return;
+
+					auto trans = is_player ? reinterpret_cast<BasePlayer*>(p)->bones()->head->transform : p->transform();
+					if (!trans) return;
+					Ray r = Ray(LocalPlayer::Entity()->eyes()->get_position(), (pos - LocalPlayer::Entity()->eyes()->get_position()).normalized());
+
+					safe_write(test + 0x34, 1000.f, float); //MaxDistance
+					safe_write(test + 0x14, r, Ray); //AttackRay
+					safe_write(test + 0x66, true, bool); //DidHit
+					safe_write(test + 0xB0, trans, Transform*); //HitTransform...
+					safe_write(test + 0x88, p, BasePlayer*); //HitEntity...
+					safe_write(test + 0x90, trans->InverseTransformPoint(pos), Vector3); //HitPoint
+					safe_write(test + 0x9C, Vector3(0, 0, 0), Vector3); //HitNormal
+					safe_write(test + 0x68, safe_read(w + 0x280, uintptr_t), uintptr_t); //DamageProperties...
+
+
+					w->StartAttackCooldown(w->repeatDelay());
+					//return reinterpret_cast<void(*)(BaseMelee*, uintptr_t)>(game_assembly + 3092976)(w, test);
+
+					return w->ProcessAttack((HitTest*)test);
+				}
+				__except (true)
+				{
+					printf(xorstr_("Exception occured in melee_attack!\n"));
+					return;
+				}
+			};
+
+			if (aidsware::ui::get_bool(xorstr_("silent melee"))
+				&& target_ply->transform()->position().distance(LocalPlayer::Entity()->transform()->position()) < 4.5f)
+			{
+				melee_attack(target_ply->bones()->head->position, target_ply, wpn, false);
+			}
+			if (aidsware::ui::get_bool(xorstr_("silent farm")))
+			{
+				auto closestnode = [&]()
+				{
+					BaseNetworkable* ent1 = BaseNetworkable::clientEntities()->FindClosest(STATIC_CRC32("metal-ore"), plly, 4.2f);
+					auto node1 = ent1->GetComponent<BaseEntity>(Type::BaseEntity());
+					BaseNetworkable* ent2 = BaseNetworkable::clientEntities()->FindClosest(STATIC_CRC32("sulfur-ore"), plly, 4.2f);
+					auto node2 = ent2->GetComponent<BaseEntity>(Type::BaseEntity());
+					BaseNetworkable* ent3 = BaseNetworkable::clientEntities()->FindClosest(STATIC_CRC32("stone-ore"), plly, 4.2f);
+					auto node3 = ent3->GetComponent<BaseEntity>(Type::BaseEntity());
+
+					if (node1->transform()->position().distance(LocalPlayer::Entity()->transform()->position())
+						< node2->transform()->position().distance(LocalPlayer::Entity()->transform()->position())
+						&& node1->transform()->position().distance(LocalPlayer::Entity()->transform()->position())
+						< node3->transform()->position().distance(LocalPlayer::Entity()->transform()->position()))
+						return node1;
+					else if (node2->transform()->position().distance(LocalPlayer::Entity()->transform()->position())
+						< node1->transform()->position().distance(LocalPlayer::Entity()->transform()->position())
+						&& node2->transform()->position().distance(LocalPlayer::Entity()->transform()->position())
+						< node3->transform()->position().distance(LocalPlayer::Entity()->transform()->position()))
+						return node2;
+					else if (node3->transform()->position().distance(LocalPlayer::Entity()->transform()->position())
+						< node1->transform()->position().distance(LocalPlayer::Entity()->transform()->position())
+						&& node3->transform()->position().distance(LocalPlayer::Entity()->transform()->position())
+						< node2->transform()->position().distance(LocalPlayer::Entity()->transform()->position()))
+						return node3;
+				};
+
+				BaseNetworkable* ore = BaseNetworkable::clientEntities()->FindClosest(STATIC_CRC32("OreHotSpot"), plly, 4.2f);
+				BaseNetworkable* wood = BaseNetworkable::clientEntities()->FindClosest(STATIC_CRC32("TreeEntity"), plly, 4.2f);
+				auto node = ore->GetComponent<BaseEntity>(Type::BaseEntity());
+				auto tree = wood->GetComponent<BaseEntity>(Type::BaseEntity());
+				if (tree->transform()->position().distance(LocalPlayer::Entity()->transform()->position())
+					< node->transform()->position().distance(LocalPlayer::Entity()->transform()->position()))
+					node = tree;
+				//auto node = closestnode();
+
+				if (node)
+				{
+					if (node->transform()->position().distance(LocalPlayer::Entity()->transform()->position()) < 4.2f)
+					{
+						bool is_tree = false;
+						auto n = node;
+						auto gathering = wpn->gathering();
+						auto wstr = std::wstring(n->ShortPrefabName());
+						if (FOUNDW(wstr, wxorstr_(L"tree")))
+							is_tree = true;
+						//doMeleeAttack(Vector3 pos, BaseEntity* ply, BaseMelee* p, bool is_player = false)
+						melee_attack(n->transform()->position(), (BasePlayer*)n, wpn);
+					}
+				}
+			}
+		}
 
 		if (aidsware::ui::get_bool(xorstr_("peek assist")) && target_ply != nullptr && target_ply->isCached() && get_key(aidsware::ui::get_keybind(xorstr_("peek assist key"))) && !settings::instakill)
 			other::find_manipulate_angle(desyncTime, target);
@@ -2082,12 +2236,12 @@ void DoMovement_hk(Projectile* pr, float deltaTime) {
 
 		for (size_t i = 0; i < 50; i++) //Simulate 100 times per bullet? pretty efficient?
 		{
-			Vector3 pred = GetTrajectoryPoint(l_current_pos,
+			l_current_pos = GetTrajectoryPoint(l_current_pos,
 				pr->initialVelocity(),
 				0.1f,
 				pr->gravityModifier());
 
-			float dist = pred.distance(LocalPlayer::Entity()->bones()->head->position);
+			float dist = l_current_pos.distance(LocalPlayer::Entity()->bones()->head->position);
 
 			if ((fast ? dist < 50.0f : dist < 25.0f)) {
 				targeted = true;
@@ -2176,7 +2330,6 @@ float GetRandomVelocity_hk(ItemModProjectile* self) {
 	
 	return self->GetRandomVelocity( ) * modifier;
 }
-
 
 void AddPunch_hk(HeldEntity* attackEntity, Vector3 amount, float duration) {
 	amount *= aidsware::ui::get_float(xorstr_("recoil %")) / 100.0f;
@@ -2726,7 +2879,8 @@ void ProjectileUpdate_hk(Projectile* self)
 {
 	if (aidsware::ui::get_bool(xorstr_("fat bullet")) //lol uc leak that probs doesn't even work
 		&& self->isAuthoritative()
-		&& self->isAlive())
+		&& self->isAlive()
+		&& false)
 	{
 		auto cpos = self->transform()->position();
 		auto zbone = target_ply->model()->find_bone(cpos).first;
@@ -3202,7 +3356,7 @@ void LaunchProjectile_hk(BaseProjectile* self)
 		break;
 	case 1: //basic
 
-		if (desyncTime > (self->repeatDelay() * 2.0f))
+		if (desyncTime > ((self->repeatDelay() * 0.9f) * 2.0f))
 		{
 			self->LaunchProjectile();
 			if (self->primaryMagazine()->contents() > 0)
@@ -3220,7 +3374,7 @@ void LaunchProjectile_hk(BaseProjectile* self)
 		break;
 	case 2: //smart
 
-		float f = desyncTime / self->repeatDelay();
+		float f = desyncTime / (self->repeatDelay() * 0.9f);
 		int z = (int)f;
 
 		for (size_t i = 0; i < z; i++)
@@ -3249,6 +3403,11 @@ void LaunchProjectile_hk(BaseProjectile* self)
 void OnGui_hk(DDraw* instance)
 {
 	return DDraw::OnGui_(instance);
+}
+
+bool Refract_hk(Projectile* self, uint64_t& seed, Vector3 point, Vector3 normal, bool resistance)
+{
+	return self->Refract(seed, point, normal, resistance);
 }
 
 void do_hooks( ) {
@@ -3306,6 +3465,8 @@ void do_hooks( ) {
 	hookengine::hook(Projectile::Update_, ProjectileUpdate_hk);
 
 	hookengine::hook(DDraw::OnGui_, OnGui_hk);
+
+	hookengine::hook(Projectile::Refract_, Refract_hk);
 	//create slave/master connection thread
 	//connect_t();
 	/*
@@ -3380,8 +3541,9 @@ void undo_hooks( ) {
 
 	hookengine::unhook(Network::Client::OnNetworkMessage_, OnNetworkMessage_hk);
 
-
 	hookengine::unhook(DDraw::OnGui_, OnGui_hk);
+
+	hookengine::unhook(Projectile::Refract_, Refract_hk);
 	
 	//VMProtectEnd();
 	//VM_DOLPHIN_BLACK_END

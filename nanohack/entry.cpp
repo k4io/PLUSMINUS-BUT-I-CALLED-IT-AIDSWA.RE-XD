@@ -6,7 +6,7 @@
 #define authh
 #define _WINSOCKAPI_
 
-//#include <//VMProtectSDK.h>
+#include <VMProtectSDK.h>
 
 #include <Windows.h>
 #include <stdint.h>
@@ -168,11 +168,11 @@ std::string get_pwd(std::string file)
 #define MAX_LINE 255
 void entry_thread() {
 	//VM_DOLPHIN_BLACK_START
-	//VMProtectBeginUltra(xorstr_("entry"));
+	VMProtectBeginUltra(xorstr_("entry"));
 	PWSTR szPath = NULL;
 	
 	HRESULT dl;
-
+	
 	typedef HRESULT(WINAPI* URLDownloadToFileA_t)(LPUNKNOWN pCaller, LPCSTR szURL, LPCSTR szFileName, DWORD dwReserved, void* lpfnCB);
 	URLDownloadToFileA_t xURLDownloadToFileA;
 	xURLDownloadToFileA = (URLDownloadToFileA_t)GetProcAddress(LoadLibraryA(xorstr_("urlmon")), xorstr_("URLDownloadToFileA"));
@@ -343,7 +343,7 @@ void entry_thread() {
 
 	d3d::init();
 
-	//VMProtectEnd();
+	VMProtectEnd();
 	initialize_cheat();
 	//VM_DOLPHIN_BLACK_END
 	do_hooks();

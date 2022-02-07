@@ -388,6 +388,10 @@ public:
 		Type* type = GetType(xorstr_("BasePlayer, Assembly-CSharp"));
 		return type;
 	}
+	static Type* BaseEntity() {
+		Type* type = GetType(xorstr_("BaseEntity, Assembly-CSharp"));
+		return type;
+	}
 	static Type* BuildingBlock() {
 		Type* type = GetType(xorstr_("BuildingBlock, Assembly-CSharp"));
 		return type;
@@ -1919,11 +1923,11 @@ public:
 	//idc about active item or parentid fk u
 };
 
-class DecayEntity : BaseCombatEntity {
+class DecayEntity : public BaseCombatEntity{
 public:
 };
 
-class StabilityEntity : DecayEntity {
+class StabilityEntity : public DecayEntity {
 public:
 };
 
@@ -1943,18 +1947,27 @@ public:
 
 	bool CanAffordUpgrade(BuildingGrade g) {
 		if (!this) return false;
-		static auto off = METHOD("Assembly-CSharp::BuildingBlock::CanAffordUpgrade(Assembly-CSharp::BuildingGrade.Enum,BasePlayer): Boolean");
-		return reinterpret_cast<bool(__fastcall*)(BuildingBlock*, int, BasePlayer*)>(off)(this, (int)g, LocalPlayer::Entity());
+		typedef bool(__stdcall* CanAffordUpgrade_)(BuildingBlock*, BuildingGrade, BasePlayer*);
+		return ((CanAffordUpgrade_)(game_assembly + 5215248))(this, g, LocalPlayer::Entity());
+
+		//static auto off = METHOD("Assembly-CSharp::BuildingBlock::CanAffordUpgrade(BuildingGrade.Enum,BasePlayer): Boolean");
+		//return reinterpret_cast<bool(__fastcall*)(BuildingBlock*, int, BasePlayer*)>(game_assembly + 4636848)(this, (int)g, LocalPlayer::Entity());
 	}
 	bool CanChangeToGrade(BuildingGrade g) {
 		if (!this) return false;
-		static auto off = METHOD("Assembly-CSharp::BuildingBlock::CanChangeToGrade(BuildingGrade.Enum,BasePlayer): Boolean");
-		return reinterpret_cast<bool(__fastcall*)(BuildingBlock*, int, BasePlayer*)>(off)(this, (int)g, LocalPlayer::Entity());
+		typedef bool(__stdcall* CanChangeToGrade_)(BuildingBlock*, BuildingGrade, BasePlayer*);
+		return ((CanChangeToGrade_)(game_assembly + 5215712))(this, g, LocalPlayer::Entity());
+
+		//static auto off = METHOD("Assembly-CSharp::BuildingBlock::CanChangeToGrade(BuildingGrade.Enum,BasePlayer): Boolean");aw
+		//return reinterpret_cast<bool(__fastcall*)(BuildingBlock*, int, BasePlayer*)>(game_assembly + 4637312)(this, (int)g, LocalPlayer::Entity());
 	}
 	void Upgrade(BuildingGrade g){
 		if (!this) return;
-		static auto off = METHOD("Assembly-CSharp::BuildingBlock::UpgradeToGrade(BuildingGrade.Enum,BasePlayer): Void");
-		return reinterpret_cast<void(__fastcall*)(BuildingBlock*, int, BasePlayer*)>(off)(this, (int)g, LocalPlayer::Entity());
+		typedef void(__stdcall* UpgradeToGrade_)(BuildingBlock*, BuildingGrade, BasePlayer*);
+		return ((UpgradeToGrade_)(game_assembly + 5229504))(this, g, LocalPlayer::Entity());
+		
+		//static auto off = METHOD("Assembly-CSharp::BuildingBlock::UpgradeToGrade(BuildingGrade.Enum,BasePlayer): Void");
+		//return reinterpret_cast<void(__fastcall*)(BuildingBlock*, int, BasePlayer*)>(game_assembly + 4651104)(this, (int)g, LocalPlayer::Entity());
 	}
 };
 
@@ -3388,7 +3401,7 @@ Shader* chams = nullptr;
 																															  
 void initialize_cheat( ) {																									  
 	////VM_DOLPHIN_BLACK_START																								  
-	//VMProtectBeginUltra(xorstr_("init"));																				  
+	VMProtectBeginUltra(xorstr_("init"));																				  
 	init_classes( );
 	init_fields( );
 	init_methods();
@@ -3445,6 +3458,6 @@ void initialize_cheat( ) {
 
 	settings::cheat_init = true;
 
-	//VMProtectEnd();
+	VMProtectEnd();
 	////VM_DOLPHIN_BLACK_END
 }

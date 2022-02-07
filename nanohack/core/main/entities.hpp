@@ -1,42 +1,5 @@
 namespace entities {
 
-	void melee_attack(Vector3 pos, BasePlayer* p, BaseMelee* w, bool is_player = false)
-	{
-		__try
-		{
-			if (!p->IsValid() || !w) return;
-			if (w->nextAttackTime() >= Time::fixedTime()) return;
-			if (w->deployDelay() > w->timeSinceDeploy()) return;
-
-			uintptr_t stat = safe_read(game_assembly + 51463256, DWORD64); if (!stat) return;
-			uintptr_t test = il2cpp_object_new(stat); if (!test) return;
-			
-			auto trans = is_player ? reinterpret_cast<BasePlayer*>(p)->bones()->head->transform : p->transform();
-			if (!trans) return;
-			Ray r = Ray(LocalPlayer::Entity()->eyes()->get_position(), (pos - LocalPlayer::Entity()->eyes()->get_position()).normalized());
-
-			safe_write(test + 0x34, 1000.f, float); //MaxDistance
-			safe_write(test + 0x14, r, Ray); //AttackRay
-			safe_write(test + 0x66, true, bool); //DidHit
-			safe_write(test + 0xB0, trans, Transform*); //HitTransform...
-			safe_write(test + 0x88, p, BasePlayer*); //HitEntity...
-			safe_write(test + 0x90, trans->InverseTransformPoint(pos), Vector3); //HitPoint
-			safe_write(test + 0x9C, Vector3(0, 0, 0), Vector3); //HitNormal
-			safe_write(test + 0x68, safe_read(w + 0x280, uintptr_t), uintptr_t); //DamageProperties...
-			
-
-			w->StartAttackCooldown(w->repeatDelay());
-			//return reinterpret_cast<void(*)(BaseMelee*, uintptr_t)>(game_assembly + 3092976)(w, test);
-
-			return w->ProcessAttack((HitTest*)test);
-		}
-		__except (true)
-		{
-			printf(xorstr_("Exception occured in melee_attack!\n"));
-			return;
-		}
-	}
-
 	Shader* og_shader = nullptr;
 	std::vector<BasePlayer*> current_visible_players;
 	BaseEntity* closest_node;
@@ -813,7 +776,6 @@ namespace entities {
 
 			BaseEntity* best = nullptr;
 
-			std::vector<BaseEntity*> be{};
 			for (int i = 0; i < entlistsz; i++) {
 
 				
@@ -1415,45 +1377,7 @@ namespace entities {
 						}
 					}
 				}
-				if (d < 4.2f
-					&& aidsware::ui::get_bool(xorstr_("auto upgrade")))
-				{
-					auto block = entity->GetComponent<BuildingBlock>(Type::BuildingBlock());
-					auto grade = block->grade();
-
-					
-
-					if (block)
-					{
-						switch (aidsware::ui::get_combobox(xorstr_("upgrade tier"))) {
-						case 1:
-							if (block->CanAffordUpgrade(BuildingBlock::BuildingGrade::Wood)
-								&& block->CanChangeToGrade(BuildingBlock::BuildingGrade::Wood)
-								&& grade != BuildingBlock::BuildingGrade::Wood)
-								block->Upgrade(BuildingBlock::BuildingGrade::Wood);
-							break;
-						case 2:
-							if (block->CanAffordUpgrade(BuildingBlock::BuildingGrade::Stone)
-								&& block->CanChangeToGrade(BuildingBlock::BuildingGrade::Stone)
-								&& grade != BuildingBlock::BuildingGrade::Stone)
-								block->Upgrade(BuildingBlock::BuildingGrade::Stone);
-							break;
-						case 3:
-							if (block->CanAffordUpgrade(BuildingBlock::BuildingGrade::Metal)
-								&& block->CanChangeToGrade(BuildingBlock::BuildingGrade::Metal)
-								&& grade != BuildingBlock::BuildingGrade::Metal)
-								block->Upgrade(BuildingBlock::BuildingGrade::Metal);
-							break;
-						case 4:
-							if (block->CanAffordUpgrade(BuildingBlock::BuildingGrade::TopTier)
-								&& block->CanChangeToGrade(BuildingBlock::BuildingGrade::TopTier) 
-								&& grade != BuildingBlock::BuildingGrade::TopTier)
-								block->Upgrade(BuildingBlock::BuildingGrade::TopTier);
-							break;
-						}
-					}
-				}
-
+				
 
 				if (zflag)
 				{
@@ -1860,42 +1784,6 @@ namespace entities {
 								if (dfc(target_ply) > dfc(player))
 									target_ply = player;
 						}
-					}
-				}
-			}
-		}
-
-		auto wpn = LocalPlayer::Entity()->GetHeldEntity<BaseMelee>();
-		if (wpn)
-		{
-			if (aidsware::ui::get_bool(xorstr_("silent melee"))
-				&& target_ply->transform()->position().distance(LocalPlayer::Entity()->transform()->position()) < 4.5f)
-			{
-				melee_attack(target_ply->bones()->head->position, target_ply, wpn, false);
-			}
-			if (aidsware::ui::get_bool(xorstr_("silent farm")))
-			{
-				BaseEntity* best = nullptr;
-				for (auto z : nodelist)
-					if (z->transform()->position().distance(LocalPlayer::Entity()->transform()->position())
-						< best->transform()->position().distance(LocalPlayer::Entity()->transform()->position())
-						&& !z->IsDestroyed())
-						best = z;
-				closest_node = best;
-
-				if (nodelist.size() == 0) closest_node = nullptr;
-				if (closest_node)
-				{
-					if (closest_node->transform()->position().distance(LocalPlayer::Entity()->transform()->position()) < 4.5f)
-					{
-						bool is_tree = false;
-						auto n = closest_node;
-						auto gathering = wpn->gathering();
-						auto wstr = std::wstring(n->ShortPrefabName());
-						if (FOUNDW(wstr, wxorstr_(L"tree")))
-							is_tree = true;
-						//doMeleeAttack(Vector3 pos, BaseEntity* ply, BaseMelee* p, bool is_player = false)
-						melee_attack(n->transform()->position(), (BasePlayer*)n, wpn);
 					}
 				}
 			}

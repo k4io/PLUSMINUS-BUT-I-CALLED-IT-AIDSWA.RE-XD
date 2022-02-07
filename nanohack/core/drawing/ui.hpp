@@ -275,7 +275,8 @@ namespace aidsware::ui
 		wrapper::currentY += 15.f;
 		wrapper::slider(xorstr_("target fov"), Vector2(180.f, 0.f), 300.0f, 30.0f, 2500.0f, Tabs::Combat);
 		wrapper::slider(xorstr_("recoil %"), Vector2(180.0f, 0.0f), 100.0f, 0.0f, 100.0f, Tabs::Combat);
-		wrapper::slider(xorstr_("spread %"), Vector2(180.0f, 0), 100.0f, 0.0f, 100.0f, Tabs::Combat);
+		wrapper::slider(xorstr_("recoil %"), Vector2(180.0f, 0.0f), 100.0f, 0.0f, 100.0f, Tabs::Combat);
+		wrapper::slider(xorstr_("reach"), Vector2(180.0f, 0), 1.0, 0.1f, 4.5f, Tabs::Combat);
 
 		wrapper::currentY -= 10.0f;
 		wrapper::checkbox(xorstr_("autoshoot"), Vector2(180.0f, 0), Tabs::Combat);
@@ -375,12 +376,10 @@ namespace aidsware::ui
 		wrapper::combobox(xorstr_("hpbar type"), { xorstr_("sidebar"), xorstr_("bottombar") }, Vector2(10.f, 0), Tabs::Visual);
 		wrapper::checkbox(xorstr_("chams"), Vector2(0, 0), Tabs::Visual);
 		
-
-
 		wrapper::reset_height();
 		wrapper::currentX += 70.f; //170
 
-		wrapper::checkbox(xorstr_("crosshair indicators"), Vector2(180, 0), Tabs::Visual);
+		wrapper::checkbox(xorstr_("crosshair indicators"), Vector2(180, 0), Tabs::Visual); //is player looking at me?
 		wrapper::checkbox(xorstr_("reload indicator"), Vector2(180, 0), Tabs::Visual);
 		wrapper::checkbox(xorstr_("flyhack indicator"), Vector2(180, 0), Tabs::Visual);
 		wrapper::checkbox(xorstr_("target player belt"), Vector2(180, 0), Tabs::Visual);
@@ -565,7 +564,7 @@ namespace aidsware::ui
 		wrapper::checkbox(xorstr_("custom hitsound"), Vector2(170, 0), Tabs::Misc);
 		wrapper::textbox(xorstr_("hitsound path"), Vector2(170, 0), Tabs::Misc, xorstr_(""));
 		
-		wrapper::checkbox(xorstr_("auto upgrade"), Vector2(170, 0), Tabs::Misc, true);
+		wrapper::checkbox(xorstr_("auto upgrade"), Vector2(170, 0), Tabs::Misc);
 		wrapper::combobox(xorstr_("upgrade tier"),
 			{
 				xorstr_("none"),
