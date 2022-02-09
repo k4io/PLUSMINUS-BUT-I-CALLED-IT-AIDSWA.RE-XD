@@ -754,51 +754,6 @@ bool CanAttack_hk(BasePlayer* self) {
 	return self->CanAttack( );
 }
 
-void doMeleeAttack(Vector3 pos, BaseEntity* ply, BaseMelee* p, bool is_player = false)
-{
-	__try
-	{
-		auto lp = LocalPlayer::Entity();
-		if (!LineOfSight(pos, lp->transform()->position()))
-			return;
-
-		Vector3 lpos = lp->eyes()->get_position();
-
-		if (p->nextAttackTime() >= Time::fixedTime())
-			return;
-
-		if (p->timeSinceDeploy() < p->deployDelay())
-			return;
-		p->maxDistance() = 4.5f;
-
-
-		auto clazz = init_class(xorstr_("HitTest"));
-		auto n = (HitTest*)il2cpp_object_new(clazz);
-
-
-		if (!n) return;
-		Ray r(lpos, (pos - lpos).normalized());
-		Transform* tranny = is_player ? reinterpret_cast<BasePlayer*>(ply)->bones()->head->transform : ply->transform();
-		if (!tranny) return;
-
-		n->MaxDistance() = 1000.f;
-		n->HitTransform() = tranny;
-		n->AttackRay() = r;
-		n->HitEntity() = ply;
-		n->HitPoint() = tranny->InverseTransformPoint(pos);
-		n->HitNormal() = Vector3(0, 0, 0);
-		n->damageProperties() = p->damageProperties();
-
-		p->StartAttackCooldown(p->repeatDelay());
-		printf(xorstr_("Ret do_autofarm\n"));
-		return p->ProcessAttack(n);
-	}
-	__except (true)
-	{
-		printf(xorstr_("Exception occured inside do_autofarm\n"));
-	}
-}
-
 bool bp_flying = false;
 int flyhack_state = 0;
 float state_time = 0.0f;
@@ -848,18 +803,23 @@ void CreatePath(Vector3 start)
 	//create path
 	std::vector<Vector3> path;
 	Vector3 point = LocalPlayer::Entity()->eyes()->transform()->position();
+	Vector3 original = point;
 	bool failed = false;
 	Vector3 old_point = point;
 	float control = 0.f;
 	int iterations = 0;
-	while (point.distance(node.pos) > 2.f)
+	while (point.distance(node.pos) > 0.5f)
 	{
 		if (iterations++ > 10000)
-			return;
+			break;
 
 
 		path.push_back(point);
 		Vector3 new_point = lowest_pos(Vector3_::MoveTowards(point, node.pos, 1.0f));
+
+		bool flag = false;
+
+
 		if (GamePhysics::LineOfSightRadius(point, new_point, 10551296, 1.5f, 0.f))
 		{
 			old_point = point;
@@ -870,11 +830,14 @@ void CreatePath(Vector3 start)
 			std::vector<Vector3> ps = {};
 
 			for (auto e : ext) //create sphere if cannot find LOS straight ahead
-				if ((GamePhysics::LineOfSightRadius(point, point + e, 10551296, 1.0f, 0.f) && //0.5 for margin next to walls
-					GamePhysics::LineOfSightRadius(point, point + e, 10551296, 1.0f, 0.f)) //0.5 for margin next to walls
+				if ((GamePhysics::LineOfSightRadius(point, point + e, 10551296, 1.5f, 0.f) && //0.5 for margin next to walls
+					GamePhysics::LineOfSightRadius(point + e, point, 10551296, 1.5f, 0.f) &&
+					GamePhysics::LineOfSightRadius(Vector3((point + e).x, (point + e).y + 1000, (point + e).z), point + e, 10551296, 1.5f, 0.f) &&
+					GamePhysics::LineOfSightRadius(point + e, Vector3((point + e).x, (point + e).y + 1000, (point + e).z), 10551296, 1.5f, 0.f))
 					&& (point + e).distance(node.pos) < point.distance(node.pos)
 					&& (point + e).distance(point) > 0.99f)
 				{
+					if (flag) continue;
 					bool y = false;
 					for (auto z : node.path) //check if new path passes by any points
 						if ((point + e).distance(z) < 0.99f)
@@ -923,16 +886,28 @@ void do_autofarm(Vector3& vel)
 		auto lp = LocalPlayer::Entity();
 		float speed = (lp->movement()->swimming() || lp->movement()->Ducking() > 0.5) ? 1.7f : 5.5f;
 
-		//auto marker = BaseNetworkable::clientEntities()->FindClosest<BaseEntity*>(STATIC_CRC32("OreResourceEntity"), lp, 400.0f);
+		auto hotspot = BaseNetworkable::clientEntities()->FindClosest<BaseEntity*>(STATIC_CRC32("OreHotSpot"), lp, 5.f);
+		auto marker = (hotspot ? hotspot : BaseNetworkable::clientEntities()->FindClosest<BaseEntity*>(STATIC_CRC32("OreResourceEntity"), lp, 400.0f));
+
+		auto treespot = BaseNetworkable::clientEntities()->FindClosest<BaseEntity*>(STATIC_CRC32("TreeEntity"), lp, 25.f);
 		
-		auto marker = entities::closest_node;
+		bool is_tree = false;
+		if (treespot)
+			if (treespot->transform()->position().distance(lp->eyes()->get_position())
+				< marker->transform()->position().distance(lp->eyes()->get_position()))
+			{
+				marker = treespot;
+				is_tree = true;
+			}
+
+		//auto marker = entities::closest_node;
 		node.ent = marker;
 		//auto marker = entities::closest_node;
 
 		if (marker)
 		{
 			if (node.steps > 0
-				&& lp->transform()->position().distance(node.pos) < 1.f)
+				&& lp->transform()->position().distance(node.pos) < 0.5f)
 			{
 				node.path.clear();
 				node.pos = Vector3::Zero();
@@ -944,7 +919,8 @@ void do_autofarm(Vector3& vel)
 			{
 				if (lp->transform()->position().distance(node.pos) > 0.5f)
 				{
-					if (node.path.empty() && (node.pos.empty() || node.pos == Vector3::Zero()))
+					if (node.path.empty() && (node.pos.empty() || node.pos == Vector3::Zero())
+						&& lp->transform()->position().distance(node.pos) > 1.f)
 						CreatePath(marker->transform()->position());
 
 					Vector3 current_step = node.path[node.steps];
@@ -973,7 +949,7 @@ void do_autofarm(Vector3& vel)
 					if (lp->transform()->position().distance(current_step) < 1.6f)
 						node.steps += 1;
 
-					if (node.steps >= node.path.size())
+					if (node.steps >= node.path.size() - 1)
 					{
 						vel = Vector3::Zero();
 						node.path.clear();
@@ -1046,33 +1022,9 @@ void UpdateVelocity_hk(PlayerWalkMovement* self) {
 		}
 	}
 
-	if (aidsware::ui::get_bool(xorstr_("silent farm")))
-	{
-
-	}
 	if (aidsware::ui::get_bool(xorstr_("auto farm")))
 	{
-		if(entities::closest_node)
-			do_autofarm(vel);
-		//if (LocalPlayer::Entity()->transform()->position().distance(node.pos) < 2.f)
-		if(LocalPlayer::Entity()->transform()->position().distance(node.pos) < 4.5f)
-		{
-			auto attack = [&](Vector3 pos, BaseEntity* ply, BaseMelee* p, bool is_tree)
-			{
-				auto gathering = p->gathering();
-				if (is_tree) {
-					if (!(gathering->tree()->gatherDamage() > 1))
-						return;
-				}
-				else
-					if (!(gathering->ore()->gatherDamage() > 1))
-						return;
-
-				doMeleeAttack(pos, ply, p);
-			};
-
-			attack(node.pos, node.ent, LocalPlayer::Entity()->GetHeldEntity<BaseMelee>(), false);
-		}
+		do_autofarm(vel);
 	}
 	else
 	{
@@ -1207,8 +1159,6 @@ Vector3 EyePositionForPlayer_hk(BaseMountable* mount, BasePlayer* player, Quater
 
 	return mount->EyePositionForPlayer(player, lookRot);
 }
-
-
 
 void HandleJumping_hk(PlayerWalkMovement* a1, ModelState* state, bool wantsJump, bool jumpInDirection = false) {
 	
@@ -1747,7 +1697,7 @@ void ClientInput_hk(BasePlayer* plly, uintptr_t state) {
 		auto wpn = LocalPlayer::Entity()->GetHeldEntity<BaseMelee>();
 		if (wpn)
 		{
-			auto melee_attack = [&](Vector3 pos, BasePlayer* p, BaseMelee* w, bool is_player = false)
+			auto melee_attack = [&](Vector3 pos, BaseEntity* p, BaseMelee* w, bool is_player = false)
 			{
 				__try
 				{
@@ -1766,10 +1716,11 @@ void ClientInput_hk(BasePlayer* plly, uintptr_t state) {
 					safe_write(test + 0x14, r, Ray); //AttackRay
 					safe_write(test + 0x66, true, bool); //DidHit
 					safe_write(test + 0xB0, trans, Transform*); //HitTransform...
-					safe_write(test + 0x88, p, BasePlayer*); //HitEntity...
+					safe_write(test + 0x88, p, BaseEntity*); //HitEntity...
 					safe_write(test + 0x90, trans->InverseTransformPoint(pos), Vector3); //HitPoint
-					safe_write(test + 0x9C, Vector3(0, 0, 0), Vector3); //HitNormal
-					safe_write(test + 0x68, safe_read(w + 0x280, uintptr_t), uintptr_t); //DamageProperties...
+					//safe_write(test + 0x90, pos, Vector3); //HitPoint
+					safe_write(test + 0x9C, trans->InverseTransformDirection(pos), Vector3); //HitNormal Vector3(0, 0, 0)
+					safe_write(test + 0x68, w->damageProperties(), DamageProperties*); //DamageProperties... safe_read(w + 0x280, uintptr_t)
 
 
 					w->StartAttackCooldown(w->repeatDelay());
@@ -1787,48 +1738,29 @@ void ClientInput_hk(BasePlayer* plly, uintptr_t state) {
 			if (aidsware::ui::get_bool(xorstr_("silent melee"))
 				&& target_ply->transform()->position().distance(LocalPlayer::Entity()->transform()->position()) < 4.5f)
 			{
-				melee_attack(target_ply->bones()->head->position, target_ply, wpn, false);
+				//melee_attack(LocalPlayer::Entity()->ClosestPoint(target_ply->bones()->head->position), target_ply, wpn, true);
+				melee_attack(target_ply->bones()->head->position, target_ply, wpn, true);
 			}
 			if (aidsware::ui::get_bool(xorstr_("silent farm")))
 			{
-				auto closestnode = [&]()
-				{
-					BaseNetworkable* ent1 = BaseNetworkable::clientEntities()->FindClosest(STATIC_CRC32("metal-ore"), plly, 4.2f);
-					auto node1 = ent1->GetComponent<BaseEntity>(Type::BaseEntity());
-					BaseNetworkable* ent2 = BaseNetworkable::clientEntities()->FindClosest(STATIC_CRC32("sulfur-ore"), plly, 4.2f);
-					auto node2 = ent2->GetComponent<BaseEntity>(Type::BaseEntity());
-					BaseNetworkable* ent3 = BaseNetworkable::clientEntities()->FindClosest(STATIC_CRC32("stone-ore"), plly, 4.2f);
-					auto node3 = ent3->GetComponent<BaseEntity>(Type::BaseEntity());
+				auto lp = LocalPlayer::Entity();
+				auto hotspot = BaseNetworkable::clientEntities()->FindClosest<BaseEntity*>(STATIC_CRC32("OreHotSpot"), lp, 5.f);
+				auto node = (hotspot ? hotspot : BaseNetworkable::clientEntities()->FindClosest<BaseEntity*>(STATIC_CRC32("OreResourceEntity"), lp, 400.0f));
 
-					if (node1->transform()->position().distance(LocalPlayer::Entity()->transform()->position())
-						< node2->transform()->position().distance(LocalPlayer::Entity()->transform()->position())
-						&& node1->transform()->position().distance(LocalPlayer::Entity()->transform()->position())
-						< node3->transform()->position().distance(LocalPlayer::Entity()->transform()->position()))
-						return node1;
-					else if (node2->transform()->position().distance(LocalPlayer::Entity()->transform()->position())
-						< node1->transform()->position().distance(LocalPlayer::Entity()->transform()->position())
-						&& node2->transform()->position().distance(LocalPlayer::Entity()->transform()->position())
-						< node3->transform()->position().distance(LocalPlayer::Entity()->transform()->position()))
-						return node2;
-					else if (node3->transform()->position().distance(LocalPlayer::Entity()->transform()->position())
-						< node1->transform()->position().distance(LocalPlayer::Entity()->transform()->position())
-						&& node3->transform()->position().distance(LocalPlayer::Entity()->transform()->position())
-						< node2->transform()->position().distance(LocalPlayer::Entity()->transform()->position()))
-						return node3;
-				};
+				auto treespot = BaseNetworkable::clientEntities()->FindClosest<BaseEntity*>(STATIC_CRC32("TreeMarker"), lp, 5.f);
+				if (!treespot)
+					treespot = BaseNetworkable::clientEntities()->FindClosest<BaseEntity*>(STATIC_CRC32("TreeEntity"), lp, 400.f);
 
-				BaseNetworkable* ore = BaseNetworkable::clientEntities()->FindClosest(STATIC_CRC32("OreHotSpot"), plly, 4.2f);
-				BaseNetworkable* wood = BaseNetworkable::clientEntities()->FindClosest(STATIC_CRC32("TreeEntity"), plly, 4.2f);
-				auto node = ore->GetComponent<BaseEntity>(Type::BaseEntity());
-				auto tree = wood->GetComponent<BaseEntity>(Type::BaseEntity());
-				if (tree->transform()->position().distance(LocalPlayer::Entity()->transform()->position())
-					< node->transform()->position().distance(LocalPlayer::Entity()->transform()->position()))
-					node = tree;
+				if (treespot)
+					if (treespot->transform()->position().distance(lp->eyes()->get_position())
+						< node->transform()->position().distance(lp->eyes()->get_position()))
+						node = treespot;
+
 				//auto node = closestnode();
 
 				if (node)
 				{
-					if (node->transform()->position().distance(LocalPlayer::Entity()->transform()->position()) < 4.2f)
+					if (node->transform()->position().distance(LocalPlayer::Entity()->eyes()->get_position()) < 4.2f)
 					{
 						bool is_tree = false;
 						auto n = node;
@@ -1837,7 +1769,7 @@ void ClientInput_hk(BasePlayer* plly, uintptr_t state) {
 						if (FOUNDW(wstr, wxorstr_(L"tree")))
 							is_tree = true;
 						//doMeleeAttack(Vector3 pos, BaseEntity* ply, BaseMelee* p, bool is_player = false)
-						melee_attack(n->transform()->position(), (BasePlayer*)n, wpn);
+						melee_attack(LocalPlayer::Entity()->ClosestPoint(n->transform()->position()), n, wpn);
 					}
 				}
 			}

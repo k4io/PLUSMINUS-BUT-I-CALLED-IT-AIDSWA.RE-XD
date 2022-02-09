@@ -296,7 +296,6 @@ namespace aidsware::ui
 		wrapper::slider(xorstr_("checks"), Vector2(0, 10.0f), 30.f, 1.f, 360.0f, Tabs::Combat);
 		wrapper::slider(xorstr_("duration"), Vector2(0, 10.0f), 0.05f, 0.001f, 60.0f, Tabs::Combat);
 
-		//wrapper::checkbox(xorstr_("silent melee"), Vector2(0, 0), Tabs::Combat);
 		wrapper::currentY -= 5.f;
 
 		wrapper::checkbox(xorstr_("insta kill"), Vector2(0, 0), Tabs::Combat);
