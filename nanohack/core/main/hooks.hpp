@@ -1739,7 +1739,15 @@ void ClientInput_hk(BasePlayer* plly, uintptr_t state) {
 				&& target_ply->transform()->position().distance(LocalPlayer::Entity()->transform()->position()) < 4.5f)
 			{
 				//melee_attack(LocalPlayer::Entity()->ClosestPoint(target_ply->bones()->head->position), target_ply, wpn, true);
-				melee_attack(target_ply->bones()->head->position, target_ply, wpn, true);
+
+				auto mpv = target_ply->find_mpv_bone();
+				Vector3 target;
+				if (mpv != nullptr)
+					target = mpv->position;
+				else
+					target = target_ply->bones()->head->position;
+
+				melee_attack(target, target_ply, wpn, true);
 			}
 			if (aidsware::ui::get_bool(xorstr_("silent farm")))
 			{

@@ -2958,7 +2958,7 @@ public:
 	static inline Vector3(*MoveTowards_)(Vector3, Vector3, float) = nullptr;
 
 	static Vector3 MoveTowards(Vector3 current, Vector3 target, float maxDistanceDelta) {
-		return MoveTowards_(current, target, maxDistanceDelta);6
+		return MoveTowards_(current, target, maxDistanceDelta);
 	}
 };
 
