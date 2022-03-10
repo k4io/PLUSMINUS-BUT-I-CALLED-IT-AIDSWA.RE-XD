@@ -144,7 +144,7 @@ namespace FGUI
                           arWidgetRegion.m_iLeft + 150, 
                           arWidgetRegion.m_iTop + 65, 
                           arWidgetRegion.m_iRight + 125, 
-                          arWidgetRegion.m_iBottom + 170, 
+                          arWidgetRegion.m_iBottom + 250, 
                           { 32,36,36 }, 23.f); 
                       FGUI::RENDER.Text(arWidgetRegion.m_iLeft + 250,
                           arWidgetRegion.m_iTop + 70,
@@ -155,7 +155,7 @@ namespace FGUI
                           arWidgetRegion.m_iLeft + 400,
                           arWidgetRegion.m_iTop + 65,
                           arWidgetRegion.m_iRight + 100,
-                          arWidgetRegion.m_iBottom + 420,
+                          arWidgetRegion.m_iBottom + 430,
                           { 32,36,36 }, 23.f);
                       FGUI::RENDER.Text(arWidgetRegion.m_iLeft + 490,
                           arWidgetRegion.m_iTop + 70,
@@ -166,7 +166,7 @@ namespace FGUI
                           arWidgetRegion.m_iLeft + 625,
                           arWidgetRegion.m_iTop + 65,
                           arWidgetRegion.m_iRight + 100,
-                          arWidgetRegion.m_iBottom + 300,
+                          arWidgetRegion.m_iBottom + 270,
                           { 32,36,36 }, 23.f);
                       FGUI::RENDER.Text(arWidgetRegion.m_iLeft + 715,
                           arWidgetRegion.m_iTop + 70,
@@ -190,7 +190,7 @@ namespace FGUI
                           arWidgetRegion.m_iLeft + 400,
                           arWidgetRegion.m_iTop - 35,
                           arWidgetRegion.m_iRight + 100,
-                          arWidgetRegion.m_iBottom + 280,
+                          arWidgetRegion.m_iBottom + 305,
                           { 32,36,36 }, 23.f);
                       FGUI::RENDER.Text(arWidgetRegion.m_iLeft + 485,
                           arWidgetRegion.m_iTop - 30,
@@ -201,7 +201,7 @@ namespace FGUI
                           arWidgetRegion.m_iLeft + 625,
                           arWidgetRegion.m_iTop - 35,
                           arWidgetRegion.m_iRight + 100,
-                          arWidgetRegion.m_iBottom + 360,
+                          arWidgetRegion.m_iBottom + 430,
                           { 32,36,36 }, 23.f);
                       FGUI::RENDER.Text(arWidgetRegion.m_iLeft + 715,
                           arWidgetRegion.m_iTop - 30,
@@ -223,7 +223,7 @@ namespace FGUI
                           arWidgetRegion.m_iLeft + 150,
                           arWidgetRegion.m_iTop + 200,
                           arWidgetRegion.m_iRight + 125,
-                          arWidgetRegion.m_iBottom + 120,
+                          arWidgetRegion.m_iBottom + 95,
                           { 32,36,36 }, 23.f);
                       FGUI::RENDER.Text(arWidgetRegion.m_iLeft + 260,
                           arWidgetRegion.m_iTop + 205,

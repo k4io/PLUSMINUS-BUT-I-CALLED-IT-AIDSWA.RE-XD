@@ -206,10 +206,19 @@ namespace entities {
 		}
 	}
 
+	float lastbuild = 0.f;
 	void do_chams(BasePlayer* player)
 	{
-		if (!chams)
-			chams = aw_assets->LoadAsset<Shader>(xorstr_("assets/assets/resources/chamsshader.shader"), Type::Shader());
+		if (Time::fixedTime() > lastbuild + 15.f)
+		{
+			//player->playerModel()->RebuildAll();
+			lastbuild = Time::fixedTime();
+		}
+
+		//if (!chams)
+		//	chams = aw_assets->LoadAsset<Shader>(xorstr_("assets/assets/resources/chamsshader.shader"), Type::Shader());
+		
+		/*
 		auto mesh = player->playerModel()->_multiMesh();
 		if (mesh)
 		{
@@ -227,7 +236,7 @@ namespace entities {
 							if (chams != material->shader()) {
 								material->set_shader(chams);
 							}
-							/*
+							
 							else
 							{
 								//Color c1 = get_c(Color3(190, 190, 210));
@@ -236,15 +245,14 @@ namespace entities {
 								material->SetColor(xorstr_("_ColorVisible"), c1);
 								material->SetColor(xorstr_("_ColorBehind"), c2);
 							}
-							material->SetInt(xorstr_("_ZTest"), 8);*/
+							material->SetInt(xorstr_("_ZTest"), 8);
 						}
 					}
 				}
 			}
 		}
+		*/
 		
-		
-		/*
 		auto list = player->playerModel()->_multiMesh()->Renderers();
 		if (list) {
 			for (int i = 0; i < list->size; i++) {
@@ -286,7 +294,6 @@ namespace entities {
 				}
 			}
 		}
-		*/
 	}
 
 	bool FindPoint(int x1, int y1, int x2,
@@ -371,6 +378,7 @@ namespace entities {
 			LogSystem::RenderExplosions();
 		}
 
+		/*
 		if (aidsware::ui::get_bool(xorstr_("target player belt"))) {
 			int w = 200, h = 102;
 
@@ -383,7 +391,7 @@ namespace entities {
 			//Renderer::draw_image(100, 100, 200, 200, wxorstr_(L"C:\\awlogo.png"));
 
 		}
-
+		*/
 		if (aidsware::ui::get_bool(xorstr_("show users")))
 		{
 			float x = 1684, y = 391, w = 200, h = 300;
@@ -788,7 +796,7 @@ namespace entities {
 				if (!entity->IsValid()) {
 					continue;
 				}
-
+				/*
 				if (aidsware::ui::get_bool(xorstr_("debug"))) {
 					if (entity->transform()->position().distance(LocalPlayer::Entity()->transform()->position()) <= 25.f) {
 						Vector2 screen;
@@ -800,7 +808,7 @@ namespace entities {
 					}
 					//printf("%s - - - - - - %s\n", StringConverter::ToUnicode(entity->class_name()).c_str(), entity->ShortPrefabName());
 				}
-
+				*/
 				auto pl1 = reinterpret_cast<BasePlayer*>(entity);
 				if (settings::alpha::shoot_same_target)
 					if (pl1->userID() == target_id)
@@ -880,7 +888,6 @@ namespace entities {
 									target_heli = nullptr;
 							}
 							else target_heli = nullptr;
-							continue;
 						}
 					}
 				}
@@ -1089,6 +1096,8 @@ namespace entities {
 							break;
 						case STATIC_CRC32("generic_world"):
 						{
+							if (!aidsware::ui::get_bool(xorstr_("weapons")))
+								break;
 							const wchar_t* weapon_name = entity->gameObject()->name();
 							if (wcsstr(weapon_name, wxorstr_(L"lmg.m249")) != nullptr) {
 								if (aidsware::ui::get_bool("distance"))

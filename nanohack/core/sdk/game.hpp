@@ -1648,8 +1648,7 @@ public:
 	FIELD("Assembly-CSharp::BaseMelee::gathering", gathering, GatherProperties*);
 	static inline void (*ProcessAttack_)(BaseMelee*, HitTest*) = nullptr;
 	void ProcessAttack(HitTest* test) {
-		return ProcessAttack_(this, test);
-	}
+		return ProcessAttack_(this, test);	}
 };
 enum BUTTON {
 	FORWARD = 2,
@@ -2732,6 +2731,7 @@ public:
 	FIELD("Assembly-CSharp::Projectile::gravityModifier", gravityModifier, float);
 	FIELD("Assembly-CSharp::Projectile::owner", owner, BasePlayer*);
 	FIELD("Assembly-CSharp::Projectile::tumbleSpeed", tumbleSpeed, float);
+	FIELD("Assembly-CSharp::Projectile::integrity", integrity, float);
 
 	static inline void(*Launch_)(Projectile*) = nullptr;
 	void Launch() {
@@ -2788,6 +2788,28 @@ float desyncTimeRaw = 0.f;
 float desyncTimeClamped = 0.f;
 float tickDeltaTime = 0.f;
 //int tickHistoryCapacity;
+
+bool TestNoClipping(BasePlayer* ply = LocalPlayer::Entity(),
+	Vector3 oldPos = Vector3::Zero(),
+	Vector3 newPos = Vector3::Zero(),
+	float backtracking = 0.01f)
+{
+	int num = 429990145;
+	float radius = ply->GetRadius() - 0.21f;
+	Vector3 normalized = (newPos - oldPos).normalized();
+	Vector3 vector = oldPos - normalized * backtracking;
+	float magnitude = (newPos - vector).magnitude();
+
+	Ray z = Ray(vector, normalized);
+
+	bool flag = Physics::Raycast(z, magnitude + radius, 429990145);
+	if (!flag)
+	{
+		flag = Physics::SphereCast(z, radius, magnitude, 429990145);
+	}
+	//return false;g
+	return flag;//&& GamePhysics::Verify(&hitInfo);
+}
 
 bool TestFlying2(BasePlayer* ply = LocalPlayer::Entity(),
 					Vector3 oldPos = Vector3::Zero(),
@@ -3401,7 +3423,7 @@ Shader* chams = nullptr;
 																															  
 void initialize_cheat( ) {																									  
 	////VM_DOLPHIN_BLACK_START																								  
-	VMProtectBeginUltra(xorstr_("init"));																				  
+	//VMProtectBeginUltra(xorstr_("init"));
 	init_classes( );
 	init_fields( );
 	init_methods();
@@ -3443,9 +3465,9 @@ void initialize_cheat( ) {
 	ASSIGN_HOOK("Assembly-CSharp::BaseProjectile::LaunchProjectile(): Void", BaseProjectile::LaunchProjectile_);
 	//ASSIGN_HOOK("Assembly-CSharp::EffectLibrary::CreateEffect(String,Effect): GameObject", EffectLibrary::CreateEffect_);
 	ASSIGN_HOOK("Assembly-CSharp::BaseCombatEntity::DoHitNotify(HitInfo): Void", BaseCombatEntity::DoHitNotify_);
-	ASSIGN_HOOK("Facepunch.Network::Network::NetWrite::UInt64(UInt64): Void", Network::NetWrite::UInt64_);
+	//ASSIGN_HOOK("Facepunch.Network::Network::NetWrite::UInt64(UInt64): Void", Network::NetWrite::UInt64_);
 	
-	ASSIGN_HOOK("Assembly-CSharp::Client::OnNetworkMessage(Message): Void", Network::Client::OnNetworkMessage_);
+	//ASSIGN_HOOK("Assembly-CSharp::Client::OnNetworkMessage(Message): Void", Network::Client::OnNetworkMessage_);
 
 	//ASSIGN_HOOK("Assembly-CSharp::MainCamera::get_position(): Vector3", MainCamera::get_position_);
 
@@ -3458,6 +3480,6 @@ void initialize_cheat( ) {
 
 	settings::cheat_init = true;
 
-	VMProtectEnd();
+	//VMProtectEnd();
 	////VM_DOLPHIN_BLACK_END
 }

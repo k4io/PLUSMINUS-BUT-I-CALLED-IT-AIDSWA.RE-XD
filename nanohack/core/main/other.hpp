@@ -1,29 +1,6 @@
 namespace other {
 	Vector3 m_manipulate = Vector3::Zero( );
 
-	bool TestNoClipping(BasePlayer* ply, Vector3 oldPos, Vector3 newPos, bool sphereCast, float deltaTime = 0.f)
-	{
-		float nbacktrack = 0.01f;
-		float nmargin = 0.09f;
-		float radius = ply->GetRadius();
-		float height = ply->GetHeight();
-		Vector3 normalized = (newPos - oldPos).normalized();
-		float num2 = radius - nmargin;
-		Vector3 vector = oldPos + Vector3(0.f, height - radius, 0.f) - normalized * nbacktrack;
-		float magnitude = (newPos + Vector3(0.f, height - radius, 0.f) - vector).magnitude();
-		RaycastHit hitInfo;
-
-		Ray z = Ray(vector, normalized);
-
-		bool flag = Physics::Raycast(z, magnitude + num2, 429990145);
-		if (!flag)
-		{
-			flag = Physics::SphereCast(z, num2, magnitude, 429990145);
-		}
-		//return false;g
-		return flag;//&& GamePhysics::Verify(&hitInfo);
-	}
-
 	bool ValidateEyePos(Vector3 position)
 	{
 		//protection > 3
@@ -51,15 +28,15 @@ namespace other {
 			if (aidsware::ui::get_bool(xorstr_("debug")))
 				printf("position: (%ff, %ff, %ff) caused eye_altitude!\n",
 					position.x, position.y, position.z);
+
 			flag = true; //EYE_ALTITUDE
 		}
 
 		//protection > 4
 		Vector3 position2 = LocalPlayer::Entity()->transform()->position();
-		Vector3 vector = position - Vector3(0.f, 1.5f, 0.f) - Vector3(0.f, -0.6f, 0.f);
-		
-		if (vector.distance(position2) > 0.01f
-			&& TestFlying2(loco, position2, vector, true))
+
+		if (position2.distance(loco->eyes()->get_position()) > 0.01f
+			&& TestNoClipping(loco, cLastTickPos, position2, true))
 		{
 			if (aidsware::ui::get_bool(xorstr_("debug")))
 				printf("position: (%ff, %ff, %ff) caused eye_noclip!\n",

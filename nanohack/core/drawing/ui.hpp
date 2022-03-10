@@ -253,6 +253,8 @@ namespace aidsware::ui
 		wrapper::checkbox(xorstr_("psilent"), Vector2(0, 0), Tabs::Combat, true);
 		wrapper::checkbox(xorstr_("silent melee"), Vector2(0, 0), Tabs::Combat, true);
 		wrapper::checkbox(xorstr_("target heli"), Vector2(0, 0), Tabs::Combat);
+		wrapper::checkbox(xorstr_("magic heli"), Vector2(0, 0), Tabs::Combat);
+		wrapper::checkbox(xorstr_("instant bullet"), Vector2(0, 0), Tabs::Combat);
 
 		wrapper::reset_height();
 		wrapper::currentX += 70.0f;
@@ -262,7 +264,7 @@ namespace aidsware::ui
 		wrapper::checkbox(xorstr_("fat bullet"), Vector2(180, 0), Tabs::Combat);
 		wrapper::currentY += 15.0f;
 		wrapper::slider(xorstr_("bullet size"), Vector2(180, 0), 1.0f, 0.1f, 1.0f);
-		wrapper::currentY -= 10.f;
+		wrapper::currentY -= 15.f;
 		wrapper::checkbox(xorstr_("fast bullets"), Vector2(180, 0), Tabs::Combat);
 		wrapper::combobox(xorstr_("hitbox override"), { xorstr_("none"), xorstr_("body"), xorstr_("head"), xorstr_("random (all)"), xorstr_("random (main)") }, Vector2(180, 0), Tabs::Combat);
 
@@ -275,7 +277,7 @@ namespace aidsware::ui
 		wrapper::currentY += 15.f;
 		wrapper::slider(xorstr_("target fov"), Vector2(180.f, 0.f), 300.0f, 30.0f, 2500.0f, Tabs::Combat);
 		wrapper::slider(xorstr_("recoil %"), Vector2(180.0f, 0.0f), 100.0f, 0.0f, 100.0f, Tabs::Combat);
-		wrapper::slider(xorstr_("recoil %"), Vector2(180.0f, 0.0f), 100.0f, 0.0f, 100.0f, Tabs::Combat);
+		wrapper::slider(xorstr_("spread %"), Vector2(180.0f, 0.0f), 100.0f, 0.0f, 100.0f, Tabs::Combat);
 		wrapper::slider(xorstr_("reach"), Vector2(180.0f, 0), 1.0, 0.1f, 4.5f, Tabs::Combat);
 
 		wrapper::currentY -= 10.0f;
@@ -419,6 +421,9 @@ namespace aidsware::ui
 		wrapper::checkbox(xorstr_("vehicles"), Vector2(180, 0), Tabs::Visual);
 		wrapper::checkbox(xorstr_("patrol-heli"), Vector2(180, 0), Tabs::Visual);
 		wrapper::checkbox(xorstr_("presents"), Vector2(180, 0), Tabs::Visual);
+		wrapper::currentY += 10.f;
+		wrapper::slider(xorstr_("star brightness"), Vector2(180, 0), 10.f, 0.0f, 100.0f, Tabs::Visual);
+		wrapper::slider(xorstr_("atmosphere"), Vector2(180, 0), 1.f, 0.0f, 100.0f, Tabs::Visual);
 		//wrapper::checkbox(xorstr_("raid esp"), Vector2(180, 0), Tabs::Visual);
 		wrapper::reset_height();
 		wrapper::reset_width();
@@ -441,7 +446,7 @@ namespace aidsware::ui
 		wrapper::keybind(xorstr_("zoom key"), Vector2(0, 0.0f), Tabs::Misc);
 		wrapper::currentY += 5.0f;
 
-		wrapper::currentY += 25.0f;
+		wrapper::currentY += 45.0f;
 
 		wrapper::combobox(xorstr_("anti-aim"),
 			{
@@ -504,6 +509,7 @@ namespace aidsware::ui
 				xorstr_("Relaxed"),
 				xorstr_("OnPhone"),
 			}, Vector2(170, 0), Tabs::Misc);
+		wrapper::keybind(xorstr_("model flags key"), Vector2(180, 0), Tabs::Misc);
 		wrapper::currentX -= 5.f;
 
 		wrapper::checkbox(xorstr_("shrink"), Vector2(180, 0), Tabs::Misc);
@@ -519,13 +525,6 @@ namespace aidsware::ui
 		wrapper::slider(xorstr_("timescale"), Vector2(180, 0), 2.f, 0.0f, 10.0f, Tabs::Misc);
 		wrapper::currentY -= 15.f;
 		wrapper::keybind(xorstr_("timescale key"), Vector2(180, 0), Tabs::Misc);
-		wrapper::button(xorstr_("suicide"), [&]() {
-			settings::suicide = true;
-			/*
-			if (!get_text(xorstr_("config name")).empty())
-				vars::Container->SaveToFile(settings::data_dir + xorstr_("\\") + get_text(xorstr_("config name")) + xorstr_(".cfg"));
-			*/
-			}, Vector2(180, 0), Tabs::Misc);
 
 		wrapper::currentX += 215.0f;
 

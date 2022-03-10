@@ -400,7 +400,9 @@ namespace Renderer {
 		float value,
 		float z,
 		float actual = 0.0f,
-		bool txt = false)
+		bool txt = false,
+		bool lbl = false,
+		std::wstring custom_label = wxorstr_(L""))
 	{
 		rectangle_filled(start, { end.x - start.x, 6 }, bgcolor);
 		float f = end.x;
@@ -413,6 +415,10 @@ namespace Renderer {
 			text({ (start.x) + ((end.x - start.x) * (z / value)), start.y + 2 }, Color3(219, 219, 219), 14.f, true, true, wxorstr_(L"%.2f"), (float)(z / value));
 		else 
 			text({ (start.x) + ((end.x - start.x) * (z / value)), start.y + 2 }, Color3(219, 219, 219), 14.f, true, true, wxorstr_(L"%.2f"), (float)(z / value));
+
+		if (custom_label.empty() || !lbl) return;
+
+		text({ start.x, start.y + 2 }, fgcolor, 14.f, true, true, custom_label.c_str(), (float)(z / value));
 	}
 
 	template <typename ...Args>

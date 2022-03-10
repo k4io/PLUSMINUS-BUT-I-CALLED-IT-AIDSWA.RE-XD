@@ -57,12 +57,12 @@ namespace aimutils {
 	Vector3 get_prediction() {
 		Vector3 target;
 		Vector3 targetvel;
-		if (aidsware::ui::get_bool(xorstr_("patrol-heli"))
+		if (aidsware::ui::get_bool(xorstr_("target heli"))
 			&& target_heli != nullptr)
 		{
 			target = target_heli->transform()->position();
 			target.y += 1.f;
-			targetvel = target;
+			targetvel = target_heli->GetWorldVelocity();
 			float s = safe_read(safe_read(target_heli + 0x398, uintptr_t) + 0x3C, float);
 			targetvel *= s;
 		}
