@@ -200,6 +200,7 @@
     <ClInclude Include="core\sdk\il2cpp\dissector.hpp" />
     <ClInclude Include="core\sdk\il2cpp\wrapper.hpp" />
     <ClInclude Include="core\sdk\lazy_importer.hpp" />
+    <ClInclude Include="core\sdk\sphere_arrays.h" />
     <ClInclude Include="detours\detours.h" />
     <ClInclude Include="rapidjson\allocators.h" />
     <ClInclude Include="rapidjson\document.h" />

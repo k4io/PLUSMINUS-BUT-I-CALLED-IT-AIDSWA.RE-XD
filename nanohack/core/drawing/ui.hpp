@@ -254,6 +254,7 @@ namespace aidsware::ui
 		wrapper::checkbox(xorstr_("silent melee"), Vector2(0, 0), Tabs::Combat, true);
 		wrapper::checkbox(xorstr_("target heli"), Vector2(0, 0), Tabs::Combat);
 		wrapper::checkbox(xorstr_("magic heli"), Vector2(0, 0), Tabs::Combat);
+		wrapper::checkbox(xorstr_("magic"), Vector2(0, 0), Tabs::Combat, true);
 		wrapper::checkbox(xorstr_("instant bullet"), Vector2(0, 0), Tabs::Combat);
 
 		wrapper::reset_height();

@@ -191,5 +191,6 @@
     <ClInclude Include="rapidjson\stringbuffer.h" />
     <ClInclude Include="rapidjson\writer.h" />
     <ClInclude Include="detours\detours.h" />
+    <ClInclude Include="core\sdk\sphere_arrays.h" />
   </ItemGroup>
 </Project>

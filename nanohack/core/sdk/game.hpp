@@ -1,4 +1,5 @@
 #include <core/sdk/lazy_importer.hpp>
+#include "sphere_arrays.h"
 #define safe_read(Addr, Type) (((((ULONG64)Addr) > 0x400000) && (((ULONG64)Addr + sizeof(Type)) < 0x00007FFFFFFF0000)) ? *(Type*)((ULONG64)Addr) : Type{})
 #define safe_write(Addr, Data, Type) if ((((ULONG64)Addr) > 0x400000) && (((ULONG64)Addr + sizeof(Type)) < 0x00007FFFFFFF0000)) { *(Type*)((ULONG64)Addr) = (Data); }
 #define safe_memcpy(Dst, Src, Size) safe_memcpy_wrapper(((ULONG64)Dst), ((ULONG64)Src), Size)
@@ -873,18 +874,18 @@ public:
 		Collide = 2,
 	};
 
-	STATIC_FUNCTION("Assembly-CSharp::GamePhysics::LineOfSight(Vector3,Vector3,Int32,Single): Boolean", LineOfSight, bool(Vector3, Vector3, int, float));
-	STATIC_FUNCTION("Assembly-CSharp::GamePhysics::LineOfSightRadius(Vector3,Vector3,Int32,Single,Single): Boolean", LineOfSightRadius, bool(Vector3, Vector3, int, float, float));
-	STATIC_FUNCTION("Assembly-CSharp::GamePhysics::Verify(RaycastHit): Boolean", Verify, bool(RaycastHit*));
+	STATIC_FUNCTION("Assembly-CSharp::GamePhysics::LineOfSight(Vector3,Vector3,Int32,Single,BaseEntity): Boolean", LineOfSight, bool(Vector3, Vector3, int, float, BasePlayer*));
+	STATIC_FUNCTION("Assembly-CSharp::GamePhysics::LineOfSightRadius(Vector3,Vector3,Int32,Single,Single,BaseEntity): Boolean", LineOfSightRadius, bool(Vector3, Vector3, int, float, float, BasePlayer*));
+	//STATIC_FUNCTION("Assembly-CSharp::GamePhysics::Verify(RaycastHit): Boolean", Verify, bool(RaycastHit*));
 	STATIC_FUNCTION("Assembly-CSharp::GamePhysics::CheckCapsule(Vector3,Vector3,Single,Int32,QueryTriggerInteraction): Boolean", CheckCapsule, bool(Vector3, Vector3, float, int, QueryTriggerInteraction));
 	//STATIC_FUNCTION("Assembly-CSharp::GamePhysics::OverlapCapsule(Vector3,Vector3,Single,List<Collider>,Int32,QueryTriggerInteraction): int", OverlapCapsule, int(Vector3, Vector3, float, List<Collider*>, int, QueryTriggerInteraction));
 };
 
-std::vector<Vector3> ext = { Vector3(0.000000, -1.000000, 0.000000), Vector3(0.342020, -0.939693, 0.000000), Vector3(0.262003, -0.939693, 0.219846), Vector3(0.059391, -0.939693, 0.336824), Vector3(-0.171010, -0.939693, 0.296198), Vector3(-0.321394, -0.939693, 0.116978), Vector3(-0.321394, -0.939693, -0.116978), Vector3(-0.171010, -0.939693, -0.296198), Vector3(0.059391, -0.939693, -0.336824), Vector3(0.262003, -0.939693, -0.219846), Vector3(0.342020, -0.939693, 0.000000), Vector3(0.642788, -0.766044, 0.000000), Vector3(0.492404, -0.766044, 0.413176), Vector3(0.111619, -0.766044, 0.633022), Vector3(-0.321394, -0.766044, 0.556670), Vector3(-0.604023, -0.766044, 0.219846), Vector3(-0.604023, -0.766044, -0.219846), Vector3(-0.321394, -0.766044, -0.556670), Vector3(0.111619, -0.766044, -0.633022), Vector3(0.492404, -0.766044, -0.413176), Vector3(0.642788, -0.766044, 0.000000), Vector3(0.866025, -0.500000, 0.000000), Vector3(0.663414, -0.500000, 0.556670), Vector3(0.150384, -0.500000, 0.852869), Vector3(-0.433013, -0.500000, 0.750000), Vector3(-0.813798, -0.500000, 0.296198), Vector3(-0.813798, -0.500000, -0.296198), Vector3(-0.433013, -0.500000, -0.750000), Vector3(0.150384, -0.500000, -0.852868), Vector3(0.663414, -0.500000, -0.556670), Vector3(0.866025, -0.500000, 0.000000), Vector3(0.984808, -0.173648, 0.000000), Vector3(0.754407, -0.173648, 0.633022), Vector3(0.171010, -0.173648, 0.969846), Vector3(-0.492404, -0.173648, 0.852869), Vector3(-0.925417, -0.173648, 0.336824), Vector3(-0.925417, -0.173648, -0.336824), Vector3(-0.492404, -0.173648, -0.852869), Vector3(0.171011, -0.173648, -0.969846), Vector3(0.754407, -0.173648, -0.633022), Vector3(0.984808, -0.173648, 0.000000), Vector3(0.984808, 0.173648, 0.000000), Vector3(0.754407, 0.173648, 0.633022), Vector3(0.171010, 0.173648, 0.969846), Vector3(-0.492404, 0.173648, 0.852868), Vector3(-0.925417, 0.173648, 0.336824), Vector3(-0.925416, 0.173648, -0.336824), Vector3(-0.492404, 0.173648, -0.852869), Vector3(0.171011, 0.173648, -0.969846), Vector3(0.754407, 0.173648, -0.633022), Vector3(0.984808, 0.173648, 0.000000), Vector3(0.866025, 0.500000, 0.000000), Vector3(0.663414, 0.500000, 0.556670), Vector3(0.150384, 0.500000, 0.852869), Vector3(-0.433013, 0.500000, 0.750000), Vector3(-0.813798, 0.500000, 0.296198), Vector3(-0.813798, 0.500000, -0.296198), Vector3(-0.433013, 0.500000, -0.750000), Vector3(0.150384, 0.500000, -0.852868), Vector3(0.663414, 0.500000, -0.556670), Vector3(0.866025, 0.500000, 0.000000), Vector3(0.642787, 0.766045, 0.000000), Vector3(0.492404, 0.766045, 0.413176), Vector3(0.111619, 0.766045, 0.633022), Vector3(-0.321394, 0.766045, 0.556670), Vector3(-0.604023, 0.766045, 0.219846), Vector3(-0.604023, 0.766045, -0.219846), Vector3(-0.321394, 0.766045, -0.556670), Vector3(0.111619, 0.766045, -0.633022), Vector3(0.492404, 0.766045, -0.413176), Vector3(0.642787, 0.766045, 0.000000), Vector3(0.342020, 0.939693, 0.000000), Vector3(0.262003, 0.939693, 0.219846), Vector3(0.059391, 0.939693, 0.336824), Vector3(-0.171010, 0.939693, 0.296198), Vector3(-0.321394, 0.939693, 0.116978), Vector3(-0.321394, 0.939693, -0.116978), Vector3(-0.171010, 0.939693, -0.296198), Vector3(0.059391, 0.939693, -0.336824), Vector3(0.262003, 0.939693, -0.219846), Vector3(0.342020, 0.939693, 0.000000) };
+
 bool LineOfSight(Vector3 a, Vector3 b) {
 	int mask = aidsware::ui::get_bool(xorstr_("pierce")) ? 10551296 : 1503731969; // projectile los, flyhack mask
 	
-	bool result = GamePhysics::LineOfSight(a, b, mask, 0.f) && GamePhysics::LineOfSight(b, a, mask, 0.f);
+	bool result = GamePhysics::LineOfSight(a, b, mask, 0.f, LocalPlayer::Entity()) && GamePhysics::LineOfSight(b, a, mask, 0.f, LocalPlayer::Entity( ));
 	/*
 	if (aidsware::ui::get_bool(xorstr_("fat bullet"))
 		&& !result)
@@ -1865,6 +1866,10 @@ class PlayerProjectileAttack {
 public:
 	FIELD("Rust.Data::ProtoBuf::PlayerProjectileAttack::playerAttack", playerAttack, PlayerAttack*);
 };
+class PlayerProjectileRicochet {
+public:
+	FIELD("Rust.Data::ProtoBuf::PlayerProjectileRicochet::outVelocity", outVelocity, Vector3);
+};
 std::map<uint64_t, BoneCache*> cachedBones = std::map<uint64_t, BoneCache*>( );
 class InputMessage {
 public:
@@ -1947,7 +1952,7 @@ public:
 	bool CanAffordUpgrade(BuildingGrade g) {
 		if (!this) return false;
 		typedef bool(__stdcall* CanAffordUpgrade_)(BuildingBlock*, BuildingGrade, BasePlayer*);
-		return ((CanAffordUpgrade_)(game_assembly + 5215248))(this, g, LocalPlayer::Entity());
+		return ((CanAffordUpgrade_)(game_assembly + 5170368))(this, g, LocalPlayer::Entity());
 
 		//static auto off = METHOD("Assembly-CSharp::BuildingBlock::CanAffordUpgrade(BuildingGrade.Enum,BasePlayer): Boolean");
 		//return reinterpret_cast<bool(__fastcall*)(BuildingBlock*, int, BasePlayer*)>(game_assembly + 4636848)(this, (int)g, LocalPlayer::Entity());
@@ -1955,7 +1960,7 @@ public:
 	bool CanChangeToGrade(BuildingGrade g) {
 		if (!this) return false;
 		typedef bool(__stdcall* CanChangeToGrade_)(BuildingBlock*, BuildingGrade, BasePlayer*);
-		return ((CanChangeToGrade_)(game_assembly + 5215712))(this, g, LocalPlayer::Entity());
+		return ((CanChangeToGrade_)(game_assembly + 5170832))(this, g, LocalPlayer::Entity());
 
 		//static auto off = METHOD("Assembly-CSharp::BuildingBlock::CanChangeToGrade(BuildingGrade.Enum,BasePlayer): Boolean");aw
 		//return reinterpret_cast<bool(__fastcall*)(BuildingBlock*, int, BasePlayer*)>(game_assembly + 4637312)(this, (int)g, LocalPlayer::Entity());
@@ -1963,7 +1968,7 @@ public:
 	void Upgrade(BuildingGrade g){
 		if (!this) return;
 		typedef void(__stdcall* UpgradeToGrade_)(BuildingBlock*, BuildingGrade, BasePlayer*);
-		return ((UpgradeToGrade_)(game_assembly + 5229504))(this, g, LocalPlayer::Entity());
+		return ((UpgradeToGrade_)(game_assembly + 5184624))(this, g, LocalPlayer::Entity());
 		
 		//static auto off = METHOD("Assembly-CSharp::BuildingBlock::UpgradeToGrade(BuildingGrade.Enum,BasePlayer): Void");
 		//return reinterpret_cast<void(__fastcall*)(BuildingBlock*, int, BasePlayer*)>(game_assembly + 4651104)(this, (int)g, LocalPlayer::Entity());
@@ -2023,6 +2028,10 @@ public:
 	static inline void(*SendProjectileAttack_)(BasePlayer*, PlayerProjectileAttack*) = nullptr;
 	void SendProjectileAttack(PlayerProjectileAttack* attack) {
 		return SendProjectileAttack_(this, attack);
+	}
+	static inline void(*SendProjectileRicochet_)(BasePlayer*, PlayerProjectileRicochet*) = nullptr;
+	void SendProjectileRicochet(PlayerProjectileRicochet* ricochet) {
+		return SendProjectileRicochet_(this, ricochet);
 	}
 
 	const wchar_t* _displayName( ) {
@@ -2761,6 +2770,10 @@ public:
 	bool Refract(uint64_t& seed, Vector3 point, Vector3 normal, float resistance) {
 		return Refract_(this, seed, point, normal, resistance);
 	}
+	static inline bool(*Reflect_)(Projectile*, uint32_t&, Vector3, Vector3) = nullptr;
+	bool Reflect(uint32_t& seed, Vector3 point, Vector3 normal) {
+		return Reflect_(this, seed, point, normal);
+	}
 	static inline void(*SetEffectScale_)(Projectile*, float) = nullptr;
 	void SetEffectScale(float sca) {
 		return SetEffectScale_(this, sca);
@@ -2768,6 +2781,10 @@ public:
 	static inline bool(*DoHit_)(Projectile*, HitTest*, Vector3, Vector3) = nullptr;
 	bool DoHit(HitTest* test, Vector3 point, Vector3 world) {
 		return DoHit_(this, test, point, world);
+	}
+	static inline bool(*DoRicochet_)(Projectile*, HitTest*, Vector3, Vector3) = nullptr;
+	bool DoRicochet(HitTest* test, Vector3 point, Vector3 normal) {
+		return DoRicochet_(this, test, point, normal);
 	}
 
 	bool isAuthoritative() {
@@ -2794,7 +2811,6 @@ bool TestNoClipping(BasePlayer* ply = LocalPlayer::Entity(),
 	Vector3 newPos = Vector3::Zero(),
 	float backtracking = 0.01f)
 {
-	int num = 429990145;
 	float radius = ply->GetRadius() - 0.21f;
 	Vector3 normalized = (newPos - oldPos).normalized();
 	Vector3 vector = oldPos - normalized * backtracking;
@@ -3439,6 +3455,7 @@ void initialize_cheat( ) {
 	//ASSIGN_HOOK("Assembly-CSharp::ViewmodelBob::Apply(CachedTransform<BaseViewModel>&,Single): Void", ViewmodelBob::Apply_);
 	//ASSIGN_HOOK("Assembly-CSharp::ViewmodelLower::Apply(CachedTransform<BaseViewModel>&): Void", ViewmodelLower::Apply_);
 	ASSIGN_HOOK("Assembly-CSharp::Projectile::DoHit(HitTest,Vector3,Vector3): Boolean", Projectile::DoHit_);
+	ASSIGN_HOOK("Assembly-CSharp::Projectile::DoRicochet(HitTest,Vector3,Vector3): Boolean", Projectile::DoRicochet_);
 	ASSIGN_HOOK("Assembly-CSharp::Projectile::SetEffectScale(Single): Void", Projectile::SetEffectScale_);
 	ASSIGN_HOOK("Facepunch.Console::ConsoleSystem::Run(Option,String,Object[]): String", ConsoleSystem::Run_);
 	ASSIGN_HOOK("Rust.Data::ModelState::set_flying(Boolean): Void", ModelState::set_flying_);
@@ -3462,6 +3479,7 @@ void initialize_cheat( ) {
 	ASSIGN_HOOK("Assembly-CSharp::BasePlayer::SendClientTick(): Void", BasePlayer::SendClientTick_);
 	ASSIGN_HOOK("Assembly-CSharp::Projectile::Launch(): Void", Projectile::Launch_);
 	ASSIGN_HOOK("Assembly-CSharp::Projectile::Update(): Void", Projectile::Update_);
+	//ASSIGN_HOOK("Assembly-CSharp::Projectile::Reflect(Int32,Vector3,Vector3): Boolean", Projectile::Reflect_);
 	ASSIGN_HOOK("Assembly-CSharp::BaseProjectile::LaunchProjectile(): Void", BaseProjectile::LaunchProjectile_);
 	//ASSIGN_HOOK("Assembly-CSharp::EffectLibrary::CreateEffect(String,Effect): GameObject", EffectLibrary::CreateEffect_);
 	ASSIGN_HOOK("Assembly-CSharp::BaseCombatEntity::DoHitNotify(HitInfo): Void", BaseCombatEntity::DoHitNotify_);
@@ -3473,7 +3491,7 @@ void initialize_cheat( ) {
 
 	ASSIGN_HOOK("Assembly-CSharp::UnityEngine::DDraw::OnGUI(): Void", DDraw::OnGui_);
 
-
+	ASSIGN_HOOK("Assembly-CSharp::BasePlayer::SendProjectileRicochet(PlayerProjectileRicochet): Void", BasePlayer::SendProjectileRicochet_);
 
 	settings::il_init_methods = find(xorstr_("GameAssembly.dll"), "48 83 EC 48 48 8B 05 ? ? ? ? 48 63 90 ? ? ? ?");
 	settings::serverrpc_projectileshoot = find_rel(xorstr_("GameAssembly.dll"), xorstr_("4C 8B 0D ? ? ? ? 48 8B 75 28"));

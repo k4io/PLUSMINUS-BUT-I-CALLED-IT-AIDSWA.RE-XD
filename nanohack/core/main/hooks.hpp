@@ -8,6 +8,7 @@
 #pragma comment( lib, "shlwapi.lib" )  // needed for the ColorHLSToRGB() function
 
 int _r = 255, _g = 0, _b = 0;
+float insta_travel_check_time = -1.f;
 
 #define ID3_VAL 76561197960265728
 
@@ -39,7 +40,7 @@ PlayerTick* test;
 bool just_joined_server = false;
 
 bool is_noclipping = false;
-
+bool magic_projectile_test = false;
 bool proj = false;
 Projectile* projv;
 
@@ -109,7 +110,10 @@ void ClientUpdate_hk(BasePlayer* plly) {
 					|| held->class_name_hash() == STATIC_CRC32("BaseLauncher")
 					|| held->class_name_hash() == STATIC_CRC32("CrossbowWeapon")
 					|| held->class_name_hash() == STATIC_CRC32("FlintStrikeWeapon"))) {
-					if (target_ply != nullptr && target_ply->isCached()) {
+					if(held->timeSinceDeploy() < held->deployDelay() &&
+						held->nextAttackTime() >= Time::fixedTime() &&
+						target_ply != nullptr && target_ply->isCached()) {
+
 						auto mpv = target_ply->find_mpv_bone();
 						Vector3 target;
 						if (mpv != nullptr)
@@ -262,7 +266,8 @@ Vector3 GetModifiedAimConeDirection_hk(float aimCone, Vector3 inputVec, bool any
 			}
 			else if (aidsware::ui::get_bool(xorstr_("fat bullet"))
 				&& other::fat_target == Vector3::Zero()
-				&& !LineOfSight(localPos, actualTargetPos))
+				&& !LineOfSight(localPos, actualTargetPos)
+				&& false)
 			{
 				for (auto e : ext)
 					if (LineOfSight(localPos, actualTargetPos + e))
@@ -299,10 +304,14 @@ Vector3 GetModifiedAimConeDirection_hk(float aimCone, Vector3 inputVec, bool any
 				Vector3 t = aimutils::SimulateProjectile(position, velocity, x, travelTime, gravity, drag);
 				printf("HitTime: %ff\partialTime: %ff\n", travelTime, partialTime);
 
+				insta_travel_check_time = travelTime;
+
 				if (travelTime > 8.f)
 					travelTime = 0.0f;
-				
-				actualTargetPos += (vel * travelTime);
+
+				if (!(aidsware::ui::get_bool(xorstr_("instant bullet"))
+					&& settings::tr::desync_time > travelTime))
+					actualTargetPos += (vel * travelTime);
 				
 				targetPosition = actualTargetPos + Vector3(0, offset, 0);
 				_aimDir = AimConeUtil::GetModifiedAimConeDirection(0.f, targetPosition - localPos, anywhereInside);
@@ -614,6 +623,17 @@ Attack* BuildAttackMessage_hk(HitTest* self) {
 									ret->hitPositionWorld( ) = bone.first->position( );
 								}
 							}
+
+							printf("StringPool::Get(xorstr_(\"head\")) = %zu\n", StringPool::Get(xorstr_("head")));
+							printf("StringPool::Get(xorstr_(\"pelvis\")) = %zu\n", StringPool::Get(xorstr_("pelvis")));
+							printf("StringPool::Get(xorstr_(\"r_hip\")) = %zu\n", StringPool::Get(xorstr_("r_hip")));
+							printf("StringPool::Get(xorstr_(\"r_foot\")) = %zu\n", StringPool::Get(xorstr_("r_foot")));
+							printf("StringPool::Get(xorstr_(\"spine1\")) = %zu\n", StringPool::Get(xorstr_("spine1")));
+							printf("StringPool::Get(xorstr_(\"l_hand\")) = %zu\n", StringPool::Get(xorstr_("l_hand")));
+							printf("StringPool::Get(xorstr_(\"r_upperarm\")) = %zu\n", StringPool::Get(xorstr_("r_upperarm")));
+							printf("StringPool::Get(xorstr_(\"l_knee\")) = %zu\n", StringPool::Get(xorstr_("l_knee")));
+							printf("StringPool::Get(xorstr_(\"spine4\")) = %zu\n", StringPool::Get(xorstr_("spine4")));
+
 							if (aidsware::ui::get_combobox(xorstr_("hitbox override")) != 0) {
 								if (aidsware::ui::get_combobox(xorstr_("hitbox override")) == 1)
 									ret->hitBone( ) = StringPool::Get(xorstr_("spine4"));
@@ -818,7 +838,7 @@ void CreatePath(Vector3 start)
 		bool flag = false;
 
 
-		if (GamePhysics::LineOfSightRadius(point, new_point, 10551296, 1.5f, 0.f))
+		if (GamePhysics::LineOfSightRadius(point, new_point, 10551296, 1.5f, 0.f, LocalPlayer::Entity()))
 		{
 			old_point = point;
 			point = new_point;
@@ -828,10 +848,10 @@ void CreatePath(Vector3 start)
 			std::vector<Vector3> ps = {};
 
 			for (auto e : ext) //create sphere if cannot find LOS straight ahead
-				if ((GamePhysics::LineOfSightRadius(point, point + e, 10551296, 1.5f, 0.f) && //0.5 for margin next to walls
-					GamePhysics::LineOfSightRadius(point + e, point, 10551296, 1.5f, 0.f) &&
-					GamePhysics::LineOfSightRadius(Vector3((point + e).x, (point + e).y + 1000, (point + e).z), point + e, 10551296, 1.5f, 0.f) &&
-					GamePhysics::LineOfSightRadius(point + e, Vector3((point + e).x, (point + e).y + 1000, (point + e).z), 10551296, 1.5f, 0.f))
+				if ((GamePhysics::LineOfSightRadius(point, point + e, 10551296, 1.5f, 0.f, LocalPlayer::Entity()) && //0.5 for margin next to walls
+					GamePhysics::LineOfSightRadius(point + e, point, 10551296, 1.5f, 0.f, LocalPlayer::Entity()) &&
+					GamePhysics::LineOfSightRadius(Vector3((point + e).x, (point + e).y + 1000, (point + e).z), point + e, 10551296, 1.5f, 0.f, LocalPlayer::Entity()) &&
+					GamePhysics::LineOfSightRadius(point + e, Vector3((point + e).x, (point + e).y + 1000, (point + e).z), 10551296, 1.5f, 0.f, LocalPlayer::Entity()))
 					&& (point + e).distance(node.pos) < point.distance(node.pos)
 					&& (point + e).distance(point) > 0.99f)
 				{
@@ -1030,20 +1050,6 @@ void UpdateVelocity_hk(PlayerWalkMovement* self) {
 		node.pos = Vector3::Zero();
 		node.steps = 0;
 	}
-
-	if (aidsware::ui::get_bool(xorstr_("flyhack stop")))
-	{
-		if (settings::hor_flyhack >= 5.f)
-		{
-			vel.x = 0.0f;
-			vel.z = 0.0f;
-		}
-		if (settings::flyhack >= 3.0f)
-		{
-			vel.y = 0.0f;
-		}
-	}
-
 	if (get_key(aidsware::ui::get_keybind(xorstr_("climb bypass"))))
 	{
 
@@ -1144,6 +1150,19 @@ void UpdateVelocity_hk(PlayerWalkMovement* self) {
 		temp_vel = Vector3::Zero();
 	}
 
+	if (aidsware::ui::get_bool(xorstr_("flyhack stop")))
+	{
+		if (settings::hor_flyhack >= 5.f)
+		{
+			vel.x = 0.0f;
+			vel.z = 0.0f;
+		}
+		if (settings::flyhack >= 3.0f)
+		{
+			vel.y = 0.0f;
+		}
+	}
+
 	self->TargetMovement() = vel;
 	return self->UpdateVelocity( );
 }
@@ -1162,10 +1181,9 @@ void HandleJumping_hk(PlayerWalkMovement* a1, ModelState* state, bool wantsJump,
 	
 	if (aidsware::ui::get_bool(xorstr_("flyhack stop")))
 	{
-		float threshold = aidsware::ui::get_float(xorstr_("threshold"));
 		if (settings::hor_flyhack >= 5.0f
 			|| settings::flyhack >= 2.9f)
-			return;
+			return a1->HandleJumping(state, false, jumpInDirection);
 	}
 	wantsJump == needs_jump;
 	if (aidsware::ui::get_bool(xorstr_("infinite jump"))
@@ -1213,6 +1231,12 @@ bool IsDown_hk(InputState* self, BUTTON btn) {
 											|| held->class_name_hash() == STATIC_CRC32("BaseLauncher")
 											|| held->class_name_hash() == STATIC_CRC32("FlintStrikeWeapon")
 											|| held->class_name_hash() == STATIC_CRC32("CrossbowWeapon"))) {
+				if (held->class_name_hash() == STATIC_CRC32("BowWeapon")
+					|| held->class_name_hash() == STATIC_CRC32("CompoundBowWeapon")
+					|| held->class_name_hash() == STATIC_CRC32("CrossbowWeapon"))
+				{
+					if (held->nextAttackTime() >= Time::fixedTime()) return false;
+				}
 				if (target_ply != nullptr && target_ply->isCached( )) {
 					auto mpv = target_ply->find_mpv_bone( );
 					Vector3 target;
@@ -1700,7 +1724,7 @@ void ClientInput_hk(BasePlayer* plly, uintptr_t state) {
 					if (w->nextAttackTime() >= Time::fixedTime()) return;
 					if (w->deployDelay() > w->timeSinceDeploy()) return;
 
-					uintptr_t stat = safe_read(game_assembly + 51671352, DWORD64); if (!stat) return;
+					uintptr_t stat = safe_read(game_assembly + 52121760, DWORD64); if (!stat) return; //HitTest_TypeInfo
 					uintptr_t test = il2cpp_object_new(stat); if (!test) return;
 
 					auto trans = is_player ? reinterpret_cast<BasePlayer*>(p)->bones()->head->transform : p->transform();
@@ -1793,6 +1817,20 @@ void ClientInput_hk(BasePlayer* plly, uintptr_t state) {
 				settings::tr::manipulate_visible = false;
 			}
 
+		if (aidsware::ui::get_bool(xorstr_("magic"))
+			&& get_key(aidsware::ui::get_keybind(xorstr_("magic key"))))
+		{
+			LocalPlayer::Entity()->clientTickInterval() = 0.99f;
+
+			magic_projectile_test = true;
+
+			auto ent = LocalPlayer::Entity()->GetHeldEntity<BaseProjectile>();
+
+			if (ent->timeSinceDeploy() > ent->deployDelay() && ent->get_NextAttackTime() > Time::fixedTime()
+				&& desyncTime >= 0.9f)
+				ent->LaunchProjectile();
+		}
+
 		if (aidsware::ui::get_bool(xorstr_("auto med"))
 			&& plly->health() < 99)
 		{
@@ -1801,7 +1839,7 @@ void ClientInput_hk(BasePlayer* plly, uintptr_t state) {
 
 			if (std::wstring(held->info()->shortname()).find(wxorstr_(L"med")) != std::string::npos
 				|| std::wstring(held->info()->shortname()).find(wxorstr_(L"band")) != std::string::npos)
-				if (ent->timeSinceDeploy() > ent->deployDelay() && (ent->get_NextAttackTime() * 0.9) > Time::fixedTime())
+				if (ent->timeSinceDeploy() > ent->deployDelay() && ent->get_NextAttackTime() > Time::fixedTime())
 				{
 					printf("auto medding");
 					ent->ServerRPC(xorstr_("UseSelf"));
@@ -2774,26 +2812,46 @@ Projectile* CreateProjectile_hk(BaseProjectile* self, String* prefabPath, Vector
 	Projectile* p = self->CreateProjectile(prefabPath, pos, forward, velocity);
 	printf("CreateProjectile called\n");
 
-	if (aidsware::ui::get_bool(xorstr_("instant bullet")))
-	{
-		auto mpv = target_ply->find_mpv_bone();
-		Vector3 target;
-		if (mpv != nullptr)
-			target = mpv->position;
-		else
-			target = target_ply->bones()->head->position;
+	auto mpv = target_ply->find_mpv_bone();
+	Vector3 target;
+	if (mpv != nullptr)
+		target = mpv->position;
+	else
+		target = target_ply->bones()->head->position;
 
-		if (LineOfSight(target, LocalPlayer::Entity()->eyes()->position()))
+	if (magic_projectile_test)
+	{
+		auto pos = Vector3_::MoveTowards(target, self->transform()->position(), 2.0f);
+		auto d2t = LocalPlayer::Entity()->eyes()->get_position().distance(target);
+
+		p->initialDistance() = d2t - 2.f; //1m then 2m?
+		p->integrity() = 999.f;
+		p->ricochetChance() = 1.f;
+		printf("magic woohoo %ff | %ff\n", d2t - 2.f, d2t);
+		DDraw::Sphere(pos, 0.05f, Color::Color(_r, _g, _b, 50), 5.f, false);
+		magic_projectile_test = false;
+	}
+	else p->initialDistance() = 1.f;
+
+	if (aidsware::ui::get_bool(xorstr_("instant bullet"))
+		&& settings::tr::desync_time > 0.f
+		&& !magic_projectile_test)
+	{
+		printf("desync time: %.2f\n", settings::tr::desync_time);
+
+		if (LineOfSight(target, LocalPlayer::Entity()->eyes()->position())
+			&& settings::tr::desync_time > insta_travel_check_time)
 		{
 			p->initialDistance() = 999.f;
 			p->integrity() = 999.f;
-			printf("Set integrity\n");
+			printf("teleported bullet\n");
 		}
-	}
+	} else p->initialDistance() = 1.f;
+
 
 	return p;
 }
-
+ 
 bool requested_flag = false;
 void OnRequestUserInformation_hk(Network::Client* self, Network::Message* packet)
 {
@@ -3366,9 +3424,49 @@ void OnGui_hk(DDraw* instance)
 	return DDraw::OnGui_(instance);
 }
 
+void SendProjectileRicochet_hk(BasePlayer* self, PlayerProjectileRicochet* r)
+{
+	printf("ricochet out velocity -> (%ff, %ff, %ff)\n", r->outVelocity().x, r->outVelocity().y, r->outVelocity().z);
+
+	return self->SendProjectileRicochet(r);
+}
+
 bool Refract_hk(Projectile* self, uint64_t& seed, Vector3 point, Vector3 normal, bool resistance)
 {
+	printf("refract seed %ld\n", seed);
+
+	if (aidsware::ui::get_bool(xorstr_("magic"))
+		&& get_key(aidsware::ui::get_keybind(xorstr_("magic key"))))
+	{
+		return true;
+	}
+
 	return self->Refract(seed, point, normal, resistance);
+}
+
+bool Reflect_hk(Projectile* self, uint32_t seed, Vector3 point, Vector3 normal)
+{
+	bool result = self->Reflect(seed, point, normal);
+
+	printf("reflect seed %ld\nresult=%s\n", seed, result ? "true" : "false");
+
+	if (aidsware::ui::get_bool(xorstr_("magic"))
+		&& get_key(aidsware::ui::get_keybind(xorstr_("magic key"))))
+	{
+		return true;
+	}
+
+	return result;
+}
+
+bool DoRicochet_hk(Projectile* self, HitTest* test, Vector3 point, Vector3 normal)
+{
+	printf("DoRicochet called (%ff, %ff, %ff)\n", point.x, point.y, point.z);
+
+	//check if point is within 1m of player then teleport bullet 0.1m inside of wall
+	//call doricochet again
+
+	return self->DoRicochet(test, point, normal);
 }
 
 void do_hooks( ) {
@@ -3395,6 +3493,7 @@ void do_hooks( ) {
 	hookengine::hook(HitTest::BuildAttackMessage_, BuildAttackMessage_hk);
 	hookengine::hook(BaseMelee::ProcessAttack_, ProcessAttack_hk);
 	hookengine::hook(Projectile::DoHit_, DoHit_hk);
+	hookengine::hook(Projectile::DoRicochet_, DoRicochet_hk);
 	hookengine::hook(BaseMountable::EyePositionForPlayer_, EyePositionForPlayer_hk);
 	hookengine::hook(MonoBehaviour::StartCoroutine_, StartCoroutine_hk);
 	hookengine::hook(Projectile::SetEffectScale_, SetEffectScale_hk);
@@ -3428,6 +3527,12 @@ void do_hooks( ) {
 	hookengine::hook(DDraw::OnGui_, OnGui_hk);
 
 	hookengine::hook(Projectile::Refract_, Refract_hk);
+	hookengine::hook(Projectile::Reflect_, Reflect_hk);
+
+	hookengine::hook(BasePlayer::SendProjectileRicochet_, SendProjectileRicochet_hk);
+
+	
+
 	//create slave/master connection thread
 	//connect_t();
 	/*
@@ -3472,6 +3577,7 @@ void undo_hooks( ) {
 	hookengine::unhook(Projectile::Launch_, Launch_hk);
 	hookengine::unhook(Projectile::Update_, ProjectileUpdate_hk);
 	hookengine::unhook(Projectile::DoHit_, DoHit_hk);
+	hookengine::unhook(Projectile::DoRicochet_, DoRicochet_hk);
 
 	hookengine::unhook(BaseProjectile::CreateProjectile_, CreateProjectile_hk);
 	hookengine::unhook(BaseProjectile::LaunchProjectile_, LaunchProjectile_hk);
@@ -3505,7 +3611,10 @@ void undo_hooks( ) {
 	hookengine::unhook(DDraw::OnGui_, OnGui_hk);
 
 	hookengine::unhook(Projectile::Refract_, Refract_hk);
+	hookengine::unhook(Projectile::Reflect_, Reflect_hk);
 	
+	hookengine::unhook(BasePlayer::SendProjectileRicochet_, SendProjectileRicochet_hk);
+
 	//VMProtectEnd();
 	//VM_DOLPHIN_BLACK_END
 }

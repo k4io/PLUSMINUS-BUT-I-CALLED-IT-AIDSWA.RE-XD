@@ -18,7 +18,6 @@ namespace other {
 		float num5 = loco->MaxVelocity() + loco->GetParentVelocity().magnitude();
 		float num6 = loco->BoundsPadding() + num4 * num5;
 		float num7 = loco->eyes()->position().distance(position);
-
 		float num8 = std::fabs(loco->GetParentVelocity().y);
 		float num9 = loco->BoundsPadding() + num4 + num8 + loco->GetJumpHeight();
 		float num10 = std::fabs(loco->eyes()->get_position().y - position.y);

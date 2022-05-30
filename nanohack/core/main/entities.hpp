@@ -1064,6 +1064,17 @@ namespace entities {
 								if (aidsware::ui::get_bool("distance"))
 									Renderer::text({ screen.x, screen.y + 10 }, aidsware::ui::get_color(xorstr_("crate color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
 								Renderer::text(screen, aidsware::ui::get_color(xorstr_("crate color")), 14.f, true, true, wxorstr_(L"locked crate"));
+								continue;	
+							}
+							break;
+						case STATIC_CRC32("codelockedhackablecrate_oilrig"):
+							if (aidsware::ui::get_bool(xorstr_("crates")))
+							{
+								if (aidsware::ui::get_bool("distance"))
+									Renderer::text({ screen.x, screen.y + 10 }, aidsware::ui::get_color(xorstr_("crate color")), 14.f, true, true, wxorstr_(L"%dm"), (int)d);
+								Renderer::text(screen, aidsware::ui::get_color(xorstr_("crate color")), 14.f, true, true, wxorstr_(L"locked crate"));
+								if (aidsware::ui::get_bool("magic"))
+									entity->ServerRPC("RPC_Hack");
 								continue;
 							}
 							break;
